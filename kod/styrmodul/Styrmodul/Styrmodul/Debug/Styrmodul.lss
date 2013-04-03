@@ -1,0 +1,244 @@
+
+Styrmodul.elf:     file format elf32-avr
+
+Sections:
+Idx Name          Size      VMA       LMA       File off  Algn
+  0 .text         0000015e  00000000  00000000  00000054  2**1
+                  CONTENTS, ALLOC, LOAD, READONLY, CODE
+  1 .stab         000006cc  00000000  00000000  000001b4  2**2
+                  CONTENTS, READONLY, DEBUGGING
+  2 .stabstr      00000085  00000000  00000000  00000880  2**0
+                  CONTENTS, READONLY, DEBUGGING
+  3 .debug_aranges 00000080  00000000  00000000  00000908  2**3
+                  CONTENTS, READONLY, DEBUGGING
+  4 .debug_info   0000038d  00000000  00000000  00000988  2**0
+                  CONTENTS, READONLY, DEBUGGING
+  5 .debug_abbrev 000000c5  00000000  00000000  00000d15  2**0
+                  CONTENTS, READONLY, DEBUGGING
+  6 .debug_line   0000029e  00000000  00000000  00000dda  2**0
+                  CONTENTS, READONLY, DEBUGGING
+  7 .debug_frame  00000054  00000000  00000000  00001078  2**2
+                  CONTENTS, READONLY, DEBUGGING
+  8 .debug_str    000000c9  00000000  00000000  000010cc  2**0
+                  CONTENTS, READONLY, DEBUGGING
+
+Disassembly of section .text:
+
+00000000 <__vectors>:
+   0:	0c 94 46 00 	jmp	0x8c	; 0x8c <__ctors_end>
+   4:	0c 94 65 00 	jmp	0xca	; 0xca <__bad_interrupt>
+   8:	0c 94 65 00 	jmp	0xca	; 0xca <__bad_interrupt>
+   c:	0c 94 65 00 	jmp	0xca	; 0xca <__bad_interrupt>
+  10:	0c 94 65 00 	jmp	0xca	; 0xca <__bad_interrupt>
+  14:	0c 94 65 00 	jmp	0xca	; 0xca <__bad_interrupt>
+  18:	0c 94 65 00 	jmp	0xca	; 0xca <__bad_interrupt>
+  1c:	0c 94 65 00 	jmp	0xca	; 0xca <__bad_interrupt>
+  20:	0c 94 65 00 	jmp	0xca	; 0xca <__bad_interrupt>
+  24:	0c 94 65 00 	jmp	0xca	; 0xca <__bad_interrupt>
+  28:	0c 94 65 00 	jmp	0xca	; 0xca <__bad_interrupt>
+  2c:	0c 94 65 00 	jmp	0xca	; 0xca <__bad_interrupt>
+  30:	0c 94 65 00 	jmp	0xca	; 0xca <__bad_interrupt>
+  34:	0c 94 65 00 	jmp	0xca	; 0xca <__bad_interrupt>
+  38:	0c 94 65 00 	jmp	0xca	; 0xca <__bad_interrupt>
+  3c:	0c 94 65 00 	jmp	0xca	; 0xca <__bad_interrupt>
+  40:	0c 94 65 00 	jmp	0xca	; 0xca <__bad_interrupt>
+  44:	0c 94 65 00 	jmp	0xca	; 0xca <__bad_interrupt>
+  48:	0c 94 65 00 	jmp	0xca	; 0xca <__bad_interrupt>
+  4c:	0c 94 65 00 	jmp	0xca	; 0xca <__bad_interrupt>
+  50:	0c 94 65 00 	jmp	0xca	; 0xca <__bad_interrupt>
+  54:	0c 94 65 00 	jmp	0xca	; 0xca <__bad_interrupt>
+  58:	0c 94 65 00 	jmp	0xca	; 0xca <__bad_interrupt>
+  5c:	0c 94 65 00 	jmp	0xca	; 0xca <__bad_interrupt>
+  60:	0c 94 65 00 	jmp	0xca	; 0xca <__bad_interrupt>
+  64:	0c 94 65 00 	jmp	0xca	; 0xca <__bad_interrupt>
+  68:	0c 94 65 00 	jmp	0xca	; 0xca <__bad_interrupt>
+  6c:	0c 94 65 00 	jmp	0xca	; 0xca <__bad_interrupt>
+  70:	0c 94 65 00 	jmp	0xca	; 0xca <__bad_interrupt>
+  74:	0c 94 65 00 	jmp	0xca	; 0xca <__bad_interrupt>
+  78:	0c 94 65 00 	jmp	0xca	; 0xca <__bad_interrupt>
+  7c:	0c 94 65 00 	jmp	0xca	; 0xca <__bad_interrupt>
+  80:	0c 94 65 00 	jmp	0xca	; 0xca <__bad_interrupt>
+  84:	0c 94 65 00 	jmp	0xca	; 0xca <__bad_interrupt>
+  88:	0c 94 65 00 	jmp	0xca	; 0xca <__bad_interrupt>
+
+0000008c <__ctors_end>:
+  8c:	11 24       	eor	r1, r1
+  8e:	1f be       	out	0x3f, r1	; 63
+  90:	cf ef       	ldi	r28, 0xFF	; 255
+  92:	d0 e4       	ldi	r29, 0x40	; 64
+  94:	de bf       	out	0x3e, r29	; 62
+  96:	cd bf       	out	0x3d, r28	; 61
+
+00000098 <__do_copy_data>:
+  98:	11 e0       	ldi	r17, 0x01	; 1
+  9a:	a0 e0       	ldi	r26, 0x00	; 0
+  9c:	b1 e0       	ldi	r27, 0x01	; 1
+  9e:	ee e5       	ldi	r30, 0x5E	; 94
+  a0:	f1 e0       	ldi	r31, 0x01	; 1
+  a2:	00 e0       	ldi	r16, 0x00	; 0
+  a4:	0b bf       	out	0x3b, r16	; 59
+  a6:	02 c0       	rjmp	.+4      	; 0xac <__do_copy_data+0x14>
+  a8:	07 90       	elpm	r0, Z+
+  aa:	0d 92       	st	X+, r0
+  ac:	a0 30       	cpi	r26, 0x00	; 0
+  ae:	b1 07       	cpc	r27, r17
+  b0:	d9 f7       	brne	.-10     	; 0xa8 <__do_copy_data+0x10>
+
+000000b2 <__do_clear_bss>:
+  b2:	11 e0       	ldi	r17, 0x01	; 1
+  b4:	a0 e0       	ldi	r26, 0x00	; 0
+  b6:	b1 e0       	ldi	r27, 0x01	; 1
+  b8:	01 c0       	rjmp	.+2      	; 0xbc <.do_clear_bss_start>
+
+000000ba <.do_clear_bss_loop>:
+  ba:	1d 92       	st	X+, r1
+
+000000bc <.do_clear_bss_start>:
+  bc:	a0 30       	cpi	r26, 0x00	; 0
+  be:	b1 07       	cpc	r27, r17
+  c0:	e1 f7       	brne	.-8      	; 0xba <.do_clear_bss_loop>
+  c2:	0e 94 67 00 	call	0xce	; 0xce <main>
+  c6:	0c 94 ad 00 	jmp	0x15a	; 0x15a <_exit>
+
+000000ca <__bad_interrupt>:
+  ca:	0c 94 00 00 	jmp	0	; 0x0 <__vectors>
+
+000000ce <main>:
+
+
+int main(void)
+{
+	//pwm-styrning för gripklon, pin OC1A, register OCR1A
+	TCCR1A = 0;
+  ce:	e0 e8       	ldi	r30, 0x80	; 128
+  d0:	f0 e0       	ldi	r31, 0x00	; 0
+  d2:	10 82       	st	Z, r1
+	setbit(TCCR1A, COM1A1);
+  d4:	80 81       	ld	r24, Z
+  d6:	80 68       	ori	r24, 0x80	; 128
+  d8:	80 83       	st	Z, r24
+	setbit(TCCR1A, WGM11);
+  da:	80 81       	ld	r24, Z
+  dc:	82 60       	ori	r24, 0x02	; 2
+  de:	80 83       	st	Z, r24
+	
+	TCCR1B = 0;
+  e0:	e1 e8       	ldi	r30, 0x81	; 129
+  e2:	f0 e0       	ldi	r31, 0x00	; 0
+  e4:	10 82       	st	Z, r1
+	setbit(TCCR1B, WGM11);
+  e6:	80 81       	ld	r24, Z
+  e8:	82 60       	ori	r24, 0x02	; 2
+  ea:	80 83       	st	Z, r24
+	setbit(TCCR1B, WGM12);
+  ec:	80 81       	ld	r24, Z
+  ee:	88 60       	ori	r24, 0x08	; 8
+  f0:	80 83       	st	Z, r24
+	setbit(TCCR1B, WGM13);
+  f2:	80 81       	ld	r24, Z
+  f4:	80 61       	ori	r24, 0x10	; 16
+  f6:	80 83       	st	Z, r24
+	
+	//sätt klockan, fc = f/1024
+	setbit(TCCR1B, CS10);
+  f8:	80 81       	ld	r24, Z
+  fa:	81 60       	ori	r24, 0x01	; 1
+  fc:	80 83       	st	Z, r24
+	setbit(TCCR1B, CS12);
+  fe:	80 81       	ld	r24, Z
+ 100:	84 60       	ori	r24, 0x04	; 4
+ 102:	80 83       	st	Z, r24
+	//TIMSK1 = (1 << OCIE1A);  // Enable Interrupt TimerCounter1 Compare Match A (TIMER1_COMPA_vect)
+	//sätt OCR1A också!
+	
+	//pwm-styrning för motorerna, pinne OC2A, register OCR2A för vänster, pinne OC2B, register OCR2B för höger.
+	//PB1 DIR höger, PB0 vänster
+	TCCR2A=0;
+ 104:	e0 eb       	ldi	r30, 0xB0	; 176
+ 106:	f0 e0       	ldi	r31, 0x00	; 0
+ 108:	10 82       	st	Z, r1
+	setbit(TCCR2A, COM2A1);
+ 10a:	80 81       	ld	r24, Z
+ 10c:	80 68       	ori	r24, 0x80	; 128
+ 10e:	80 83       	st	Z, r24
+	setbit(TCCR2A, COM2B1);
+ 110:	80 81       	ld	r24, Z
+ 112:	80 62       	ori	r24, 0x20	; 32
+ 114:	80 83       	st	Z, r24
+	setbit(TCCR2A, WGM20);
+ 116:	80 81       	ld	r24, Z
+ 118:	81 60       	ori	r24, 0x01	; 1
+ 11a:	80 83       	st	Z, r24
+	setbit(TCCR2A, WGM21);
+ 11c:	80 81       	ld	r24, Z
+ 11e:	82 60       	ori	r24, 0x02	; 2
+ 120:	80 83       	st	Z, r24
+	OCR2A = 0;
+ 122:	10 92 b3 00 	sts	0x00B3, r1
+	OCR2B = 0;
+ 126:	10 92 b4 00 	sts	0x00B4, r1
+	
+	//TCCR2A = (1 << COM2A1) | (1 << COM2B1) | (1 << WGM21) | (1 << WGM20);
+	
+	//sätter på pwm!
+	TCCR2B=0;
+ 12a:	e1 eb       	ldi	r30, 0xB1	; 177
+ 12c:	f0 e0       	ldi	r31, 0x00	; 0
+ 12e:	10 82       	st	Z, r1
+	setbit(TCCR2B, CS20);
+ 130:	80 81       	ld	r24, Z
+ 132:	81 60       	ori	r24, 0x01	; 1
+ 134:	80 83       	st	Z, r24
+ 136:	ff cf       	rjmp	.-2      	; 0x136 <main+0x68>
+
+00000138 <drive_forwards>:
+}
+
+
+void drive_forwards(uint8_t amount)
+{
+	OCR2A = amount;
+ 138:	80 93 b3 00 	sts	0x00B3, r24
+	OCR2B = amount;
+ 13c:	80 93 b4 00 	sts	0x00B4, r24
+	
+	//sätt ettor (framåt) på DIR-pinnarna
+	setbit(PORT_DIR, LEFT_DIR);
+ 140:	28 9a       	sbi	0x05, 0	; 5
+	setbit(PORT_DIR, RIGHT_DIR);
+ 142:	29 9a       	sbi	0x05, 1	; 5
+}
+ 144:	08 95       	ret
+
+00000146 <drive_backwards>:
+
+void drive_backwards(uint8_t amount)
+{
+	OCR2A = amount;
+ 146:	80 93 b3 00 	sts	0x00B3, r24
+	OCR2B = amount;
+ 14a:	80 93 b4 00 	sts	0x00B4, r24
+	
+	//sätt nollor (bakåt) på DIR-pinnarna
+	clearbit(PORT_DIR, LEFT_DIR);
+ 14e:	28 98       	cbi	0x05, 0	; 5
+	clearbit(PORT_DIR, RIGHT_DIR);
+ 150:	29 98       	cbi	0x05, 1	; 5
+}
+ 152:	08 95       	ret
+
+00000154 <tank_turn_left>:
+
+void tank_turn_left(uint8_t amount)
+{
+	OCR2A = amount;
+ 154:	80 93 b3 00 	sts	0x00B3, r24
+	
+	
+ 158:	08 95       	ret
+
+0000015a <_exit>:
+ 15a:	f8 94       	cli
+
+0000015c <__stop_program>:
+ 15c:	ff cf       	rjmp	.-2      	; 0x15c <__stop_program>
