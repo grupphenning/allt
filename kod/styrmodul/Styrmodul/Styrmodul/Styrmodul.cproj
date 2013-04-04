@@ -42,12 +42,12 @@
           <JtagDbgClock>250000</JtagDbgClock>
           <JtagProgClock>1000000</JtagProgClock>
           <IspClock>250000</IspClock>
-          <JtagInChain>false</JtagInChain>
+          <JtagInChain>true</JtagInChain>
           <JtagEnableExtResetOnStartSession>false</JtagEnableExtResetOnStartSession>
           <JtagDevicesBefore>0</JtagDevicesBefore>
-          <JtagDevicesAfter>0</JtagDevicesAfter>
+          <JtagDevicesAfter>2</JtagDevicesAfter>
           <JtagInstrBitsBefore>0</JtagInstrBitsBefore>
-          <JtagInstrBitsAfter>0</JtagInstrBitsAfter>
+          <JtagInstrBitsAfter>8</JtagInstrBitsAfter>
         </InterfaceProperties>
       </ToolOptions>
     </com_atmel_avrdbg_tool_jtagicemk3>
@@ -96,6 +96,12 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="bitmacros.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="display.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="display.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="Styrmodul.c">

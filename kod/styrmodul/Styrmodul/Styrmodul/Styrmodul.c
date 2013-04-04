@@ -9,6 +9,7 @@
 #include <avr/io.h>
 #include "bitmacros.h"
 #include <avr/delay.h>
+#include "display.h"
 
 #define LEFT_DIR PB1
 #define RIGHT_DIR PB0
@@ -24,16 +25,40 @@
 #define CLAW PD5
 #define PORT_PWM PORTD
 
+#define DISPLAY PORTA
+#define DISPLAY_POWER PA2
+#define DISPLAY_BLINK PA0
+#define DISPLAY_CURSOR PA1
+#define DISPLAY_RS PC7
+#define DISPLAY_ENABLE PC6
+
 
 
 
 int main(void)
 {
+	//display ska ut
 	DDRA = 0xFF;
-	DDRB = 0xFF;
-	DDRC = 0xFF;
-	DDRD = 0xFF;	
+	//DDRB = 0xFF;
+	//DDRC = 0xFF;
+	//DDRD = 0xFF;
+	
+	//sätt riktning på displaystyrpinnar!
+	setbit(DDRC, PC6);
+	setbit(DDRC, PC7);
+	
+	
+	
+	//sätt riktning på motorer + gripklo
+	setbit(DDRB, PB0);
+	setbit(DDRB, PB1);
+	setbit(DDRD, PD7);
+	setbit(DDRD, PD6);
+	setbit(DDRD, PD5);
+	
+	
 	//pwm-styrning för gripklon, pin OC1A, register OCR1A
+	
 	TCCR1A = 0;
 	setbit(TCCR1A, COM1A1);
 	setbit(TCCR1A, WGM11);
@@ -43,17 +68,23 @@ int main(void)
 	setbit(TCCR1B, WGM12);
 	setbit(TCCR1B, WGM13);
 	
-	//sätt klockan, fc = f/1024
+	
+	//sätt klockan, f = fclk/1024
+	//NEJ! Sätt f = fclk/256
 	setbit(TCCR1B, CS10);
+	setbit(TCCR1B, CS11);
 	//setbit(TCCR1B, CS12);
 	
 	
 	//TCCR1A = (1 << COM1A1) | (1 << WGM11);
 	//TCCR1B = (1 << WGM11) | (1 << WGM13) | (1 << WGM12) | (1 << CS12) | (1 << CS10);
 	TIMSK1 = (1 << OCIE1A);  // Enable Interrupt TimerCounter1 Compare Match A (TIMER1_COMPA_vect)
-	ICR1 = 390;
+	//ICR1 = 390;
+	//ICR1 = 625;
+	//ICR1 = 313;
+	ICR1 = 2500;
 	//sätt OCR1A också!
-	OCR1A = 200;
+	OCR1A = 300;
 	
 	//pwm-styrning för motorerna, pinne OC2A, register OCR2A för vänster, pinne OC2B, register OCR2B för höger.
 	//PB1 DIR höger, PB0 vänster
@@ -74,15 +105,27 @@ int main(void)
 	TIMSK2 = (1 << OCIE2A);
 	//fullt ös på OCR=0xff, inget på 0x00
 	
+	//drive_forwards(150);
+	tank_turn_left(180, 180);
+	
 	//drive_forwards(90);
-	//tank_turn_left(255, 100);
+	//display_on();
+	
+	init_display();
+	update();
+	clear_screen();
+	update();
+	send_string("Henning!!!!!!!!!!!! ;) ;) ;) ;)");
+	update();
+	
     while(1)
     {
-		//claw_out();
-		drive_forwards(90);
+		
+		claw_out();
+		
 		_delay_ms(10000);
 		claw_in();
-		stop_motors();
+		//stop_motors();
 		_delay_ms(10000);
     }
 }
@@ -156,10 +199,76 @@ void tank_turn_right(uint8_t amount)
 
 void claw_out()
 {
-	CLAW_AMOUNT = 0;
+	CLAW_AMOUNT = 64;
 }
 
 void claw_in()
 {
-	CLAW_AMOUNT = 200;
+	CLAW_AMOUNT = 314;
+}
+
+void display_on()
+{
+	DISPLAY = 0;
+	clearbit(PORTC, DISPLAY_RS);
+	setbit(DISPLAY, DISPLAY_BLINK);
+	setbit(DISPLAY, DISPLAY_CURSOR);
+	setbit(DISPLAY,DISPLAY_POWER);
+	setbit(DISPLAY,PA3);
+	display_enable();
+	display_set_two_lines();
+	display_enable();
+	display_home();
+	display_enable();
+	display_clear();
+	display_enable();
+	
+	display_write();
+	display_enable();
+}
+
+void display_off()
+{
+	clearbit(DISPLAY,DISPLAY_POWER);
+}
+
+void display_set_two_lines()
+{
+	DISPLAY = 0;
+	setbit(DISPLAY,PA5);
+	setbit(DISPLAY,PA4);
+	setbit(DISPLAY,PA3);
+	
+	
+	
+}
+
+
+void display_clear()
+{
+	DISPLAY = 0;
+	setbit(DISPLAY, PA0);
+}
+
+void display_enable()
+{
+	setbit(PORTC,DISPLAY_ENABLE);
+	_delay_ms(500);
+	clearbit(PORTC,DISPLAY_ENABLE);
+	_delay_ms(500);
+	setbit(PORTC,DISPLAY_ENABLE);
+	_delay_ms(500);
+}
+
+void display_home()
+{
+	DISPLAY = 0;
+	setbit(DISPLAY,PA1);
+}
+
+void display_write()
+{
+	setbit(PORTC, DISPLAY_RS);
+	DISPLAY = 0b01001000;
+	
 }
