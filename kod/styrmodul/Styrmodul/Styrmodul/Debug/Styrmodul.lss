@@ -3,23 +3,23 @@ Styrmodul.elf:     file format elf32-avr
 
 Sections:
 Idx Name          Size      VMA       LMA       File off  Algn
-  0 .text         0000015e  00000000  00000000  00000054  2**1
+  0 .text         000001fc  00000000  00000000  00000054  2**1
                   CONTENTS, ALLOC, LOAD, READONLY, CODE
-  1 .stab         000006cc  00000000  00000000  000001b4  2**2
+  1 .stab         000006cc  00000000  00000000  00000250  2**2
                   CONTENTS, READONLY, DEBUGGING
-  2 .stabstr      00000085  00000000  00000000  00000880  2**0
+  2 .stabstr      00000085  00000000  00000000  0000091c  2**0
                   CONTENTS, READONLY, DEBUGGING
-  3 .debug_aranges 00000080  00000000  00000000  00000908  2**3
+  3 .debug_aranges 00000080  00000000  00000000  000009a8  2**3
                   CONTENTS, READONLY, DEBUGGING
-  4 .debug_info   0000038d  00000000  00000000  00000988  2**0
+  4 .debug_info   0000057a  00000000  00000000  00000a28  2**0
                   CONTENTS, READONLY, DEBUGGING
-  5 .debug_abbrev 000000c5  00000000  00000000  00000d15  2**0
+  5 .debug_abbrev 0000016b  00000000  00000000  00000fa2  2**0
                   CONTENTS, READONLY, DEBUGGING
-  6 .debug_line   0000029e  00000000  00000000  00000dda  2**0
+  6 .debug_line   00000387  00000000  00000000  0000110d  2**0
                   CONTENTS, READONLY, DEBUGGING
-  7 .debug_frame  00000054  00000000  00000000  00001078  2**2
+  7 .debug_frame  000000b4  00000000  00000000  00001494  2**2
                   CONTENTS, READONLY, DEBUGGING
-  8 .debug_str    000000c9  00000000  00000000  000010cc  2**0
+  8 .debug_str    00000164  00000000  00000000  00001548  2**0
                   CONTENTS, READONLY, DEBUGGING
 
 Disassembly of section .text:
@@ -73,7 +73,7 @@ Disassembly of section .text:
   98:	11 e0       	ldi	r17, 0x01	; 1
   9a:	a0 e0       	ldi	r26, 0x00	; 0
   9c:	b1 e0       	ldi	r27, 0x01	; 1
-  9e:	ee e5       	ldi	r30, 0x5E	; 94
+  9e:	ec ef       	ldi	r30, 0xFC	; 252
   a0:	f1 e0       	ldi	r31, 0x01	; 1
   a2:	00 e0       	ldi	r16, 0x00	; 0
   a4:	0b bf       	out	0x3b, r16	; 59
@@ -97,148 +97,296 @@ Disassembly of section .text:
   bc:	a0 30       	cpi	r26, 0x00	; 0
   be:	b1 07       	cpc	r27, r17
   c0:	e1 f7       	brne	.-8      	; 0xba <.do_clear_bss_loop>
-  c2:	0e 94 67 00 	call	0xce	; 0xce <main>
-  c6:	0c 94 ad 00 	jmp	0x15a	; 0x15a <_exit>
+  c2:	0e 94 7a 00 	call	0xf4	; 0xf4 <main>
+  c6:	0c 94 fc 00 	jmp	0x1f8	; 0x1f8 <_exit>
 
 000000ca <__bad_interrupt>:
   ca:	0c 94 00 00 	jmp	0	; 0x0 <__vectors>
 
-000000ce <main>:
-
-
-int main(void)
-{
-	//pwm-styrning för gripklon, pin OC1A, register OCR1A
-	TCCR1A = 0;
-  ce:	e0 e8       	ldi	r30, 0x80	; 128
-  d0:	f0 e0       	ldi	r31, 0x00	; 0
-  d2:	10 82       	st	Z, r1
-	setbit(TCCR1A, COM1A1);
-  d4:	80 81       	ld	r24, Z
-  d6:	80 68       	ori	r24, 0x80	; 128
-  d8:	80 83       	st	Z, r24
-	setbit(TCCR1A, WGM11);
-  da:	80 81       	ld	r24, Z
-  dc:	82 60       	ori	r24, 0x02	; 2
-  de:	80 83       	st	Z, r24
-	
-	TCCR1B = 0;
-  e0:	e1 e8       	ldi	r30, 0x81	; 129
-  e2:	f0 e0       	ldi	r31, 0x00	; 0
-  e4:	10 82       	st	Z, r1
-	setbit(TCCR1B, WGM11);
-  e6:	80 81       	ld	r24, Z
-  e8:	82 60       	ori	r24, 0x02	; 2
-  ea:	80 83       	st	Z, r24
-	setbit(TCCR1B, WGM12);
-  ec:	80 81       	ld	r24, Z
-  ee:	88 60       	ori	r24, 0x08	; 8
-  f0:	80 83       	st	Z, r24
-	setbit(TCCR1B, WGM13);
-  f2:	80 81       	ld	r24, Z
-  f4:	80 61       	ori	r24, 0x10	; 16
-  f6:	80 83       	st	Z, r24
-	
-	//sätt klockan, fc = f/1024
-	setbit(TCCR1B, CS10);
-  f8:	80 81       	ld	r24, Z
-  fa:	81 60       	ori	r24, 0x01	; 1
-  fc:	80 83       	st	Z, r24
-	setbit(TCCR1B, CS12);
-  fe:	80 81       	ld	r24, Z
- 100:	84 60       	ori	r24, 0x04	; 4
- 102:	80 83       	st	Z, r24
-	//TIMSK1 = (1 << OCIE1A);  // Enable Interrupt TimerCounter1 Compare Match A (TIMER1_COMPA_vect)
-	//sätt OCR1A också!
-	
-	//pwm-styrning för motorerna, pinne OC2A, register OCR2A för vänster, pinne OC2B, register OCR2B för höger.
-	//PB1 DIR höger, PB0 vänster
-	TCCR2A=0;
- 104:	e0 eb       	ldi	r30, 0xB0	; 176
- 106:	f0 e0       	ldi	r31, 0x00	; 0
- 108:	10 82       	st	Z, r1
-	setbit(TCCR2A, COM2A1);
- 10a:	80 81       	ld	r24, Z
- 10c:	80 68       	ori	r24, 0x80	; 128
- 10e:	80 83       	st	Z, r24
-	setbit(TCCR2A, COM2B1);
- 110:	80 81       	ld	r24, Z
- 112:	80 62       	ori	r24, 0x20	; 32
- 114:	80 83       	st	Z, r24
-	setbit(TCCR2A, WGM20);
- 116:	80 81       	ld	r24, Z
- 118:	81 60       	ori	r24, 0x01	; 1
- 11a:	80 83       	st	Z, r24
-	setbit(TCCR2A, WGM21);
- 11c:	80 81       	ld	r24, Z
- 11e:	82 60       	ori	r24, 0x02	; 2
- 120:	80 83       	st	Z, r24
-	OCR2A = 0;
- 122:	10 92 b3 00 	sts	0x00B3, r1
-	OCR2B = 0;
- 126:	10 92 b4 00 	sts	0x00B4, r1
-	
-	//TCCR2A = (1 << COM2A1) | (1 << COM2B1) | (1 << WGM21) | (1 << WGM20);
-	
-	//sätter på pwm!
-	TCCR2B=0;
- 12a:	e1 eb       	ldi	r30, 0xB1	; 177
- 12c:	f0 e0       	ldi	r31, 0x00	; 0
- 12e:	10 82       	st	Z, r1
-	setbit(TCCR2B, CS20);
- 130:	80 81       	ld	r24, Z
- 132:	81 60       	ori	r24, 0x01	; 1
- 134:	80 83       	st	Z, r24
- 136:	ff cf       	rjmp	.-2      	; 0x136 <main+0x68>
-
-00000138 <drive_forwards>:
+000000ce <drive_forwards>:
 }
 
 
 void drive_forwards(uint8_t amount)
 {
-	OCR2A = amount;
- 138:	80 93 b3 00 	sts	0x00B3, r24
-	OCR2B = amount;
- 13c:	80 93 b4 00 	sts	0x00B4, r24
+	LEFT_AMOUNT = amount;
+  ce:	80 93 b3 00 	sts	0x00B3, r24
+	RIGHT_AMOUNT = amount;
+  d2:	80 93 b4 00 	sts	0x00B4, r24
 	
 	//sätt ettor (framåt) på DIR-pinnarna
 	setbit(PORT_DIR, LEFT_DIR);
- 140:	28 9a       	sbi	0x05, 0	; 5
+  d6:	29 9a       	sbi	0x05, 1	; 5
 	setbit(PORT_DIR, RIGHT_DIR);
- 142:	29 9a       	sbi	0x05, 1	; 5
+  d8:	28 9a       	sbi	0x05, 0	; 5
 }
- 144:	08 95       	ret
+  da:	08 95       	ret
 
-00000146 <drive_backwards>:
+000000dc <stop_motors>:
+	//clearbit(TCCR2B, CS20);
+	//clearbit(TCCR2B, CS21);
+	//clearbit(TCCR2B, CS22);
+	//LEFT_PWM = 0;
+	//RIGHT_PWM = 0;
+	LEFT_AMOUNT = 0;
+  dc:	10 92 b3 00 	sts	0x00B3, r1
+	RIGHT_AMOUNT = 0;
+  e0:	10 92 b4 00 	sts	0x00B4, r1
+}
+  e4:	08 95       	ret
+
+000000e6 <claw_in>:
+	CLAW_AMOUNT = 0;
+}
+
+void claw_in()
+{
+	CLAW_AMOUNT = 200;
+  e6:	88 ec       	ldi	r24, 0xC8	; 200
+  e8:	90 e0       	ldi	r25, 0x00	; 0
+  ea:	90 93 89 00 	sts	0x0089, r25
+  ee:	80 93 88 00 	sts	0x0088, r24
+  f2:	08 95       	ret
+
+000000f4 <main>:
+
+
+
+int main(void)
+{
+	DDRA = 0xFF;
+  f4:	8f ef       	ldi	r24, 0xFF	; 255
+  f6:	81 b9       	out	0x01, r24	; 1
+	DDRB = 0xFF;
+  f8:	84 b9       	out	0x04, r24	; 4
+	DDRC = 0xFF;
+  fa:	87 b9       	out	0x07, r24	; 7
+	DDRD = 0xFF;	
+  fc:	8a b9       	out	0x0a, r24	; 10
+	//pwm-styrning för gripklon, pin OC1A, register OCR1A
+	TCCR1A = 0;
+  fe:	e0 e8       	ldi	r30, 0x80	; 128
+ 100:	f0 e0       	ldi	r31, 0x00	; 0
+ 102:	10 82       	st	Z, r1
+	setbit(TCCR1A, COM1A1);
+ 104:	80 81       	ld	r24, Z
+ 106:	80 68       	ori	r24, 0x80	; 128
+ 108:	80 83       	st	Z, r24
+	setbit(TCCR1A, WGM11);
+ 10a:	80 81       	ld	r24, Z
+ 10c:	82 60       	ori	r24, 0x02	; 2
+ 10e:	80 83       	st	Z, r24
+	
+	TCCR1B = 0;
+ 110:	e1 e8       	ldi	r30, 0x81	; 129
+ 112:	f0 e0       	ldi	r31, 0x00	; 0
+ 114:	10 82       	st	Z, r1
+	setbit(TCCR1B, WGM11);
+ 116:	80 81       	ld	r24, Z
+ 118:	82 60       	ori	r24, 0x02	; 2
+ 11a:	80 83       	st	Z, r24
+	setbit(TCCR1B, WGM12);
+ 11c:	80 81       	ld	r24, Z
+ 11e:	88 60       	ori	r24, 0x08	; 8
+ 120:	80 83       	st	Z, r24
+	setbit(TCCR1B, WGM13);
+ 122:	80 81       	ld	r24, Z
+ 124:	80 61       	ori	r24, 0x10	; 16
+ 126:	80 83       	st	Z, r24
+	
+	//sätt klockan, fc = f/1024
+	setbit(TCCR1B, CS10);
+ 128:	80 81       	ld	r24, Z
+ 12a:	81 60       	ori	r24, 0x01	; 1
+ 12c:	80 83       	st	Z, r24
+	//setbit(TCCR1B, CS12);
+	
+	
+	//TCCR1A = (1 << COM1A1) | (1 << WGM11);
+	//TCCR1B = (1 << WGM11) | (1 << WGM13) | (1 << WGM12) | (1 << CS12) | (1 << CS10);
+	TIMSK1 = (1 << OCIE1A);  // Enable Interrupt TimerCounter1 Compare Match A (TIMER1_COMPA_vect)
+ 12e:	22 e0       	ldi	r18, 0x02	; 2
+ 130:	20 93 6f 00 	sts	0x006F, r18
+	ICR1 = 390;
+ 134:	86 e8       	ldi	r24, 0x86	; 134
+ 136:	91 e0       	ldi	r25, 0x01	; 1
+ 138:	90 93 87 00 	sts	0x0087, r25
+ 13c:	80 93 86 00 	sts	0x0086, r24
+	//sätt OCR1A också!
+	OCR1A = 200;
+ 140:	88 ec       	ldi	r24, 0xC8	; 200
+ 142:	90 e0       	ldi	r25, 0x00	; 0
+ 144:	90 93 89 00 	sts	0x0089, r25
+ 148:	80 93 88 00 	sts	0x0088, r24
+	
+	//pwm-styrning för motorerna, pinne OC2A, register OCR2A för vänster, pinne OC2B, register OCR2B för höger.
+	//PB1 DIR höger, PB0 vänster
+	TCCR2A=0;
+ 14c:	e0 eb       	ldi	r30, 0xB0	; 176
+ 14e:	f0 e0       	ldi	r31, 0x00	; 0
+ 150:	10 82       	st	Z, r1
+	setbit(TCCR2A, COM2A1);
+ 152:	80 81       	ld	r24, Z
+ 154:	80 68       	ori	r24, 0x80	; 128
+ 156:	80 83       	st	Z, r24
+	setbit(TCCR2A, COM2B1);
+ 158:	80 81       	ld	r24, Z
+ 15a:	80 62       	ori	r24, 0x20	; 32
+ 15c:	80 83       	st	Z, r24
+	setbit(TCCR2A, WGM20);
+ 15e:	80 81       	ld	r24, Z
+ 160:	81 60       	ori	r24, 0x01	; 1
+ 162:	80 83       	st	Z, r24
+	setbit(TCCR2A, WGM21);
+ 164:	80 81       	ld	r24, Z
+ 166:	82 60       	ori	r24, 0x02	; 2
+ 168:	80 83       	st	Z, r24
+	OCR2A = 0;
+ 16a:	10 92 b3 00 	sts	0x00B3, r1
+	OCR2B = 0;
+ 16e:	10 92 b4 00 	sts	0x00B4, r1
+	
+	//TCCR2A = (1 << COM2A1) | (1 << COM2B1) | (1 << WGM21) | (1 << WGM20);
+	
+	//sätter på pwm!
+	TCCR2B=0;
+ 172:	e1 eb       	ldi	r30, 0xB1	; 177
+ 174:	f0 e0       	ldi	r31, 0x00	; 0
+ 176:	10 82       	st	Z, r1
+	setbit(TCCR2B, CS20);
+ 178:	80 81       	ld	r24, Z
+ 17a:	81 60       	ori	r24, 0x01	; 1
+ 17c:	80 83       	st	Z, r24
+	//TCCR2B = (1 << CS20);
+	TIMSK2 = (1 << OCIE2A);
+ 17e:	20 93 70 00 	sts	0x0070, r18
+	//drive_forwards(90);
+	//tank_turn_left(255, 100);
+    while(1)
+    {
+		//claw_out();
+		drive_forwards(90);
+ 182:	8a e5       	ldi	r24, 0x5A	; 90
+ 184:	90 e0       	ldi	r25, 0x00	; 0
+ 186:	0e 94 67 00 	call	0xce	; 0xce <drive_forwards>
+	#else
+		//round up by default
+		__ticks_dc = (uint32_t)(ceil(fabs(__tmp)));
+	#endif
+
+	__builtin_avr_delay_cycles(__ticks_dc);
+ 18a:	8f e7       	ldi	r24, 0x7F	; 127
+ 18c:	94 e8       	ldi	r25, 0x84	; 132
+ 18e:	ae e1       	ldi	r26, 0x1E	; 30
+ 190:	81 50       	subi	r24, 0x01	; 1
+ 192:	90 40       	sbci	r25, 0x00	; 0
+ 194:	a0 40       	sbci	r26, 0x00	; 0
+ 196:	e1 f7       	brne	.-8      	; 0x190 <main+0x9c>
+ 198:	00 c0       	rjmp	.+0      	; 0x19a <main+0xa6>
+ 19a:	00 00       	nop
+		_delay_ms(10000);
+		claw_in();
+ 19c:	0e 94 73 00 	call	0xe6	; 0xe6 <claw_in>
+		stop_motors();
+ 1a0:	0e 94 6e 00 	call	0xdc	; 0xdc <stop_motors>
+ 1a4:	8f e7       	ldi	r24, 0x7F	; 127
+ 1a6:	94 e8       	ldi	r25, 0x84	; 132
+ 1a8:	ae e1       	ldi	r26, 0x1E	; 30
+ 1aa:	81 50       	subi	r24, 0x01	; 1
+ 1ac:	90 40       	sbci	r25, 0x00	; 0
+ 1ae:	a0 40       	sbci	r26, 0x00	; 0
+ 1b0:	e1 f7       	brne	.-8      	; 0x1aa <main+0xb6>
+ 1b2:	00 c0       	rjmp	.+0      	; 0x1b4 <main+0xc0>
+ 1b4:	00 00       	nop
+ 1b6:	e5 cf       	rjmp	.-54     	; 0x182 <main+0x8e>
+
+000001b8 <drive_backwards>:
+	setbit(PORT_DIR, RIGHT_DIR);
+}
 
 void drive_backwards(uint8_t amount)
 {
-	OCR2A = amount;
- 146:	80 93 b3 00 	sts	0x00B3, r24
-	OCR2B = amount;
- 14a:	80 93 b4 00 	sts	0x00B4, r24
+	LEFT_AMOUNT = amount;
+ 1b8:	80 93 b3 00 	sts	0x00B3, r24
+	RIGHT_AMOUNT = amount;
+ 1bc:	80 93 b4 00 	sts	0x00B4, r24
 	
 	//sätt nollor (bakåt) på DIR-pinnarna
 	clearbit(PORT_DIR, LEFT_DIR);
- 14e:	28 98       	cbi	0x05, 0	; 5
+ 1c0:	29 98       	cbi	0x05, 1	; 5
 	clearbit(PORT_DIR, RIGHT_DIR);
- 150:	29 98       	cbi	0x05, 1	; 5
+ 1c2:	28 98       	cbi	0x05, 0	; 5
 }
- 152:	08 95       	ret
+ 1c4:	08 95       	ret
 
-00000154 <tank_turn_left>:
+000001c6 <turn_left>:
 
-void tank_turn_left(uint8_t amount)
+//sväng vänster!
+void turn_left(uint8_t amount)
 {
-	OCR2A = amount;
- 154:	80 93 b3 00 	sts	0x00B3, r24
-	
-	
- 158:	08 95       	ret
+	LEFT_AMOUNT = amount;
+ 1c6:	80 93 b3 00 	sts	0x00B3, r24
+}
+ 1ca:	08 95       	ret
 
-0000015a <_exit>:
- 15a:	f8 94       	cli
+000001cc <turn_right>:
 
-0000015c <__stop_program>:
- 15c:	ff cf       	rjmp	.-2      	; 0x15c <__stop_program>
+//sväng höger!
+void turn_right(uint8_t amount)
+{
+	RIGHT_AMOUNT = amount;
+ 1cc:	80 93 b4 00 	sts	0x00B4, r24
+}
+ 1d0:	08 95       	ret
+
+000001d2 <tank_turn_left>:
+}
+
+//sväng vänster som en stridsvagn!
+void tank_turn_left(uint8_t amount_l, uint8_t amount_h)
+{
+	LEFT_AMOUNT = amount_l;
+ 1d2:	80 93 b3 00 	sts	0x00B3, r24
+	RIGHT_AMOUNT = amount_h;
+ 1d6:	60 93 b4 00 	sts	0x00B4, r22
+	
+	clearbit(PORT_DIR, LEFT_DIR);
+ 1da:	29 98       	cbi	0x05, 1	; 5
+	setbit(PORT_DIR, RIGHT_DIR);
+ 1dc:	28 9a       	sbi	0x05, 0	; 5
+}
+ 1de:	08 95       	ret
+
+000001e0 <tank_turn_right>:
+
+
+//sväng höger som en stridsvagn!
+void tank_turn_right(uint8_t amount)
+{
+	LEFT_AMOUNT = amount;
+ 1e0:	80 93 b3 00 	sts	0x00B3, r24
+	RIGHT_AMOUNT = amount;
+ 1e4:	80 93 b4 00 	sts	0x00B4, r24
+	
+	setbit(PORT_DIR, LEFT_DIR);
+ 1e8:	29 9a       	sbi	0x05, 1	; 5
+	clearbit(PORT_DIR, RIGHT_DIR);
+ 1ea:	28 98       	cbi	0x05, 0	; 5
+}
+ 1ec:	08 95       	ret
+
+000001ee <claw_out>:
+
+void claw_out()
+{
+	CLAW_AMOUNT = 0;
+ 1ee:	10 92 89 00 	sts	0x0089, r1
+ 1f2:	10 92 88 00 	sts	0x0088, r1
+}
+ 1f6:	08 95       	ret
+
+000001f8 <_exit>:
+ 1f8:	f8 94       	cli
+
+000001fa <__stop_program>:
+ 1fa:	ff cf       	rjmp	.-2      	; 0x1fa <__stop_program>
