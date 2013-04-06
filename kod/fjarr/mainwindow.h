@@ -2,6 +2,8 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QtWidgets/QPushButton>
+#include "qextserialport.h"
 
 namespace Ui {
 class MainWindow;
@@ -29,10 +31,22 @@ public:
     ~MainWindow();
     bool is_pressed[4];
     void updateKeyState();
+    void setDirection(unsigned);
 
 private:
+    QPushButton *arrow_keys[7];
+    unsigned current_direction;
     Ui::MainWindow *ui;
     KeyPressEater *eat;
+
+private slots:
+    void on_pushButton_2_clicked();
+    void on_pushButton_3_clicked();
+    void on_pushButton_4_clicked();
+    void on_pushButton_5_clicked();
+    void on_pushButton_6_clicked();
+    void on_pushButton_7_clicked();
+    void on_pushButton_10_clicked();
 };
 
 #endif // MAINWINDOW_H

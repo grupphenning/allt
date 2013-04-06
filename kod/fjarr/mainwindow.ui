@@ -32,6 +32,9 @@
     <property name="text">
      <string>Rotera Vänster</string>
     </property>
+    <property name="checkable">
+     <bool>true</bool>
+    </property>
    </widget>
    <widget class="QPushButton" name="pushButton_3">
     <property name="geometry">
@@ -47,6 +50,9 @@
     </property>
     <property name="text">
      <string>Framåt Vänster</string>
+    </property>
+    <property name="checkable">
+     <bool>true</bool>
     </property>
    </widget>
    <widget class="QPushButton" name="pushButton_8">
@@ -87,6 +93,9 @@
     <property name="text">
      <string>Kör Framåt</string>
     </property>
+    <property name="checkable">
+     <bool>true</bool>
+    </property>
    </widget>
    <widget class="QPushButton" name="pushButton_5">
     <property name="geometry">
@@ -99,6 +108,12 @@
     </property>
     <property name="text">
      <string>Stopp</string>
+    </property>
+    <property name="checkable">
+     <bool>true</bool>
+    </property>
+    <property name="checked">
+     <bool>false</bool>
     </property>
    </widget>
    <widget class="QPushButton" name="pushButton_6">
@@ -113,6 +128,9 @@
     <property name="text">
      <string>Framåt Höger</string>
     </property>
+    <property name="checkable">
+     <bool>true</bool>
+    </property>
    </widget>
    <widget class="QPushButton" name="pushButton_7">
     <property name="geometry">
@@ -126,6 +144,9 @@
     <property name="text">
      <string>Rotera Höger</string>
     </property>
+    <property name="checkable">
+     <bool>true</bool>
+    </property>
    </widget>
    <widget class="QPushButton" name="pushButton_10">
     <property name="geometry">
@@ -138,6 +159,9 @@
     </property>
     <property name="text">
      <string>Backa</string>
+    </property>
+    <property name="checkable">
+     <bool>true</bool>
     </property>
    </widget>
    <widget class="QLabel" name="label">
@@ -225,7 +249,7 @@
      <x>0</x>
      <y>0</y>
      <width>391</width>
-     <height>22</height>
+     <height>21</height>
     </rect>
    </property>
   </widget>
