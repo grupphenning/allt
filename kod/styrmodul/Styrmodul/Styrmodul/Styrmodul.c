@@ -5,8 +5,8 @@
  *  Author: klawi021
  */ 
 
-
-#include <avr/io.h>
+#define F_CPU 8000000UL
+ #include <avr/io.h>
 #include "bitmacros.h"
 #include <avr/delay.h>
 #include "display.h"
@@ -105,29 +105,33 @@ int main(void)
 	TIMSK2 = (1 << OCIE2A);
 	//fullt ös på OCR=0xff, inget på 0x00
 	
-	//drive_forwards(150);
-	tank_turn_left(180, 180);
-	
-	//drive_forwards(90);
-	//display_on();
-	
 	init_display();
-	update();
 	clear_screen();
 	update();
-	send_string("Henning!!!!!!!!!!!! ;) ;) ;) ;)");
+	send_string("Data:");
 	update();
+	//tank_turn_left(180,180);
+	init_spi();
+	uint8_t ch = 'a';
+	while(1)
+	{
+		_delay_ms(100);
+		send_character(ch++);	// Ä
+		update();
+	}
+}
+
+void init_spi()
+{
+	clearbit(DDRD, PIND3);		// Avbrott från kommunikationsenheten är input
+	clearbit(DDRD, PIND2);		// Samma för sensorenheten
+	setbit(PORTD, PORTD3);		// Slå på internt pull up-motstånd (1 är neutralt läge, 0 är avbrottsförfrågan!)
+	setbit(PORTD, PORTD2);		// Samma för sensor
 	
-    while(1)
-    {
-		
-		claw_out();
-		
-		_delay_ms(10000);
-		claw_in();
-		//stop_motors();
-		_delay_ms(10000);
-    }
+	setbit(DDRB, PINB3);	// Slave Select för kommunikationsenheten är output!
+	setbit(DDRB, PINB2);	// Schutzstaffel för sensor, också output
+	setbit(PORTB, PORTB3);	// 1 är neutral för komm.
+	setbit(PORTB, PORTB2);	// Samma för sensor
 }
 
 

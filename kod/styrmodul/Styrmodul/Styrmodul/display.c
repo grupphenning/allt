@@ -1,6 +1,6 @@
-#include "display.h"
 #include <avr/io.h>
 #include <util/delay.h>
+#include "display.h"
 
 void send_character_real(unsigned char character);
 unsigned char position = 0;
