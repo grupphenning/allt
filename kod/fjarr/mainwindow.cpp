@@ -29,7 +29,7 @@ MainWindow::~MainWindow()
 
 void MainWindow::updateKeyState()
 {
-    if(is_pressed[0]);
+    if(is_pressed[0]){};
 }
 
 KeyPressEater::KeyPressEater(MainWindow *w)
