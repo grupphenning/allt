@@ -154,8 +154,7 @@ void spi_init()
 	clearbit(PORTB, PORTB3);	//välj komm!
 	setbit(PORTB, PORTB2);		//välj INTE sensor!
 	
-	//clearbit(DDRB, PINB4);	//input SS
-	setbit(DDRB, PINB4);
+	clearbit(DDRB, PINB4);	//input SS
 	setbit(PORTB, PINB4);
 	
 	test = SPSR;
