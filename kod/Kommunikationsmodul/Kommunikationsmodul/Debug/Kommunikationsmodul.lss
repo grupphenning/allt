@@ -3,23 +3,25 @@ Kommunikationsmodul.elf:     file format elf32-avr
 
 Sections:
 Idx Name          Size      VMA       LMA       File off  Algn
-  0 .text         000000f4  00000000  00000000  00000054  2**1
+  0 .text         000000f0  00000000  00000000  00000054  2**1
                   CONTENTS, ALLOC, LOAD, READONLY, CODE
-  1 .stab         000006cc  00000000  00000000  00000148  2**2
+  1 .stab         000006cc  00000000  00000000  00000144  2**2
                   CONTENTS, READONLY, DEBUGGING
-  2 .stabstr      00000085  00000000  00000000  00000814  2**0
+  2 .stabstr      00000085  00000000  00000000  00000810  2**0
                   CONTENTS, READONLY, DEBUGGING
-  3 .debug_aranges 00000080  00000000  00000000  000008a0  2**3
+  3 .debug_aranges 00000080  00000000  00000000  00000898  2**3
                   CONTENTS, READONLY, DEBUGGING
-  4 .debug_info   0000044c  00000000  00000000  00000920  2**0
+  4 .debug_info   000003a9  00000000  00000000  00000918  2**0
                   CONTENTS, READONLY, DEBUGGING
-  5 .debug_abbrev 00000151  00000000  00000000  00000d6c  2**0
+  5 .debug_abbrev 00000105  00000000  00000000  00000cc1  2**0
                   CONTENTS, READONLY, DEBUGGING
-  6 .debug_line   0000035d  00000000  00000000  00000ebd  2**0
+  6 .debug_line   000002b9  00000000  00000000  00000dc6  2**0
                   CONTENTS, READONLY, DEBUGGING
-  7 .debug_frame  00000054  00000000  00000000  0000121c  2**2
+  7 .debug_frame  00000080  00000000  00000000  00001080  2**2
                   CONTENTS, READONLY, DEBUGGING
-  8 .debug_str    0000012b  00000000  00000000  00001270  2**0
+  8 .debug_str    000000fb  00000000  00000000  00001100  2**0
+                  CONTENTS, READONLY, DEBUGGING
+  9 .debug_loc    0000002f  00000000  00000000  000011fb  2**0
                   CONTENTS, READONLY, DEBUGGING
 
 Disassembly of section .text:
@@ -59,7 +61,7 @@ Disassembly of section .text:
   60:	10 e0       	ldi	r17, 0x00	; 0
   62:	a0 e6       	ldi	r26, 0x60	; 96
   64:	b0 e0       	ldi	r27, 0x00	; 0
-  66:	e4 ef       	ldi	r30, 0xF4	; 244
+  66:	e0 ef       	ldi	r30, 0xF0	; 240
   68:	f0 e0       	ldi	r31, 0x00	; 0
   6a:	02 c0       	rjmp	.+4      	; 0x70 <__do_copy_data+0x10>
   6c:	05 90       	lpm	r0, Z+
@@ -81,120 +83,134 @@ Disassembly of section .text:
   80:	a0 36       	cpi	r26, 0x60	; 96
   82:	b1 07       	cpc	r27, r17
   84:	e1 f7       	brne	.-8      	; 0x7e <.do_clear_bss_loop>
-  86:	0e 94 49 00 	call	0x92	; 0x92 <main>
-  8a:	0c 94 78 00 	jmp	0xf0	; 0xf0 <_exit>
+  86:	0e 94 58 00 	call	0xb0	; 0xb0 <main>
+  8a:	0c 94 76 00 	jmp	0xec	; 0xec <_exit>
 
 0000008e <__bad_interrupt>:
   8e:	0c 94 00 00 	jmp	0	; 0x0 <__vectors>
 
-00000092 <main>:
-int main(void)
-{
-//	init_spi();
-//  init_firefly();
-
-	DDRA = 0xff;
-  92:	8f ef       	ldi	r24, 0xFF	; 255
-  94:	8a bb       	out	0x1a, r24	; 26
-	DDRB = 0xff;
-  96:	87 bb       	out	0x17, r24	; 23
-	DDRC = 0xff;
-  98:	84 bb       	out	0x14, r24	; 20
-	DDRD = 0xff;
-  9a:	81 bb       	out	0x11, r24	; 17
-	PORTA = 0xff;
-  9c:	8b bb       	out	0x1b, r24	; 27
-	PORTB = 0xff;
-  9e:	88 bb       	out	0x18, r24	; 24
-	PORTC = 0xff;
-  a0:	85 bb       	out	0x15, r24	; 21
-	PORTD = 0xff;
-  a2:	82 bb       	out	0x12, r24	; 18
-	#else
-		//round up by default
-		__ticks_dc = (uint32_t)(ceil(fabs(__tmp)));
-	#endif
-
-	__builtin_avr_delay_cycles(__ticks_dc);
-  a4:	2f ef       	ldi	r18, 0xFF	; 255
-  a6:	39 e6       	ldi	r19, 0x69	; 105
-  a8:	48 e1       	ldi	r20, 0x18	; 24
-  aa:	21 50       	subi	r18, 0x01	; 1
-  ac:	30 40       	sbci	r19, 0x00	; 0
-  ae:	40 40       	sbci	r20, 0x00	; 0
-  b0:	e1 f7       	brne	.-8      	; 0xaa <main+0x18>
-  b2:	00 c0       	rjmp	.+0      	; 0xb4 <main+0x22>
-  b4:	00 00       	nop
-	
-    while(1)
-    {
-		_delay_ms(1000);
-		PORTA = 0x00;
-  b6:	1b ba       	out	0x1b, r1	; 27
-  b8:	2f ef       	ldi	r18, 0xFF	; 255
-  ba:	39 e6       	ldi	r19, 0x69	; 105
-  bc:	48 e1       	ldi	r20, 0x18	; 24
-  be:	21 50       	subi	r18, 0x01	; 1
-  c0:	30 40       	sbci	r19, 0x00	; 0
-  c2:	40 40       	sbci	r20, 0x00	; 0
-  c4:	e1 f7       	brne	.-8      	; 0xbe <main+0x2c>
-  c6:	00 c0       	rjmp	.+0      	; 0xc8 <main+0x36>
-  c8:	00 00       	nop
-		_delay_ms(1000);
-		PORTA = 0xff;
-  ca:	8b bb       	out	0x1b, r24	; 27
-  cc:	eb cf       	rjmp	.-42     	; 0xa4 <main+0x12>
-
-000000ce <init_spi>:
-    }
+00000092 <init_spi>:
 }
+
 
 void init_spi()
 {
+	SPCR = 0;
+  92:	1d b8       	out	0x0d, r1	; 13
 	clearbit(DDRB, PINB4);	// SS är input
-  ce:	bc 98       	cbi	0x17, 4	; 23
-	clearbit(DDRB, PORTB6);	// MOSI är input
-  d0:	be 98       	cbi	0x17, 6	; 23
-	setbit(DDRB, PINB5);	// MISO är output
-  d2:	bd 9a       	sbi	0x17, 5	; 23
+  94:	bc 98       	cbi	0x17, 4	; 23
+	clearbit(DDRB, PINB5);	// MOSI är input
+  96:	bd 98       	cbi	0x17, 5	; 23
+	setbit(DDRB, PINB6);	// MISO är output
+  98:	be 9a       	sbi	0x17, 6	; 23
+	clearbit(DDRB,PINB7);	//CLK är input 
+  9a:	bf 98       	cbi	0x17, 7	; 23
 	setbit(DDRA, PINA7);	// Avbrottsförfrågan är output
-  d4:	d7 9a       	sbi	0x1a, 7	; 26
+  9c:	d7 9a       	sbi	0x1a, 7	; 26
 	setbit(PORTA, PINA7);	// 1 = normal, 0 = avbrottsförfrågan
-  d6:	df 9a       	sbi	0x1b, 7	; 27
+  9e:	df 9a       	sbi	0x1b, 7	; 27
+	setbit(SPCR,SPE);		//Enables spi
+  a0:	6e 9a       	sbi	0x0d, 6	; 13
+	/*setbit(SPCR,SPIE);		//Enable interupt
+	setbit(SPCR,SPR0);		//FCK/16
+	//setbit(SPCR,SPR1);*/		
+	
 }
-  d8:	08 95       	ret
+  a2:	08 95       	ret
 
-000000da <init_firefly>:
+000000a4 <SPI_SlaveReceive>:
+#define USART_BAUDRATE 9600
+#define BAUD_PRESCALE (((F_CPU / (USART_BAUDRATE * 16UL))) - 1)
+
+uint8_t SPI_SlaveReceive()
+{
+	SPDR = 0x32;
+  a4:	82 e3       	ldi	r24, 0x32	; 50
+  a6:	8f b9       	out	0x0f, r24	; 15
+	/* Wait for reception complete */
+	while(!(SPSR & (1<<SPIF)));
+  a8:	77 9b       	sbis	0x0e, 7	; 14
+  aa:	fe cf       	rjmp	.-4      	; 0xa8 <SPI_SlaveReceive+0x4>
+	/* Return data register */
+	return SPDR;
+  ac:	8f b1       	in	r24, 0x0f	; 15
+}
+  ae:	08 95       	ret
+
+000000b0 <main>:
+int main(void)
+{
+	
+	sei(); //Enable global interupts
+  b0:	78 94       	sei
+
+	init_spi();
+  b2:	0e 94 49 00 	call	0x92	; 0x92 <init_spi>
+	
+
+	
+    while(1)
+    {
+		PORTA = 2;
+  b6:	c2 e0       	ldi	r28, 0x02	; 2
+  b8:	cb bb       	out	0x1b, r28	; 27
+		PORTA = SPI_SlaveReceive();
+  ba:	0e 94 52 00 	call	0xa4	; 0xa4 <SPI_SlaveReceive>
+  be:	8b bb       	out	0x1b, r24	; 27
+  c0:	fb cf       	rjmp	.-10     	; 0xb8 <main+0x8>
+
+000000c2 <init_firefly>:
+	
+}
 
 void init_firefly()
 {
 	setbit(PORTD, PIND1);
-  da:	91 9a       	sbi	0x12, 1	; 18
+  c2:	91 9a       	sbi	0x12, 1	; 18
 	UBRRL = BAUD_PRESCALE;			// De minst signifikanta bitarna av baud scale
-  dc:	83 e3       	ldi	r24, 0x33	; 51
-  de:	89 b9       	out	0x09, r24	; 9
+  c4:	83 e3       	ldi	r24, 0x33	; 51
+  c6:	89 b9       	out	0x09, r24	; 9
 	UBRRH = (BAUD_PRESCALE >> 8);	// De mest signifikanta bitarna
-  e0:	10 bc       	out	0x20, r1	; 32
+  c8:	10 bc       	out	0x20, r1	; 32
 	UCSRB = ((1<<TXEN) | (1<<RXEN)); //RXCIE för att enejjbla avbrott
-  e2:	88 e1       	ldi	r24, 0x18	; 24
-  e4:	8a b9       	out	0x0a, r24	; 10
+  ca:	88 e1       	ldi	r24, 0x18	; 24
+  cc:	8a b9       	out	0x0a, r24	; 10
 }
-  e6:	08 95       	ret
+  ce:	08 95       	ret
 
-000000e8 <serial_send_byte>:
+000000d0 <serial_send_byte>:
 
 void serial_send_byte(uint8_t val)
 {
 	while((UCSRA &(1<<UDRE)) == 0);	// Vänta på att föregående värde redan skickats
-  e8:	5d 9b       	sbis	0x0b, 5	; 11
-  ea:	fe cf       	rjmp	.-4      	; 0xe8 <serial_send_byte>
+  d0:	5d 9b       	sbis	0x0b, 5	; 11
+  d2:	fe cf       	rjmp	.-4      	; 0xd0 <serial_send_byte>
 	UDR = val;
-  ec:	8c b9       	out	0x0c, r24	; 12
+  d4:	8c b9       	out	0x0c, r24	; 12
+}
+  d6:	08 95       	ret
+
+000000d8 <SPI_STC_vect>:
+
+
+
+ISR(SPI_STC_vect)
+{
+  d8:	1f 92       	push	r1
+  da:	0f 92       	push	r0
+  dc:	0f b6       	in	r0, 0x3f	; 63
+  de:	0f 92       	push	r0
+  e0:	11 24       	eor	r1, r1
+	//PORTA=SPI_SlaveReceive();
 }	
-  ee:	08 95       	ret
+  e2:	0f 90       	pop	r0
+  e4:	0f be       	out	0x3f, r0	; 63
+  e6:	0f 90       	pop	r0
+  e8:	1f 90       	pop	r1
+  ea:	18 95       	reti
 
-000000f0 <_exit>:
-  f0:	f8 94       	cli
+000000ec <_exit>:
+  ec:	f8 94       	cli
 
-000000f2 <__stop_program>:
-  f2:	ff cf       	rjmp	.-2      	; 0xf2 <__stop_program>
+000000ee <__stop_program>:
+  ee:	ff cf       	rjmp	.-2      	; 0xee <__stop_program>
