@@ -400,13 +400,13 @@ LOAD c:/program files/atmel/atmel studio 6.0/extensions/atmel/avrgcc/3.4.0.65/av
 .debug_pubnames
  *(.debug_pubnames)
 
-.debug_info     0x00000000      0xe03
+.debug_info     0x00000000      0xe02
  *(.debug_info)
  .debug_info    0x00000000      0x6a2 display.o
- .debug_info    0x000006a2      0x4c7 Styrmodul.o
- .debug_info    0x00000b69       0xde c:/program files/atmel/atmel studio 6.0/extensions/atmel/avrgcc/3.4.0.65/avrtoolchain/bin/../lib/gcc/avr/4.6.2/avr51\libgcc.a(_exit.o)
- .debug_info    0x00000c47       0xde c:/program files/atmel/atmel studio 6.0/extensions/atmel/avrgcc/3.4.0.65/avrtoolchain/bin/../lib/gcc/avr/4.6.2/avr51\libgcc.a(_copy_data.o)
- .debug_info    0x00000d25       0xde c:/program files/atmel/atmel studio 6.0/extensions/atmel/avrgcc/3.4.0.65/avrtoolchain/bin/../lib/gcc/avr/4.6.2/avr51\libgcc.a(_clear_bss.o)
+ .debug_info    0x000006a2      0x4c6 Styrmodul.o
+ .debug_info    0x00000b68       0xde c:/program files/atmel/atmel studio 6.0/extensions/atmel/avrgcc/3.4.0.65/avrtoolchain/bin/../lib/gcc/avr/4.6.2/avr51\libgcc.a(_exit.o)
+ .debug_info    0x00000c46       0xde c:/program files/atmel/atmel studio 6.0/extensions/atmel/avrgcc/3.4.0.65/avrtoolchain/bin/../lib/gcc/avr/4.6.2/avr51\libgcc.a(_copy_data.o)
+ .debug_info    0x00000d24       0xde c:/program files/atmel/atmel studio 6.0/extensions/atmel/avrgcc/3.4.0.65/avrtoolchain/bin/../lib/gcc/avr/4.6.2/avr51\libgcc.a(_clear_bss.o)
  *(.gnu.linkonce.wi.*)
 
 .debug_abbrev   0x00000000      0x415
@@ -417,13 +417,13 @@ LOAD c:/program files/atmel/atmel studio 6.0/extensions/atmel/avrgcc/3.4.0.65/av
  .debug_abbrev  0x000003ed       0x14 c:/program files/atmel/atmel studio 6.0/extensions/atmel/avrgcc/3.4.0.65/avrtoolchain/bin/../lib/gcc/avr/4.6.2/avr51\libgcc.a(_copy_data.o)
  .debug_abbrev  0x00000401       0x14 c:/program files/atmel/atmel studio 6.0/extensions/atmel/avrgcc/3.4.0.65/avrtoolchain/bin/../lib/gcc/avr/4.6.2/avr51\libgcc.a(_clear_bss.o)
 
-.debug_line     0x00000000      0x681
+.debug_line     0x00000000      0x680
  *(.debug_line)
  .debug_line    0x00000000      0x27f display.o
- .debug_line    0x0000027f      0x259 Styrmodul.o
- .debug_line    0x000004d8       0x88 c:/program files/atmel/atmel studio 6.0/extensions/atmel/avrgcc/3.4.0.65/avrtoolchain/bin/../lib/gcc/avr/4.6.2/avr51\libgcc.a(_exit.o)
- .debug_line    0x00000560       0x93 c:/program files/atmel/atmel studio 6.0/extensions/atmel/avrgcc/3.4.0.65/avrtoolchain/bin/../lib/gcc/avr/4.6.2/avr51\libgcc.a(_copy_data.o)
- .debug_line    0x000005f3       0x8e c:/program files/atmel/atmel studio 6.0/extensions/atmel/avrgcc/3.4.0.65/avrtoolchain/bin/../lib/gcc/avr/4.6.2/avr51\libgcc.a(_clear_bss.o)
+ .debug_line    0x0000027f      0x258 Styrmodul.o
+ .debug_line    0x000004d7       0x88 c:/program files/atmel/atmel studio 6.0/extensions/atmel/avrgcc/3.4.0.65/avrtoolchain/bin/../lib/gcc/avr/4.6.2/avr51\libgcc.a(_exit.o)
+ .debug_line    0x0000055f       0x93 c:/program files/atmel/atmel studio 6.0/extensions/atmel/avrgcc/3.4.0.65/avrtoolchain/bin/../lib/gcc/avr/4.6.2/avr51\libgcc.a(_copy_data.o)
+ .debug_line    0x000005f2       0x8e c:/program files/atmel/atmel studio 6.0/extensions/atmel/avrgcc/3.4.0.65/avrtoolchain/bin/../lib/gcc/avr/4.6.2/avr51\libgcc.a(_clear_bss.o)
 
 .debug_frame    0x00000000      0x2a4
  *(.debug_frame)

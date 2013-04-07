@@ -15,17 +15,17 @@ Idx Name          Size      VMA       LMA       File off  Algn
                   CONTENTS, READONLY, DEBUGGING
   5 .debug_aranges 000000a0  00000000  00000000  00000e08  2**3
                   CONTENTS, READONLY, DEBUGGING
-  6 .debug_info   00000e03  00000000  00000000  00000ea8  2**0
+  6 .debug_info   00000e02  00000000  00000000  00000ea8  2**0
                   CONTENTS, READONLY, DEBUGGING
-  7 .debug_abbrev 00000415  00000000  00000000  00001cab  2**0
+  7 .debug_abbrev 00000415  00000000  00000000  00001caa  2**0
                   CONTENTS, READONLY, DEBUGGING
-  8 .debug_line   00000681  00000000  00000000  000020c0  2**0
+  8 .debug_line   00000680  00000000  00000000  000020bf  2**0
                   CONTENTS, READONLY, DEBUGGING
-  9 .debug_frame  000002a4  00000000  00000000  00002744  2**2
+  9 .debug_frame  000002a4  00000000  00000000  00002740  2**2
                   CONTENTS, READONLY, DEBUGGING
- 10 .debug_str    000002ea  00000000  00000000  000029e8  2**0
+ 10 .debug_str    000002ea  00000000  00000000  000029e4  2**0
                   CONTENTS, READONLY, DEBUGGING
- 11 .debug_loc    00000491  00000000  00000000  00002cd2  2**0
+ 11 .debug_loc    00000491  00000000  00000000  00002cce  2**0
                   CONTENTS, READONLY, DEBUGGING
 
 Disassembly of section .text:
@@ -770,9 +770,8 @@ void spi_init()
 	setbit(PORTB, PORTB2);		//välj INTE sensor!
  3ba:	2a 9a       	sbi	0x05, 2	; 5
 	
-	//clearbit(DDRB, PINB4);	//input SS
-	setbit(DDRB, PINB4);
- 3bc:	24 9a       	sbi	0x04, 4	; 4
+	clearbit(DDRB, PINB4);	//input SS
+ 3bc:	24 98       	cbi	0x04, 4	; 4
 	setbit(PORTB, PINB4);
  3be:	2c 9a       	sbi	0x05, 4	; 5
 	
