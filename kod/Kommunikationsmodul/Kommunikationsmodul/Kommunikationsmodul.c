@@ -3,20 +3,23 @@
  *
  * Created: 4/6/2013 2:39:23 PM
  *  Author: rasme879
- */ 
+ */
+//Måste definieras först!
+#define F_CPU 8000000UL
+
 #include <avr/io.h>
 #include <avr/delay.h>
 #include "bitmacros.h"
 
 // Our dear baud rate
-#define F_CPU 8000000UL
+//#define F_CPU 8000000UL
 #define USART_BAUDRATE 9600
 #define BAUD_PRESCALE (((F_CPU / (USART_BAUDRATE * 16UL))) - 1)
 
 int main(void)
 {
 //	init_spi();
-//    init_firefly();
+//  init_firefly();
 
 	DDRA = 0xff;
 	DDRB = 0xff;
@@ -26,8 +29,13 @@ int main(void)
 	PORTB = 0xff;
 	PORTC = 0xff;
 	PORTD = 0xff;
+	
     while(1)
     {
+		_delay_ms(1000);
+		PORTA = 0x00;
+		_delay_ms(1000);
+		PORTA = 0xff;
     }
 }
 

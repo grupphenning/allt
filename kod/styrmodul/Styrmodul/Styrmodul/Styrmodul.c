@@ -2,7 +2,7 @@
  * Styrmodul.c
  *
  * Created: 4/2/2013 2:20:45 PM
- *  Author: klawi021
+ *  Author: klawi021 et al
  */ 
 
 #define F_CPU 8000000UL
@@ -48,7 +48,6 @@ int main(void)
 	setbit(DDRC, PC7);
 	
 	
-	
 	//sätt riktning på motorer + gripklo
 	setbit(DDRB, PB0);
 	setbit(DDRB, PB1);
@@ -58,7 +57,6 @@ int main(void)
 	
 	
 	//pwm-styrning för gripklon, pin OC1A, register OCR1A
-	
 	TCCR1A = 0;
 	setbit(TCCR1A, COM1A1);
 	setbit(TCCR1A, WGM11);
@@ -108,16 +106,32 @@ int main(void)
 	init_display();
 	clear_screen();
 	update();
-	send_string("Data:");
+	send_string("Data: 1 2 3");
 	update();
 	//tank_turn_left(180,180);
 	init_spi();
 	uint8_t ch = 'a';
+	
+	//TEST!
+	setbit(DDRD, PD0);
+	
 	while(1)
 	{
-		_delay_ms(100);
-		send_character(ch++);	// Ä
+		_delay_ms(10);
+		send_character(ch++);	//Ä
 		update();
+		
+		/*
+		//claw_in();
+		//_delay_ms(5000);
+		claw_out();
+		setbit(PORTD, PD0);
+		_delay_ms(1000);
+		claw_in();
+		clearbit(PORTD, PD0);
+		_delay_ms(1000);
+		*/
+		
 	}
 }
 
@@ -132,6 +146,13 @@ void init_spi()
 	setbit(DDRB, PINB2);	// Schutzstaffel för sensor, också output
 	setbit(PORTB, PORTB3);	// 1 är neutral för komm.
 	setbit(PORTB, PORTB2);	// Samma för sensor
+	
+	//Sätt SPCR-registret, inställningar om master/slave, spi enable, data order, klockdelning
+	SPCR = 0;
+	setbit(SPCR, SPIE);
+	setbit();
+	
+	
 }
 
 

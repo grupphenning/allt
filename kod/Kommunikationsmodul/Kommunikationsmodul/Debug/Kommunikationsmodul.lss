@@ -3,23 +3,23 @@ Kommunikationsmodul.elf:     file format elf32-avr
 
 Sections:
 Idx Name          Size      VMA       LMA       File off  Algn
-  0 .text         000000cc  00000000  00000000  00000054  2**1
+  0 .text         000000f4  00000000  00000000  00000054  2**1
                   CONTENTS, ALLOC, LOAD, READONLY, CODE
-  1 .stab         000006cc  00000000  00000000  00000120  2**2
+  1 .stab         000006cc  00000000  00000000  00000148  2**2
                   CONTENTS, READONLY, DEBUGGING
-  2 .stabstr      00000085  00000000  00000000  000007ec  2**0
+  2 .stabstr      00000085  00000000  00000000  00000814  2**0
                   CONTENTS, READONLY, DEBUGGING
-  3 .debug_aranges 00000080  00000000  00000000  00000878  2**3
+  3 .debug_aranges 00000080  00000000  00000000  000008a0  2**3
                   CONTENTS, READONLY, DEBUGGING
-  4 .debug_info   00000364  00000000  00000000  000008f8  2**0
+  4 .debug_info   0000044c  00000000  00000000  00000920  2**0
                   CONTENTS, READONLY, DEBUGGING
-  5 .debug_abbrev 000000c1  00000000  00000000  00000c5c  2**0
+  5 .debug_abbrev 00000151  00000000  00000000  00000d6c  2**0
                   CONTENTS, READONLY, DEBUGGING
-  6 .debug_line   0000029e  00000000  00000000  00000d1d  2**0
+  6 .debug_line   0000035d  00000000  00000000  00000ebd  2**0
                   CONTENTS, READONLY, DEBUGGING
-  7 .debug_frame  00000054  00000000  00000000  00000fbc  2**2
+  7 .debug_frame  00000054  00000000  00000000  0000121c  2**2
                   CONTENTS, READONLY, DEBUGGING
-  8 .debug_str    000000d9  00000000  00000000  00001010  2**0
+  8 .debug_str    0000012b  00000000  00000000  00001270  2**0
                   CONTENTS, READONLY, DEBUGGING
 
 Disassembly of section .text:
@@ -59,7 +59,7 @@ Disassembly of section .text:
   60:	10 e0       	ldi	r17, 0x00	; 0
   62:	a0 e6       	ldi	r26, 0x60	; 96
   64:	b0 e0       	ldi	r27, 0x00	; 0
-  66:	ec ec       	ldi	r30, 0xCC	; 204
+  66:	e4 ef       	ldi	r30, 0xF4	; 244
   68:	f0 e0       	ldi	r31, 0x00	; 0
   6a:	02 c0       	rjmp	.+4      	; 0x70 <__do_copy_data+0x10>
   6c:	05 90       	lpm	r0, Z+
@@ -82,7 +82,7 @@ Disassembly of section .text:
   82:	b1 07       	cpc	r27, r17
   84:	e1 f7       	brne	.-8      	; 0x7e <.do_clear_bss_loop>
   86:	0e 94 49 00 	call	0x92	; 0x92 <main>
-  8a:	0c 94 64 00 	jmp	0xc8	; 0xc8 <_exit>
+  8a:	0c 94 78 00 	jmp	0xf0	; 0xf0 <_exit>
 
 0000008e <__bad_interrupt>:
   8e:	0c 94 00 00 	jmp	0	; 0x0 <__vectors>
@@ -91,7 +91,7 @@ Disassembly of section .text:
 int main(void)
 {
 //	init_spi();
-//    init_firefly();
+//  init_firefly();
 
 	DDRA = 0xff;
   92:	8f ef       	ldi	r24, 0xFF	; 255
@@ -110,58 +110,91 @@ int main(void)
   a0:	85 bb       	out	0x15, r24	; 21
 	PORTD = 0xff;
   a2:	82 bb       	out	0x12, r24	; 18
-  a4:	ff cf       	rjmp	.-2      	; 0xa4 <main+0x12>
+	#else
+		//round up by default
+		__ticks_dc = (uint32_t)(ceil(fabs(__tmp)));
+	#endif
 
-000000a6 <init_spi>:
+	__builtin_avr_delay_cycles(__ticks_dc);
+  a4:	2f ef       	ldi	r18, 0xFF	; 255
+  a6:	39 e6       	ldi	r19, 0x69	; 105
+  a8:	48 e1       	ldi	r20, 0x18	; 24
+  aa:	21 50       	subi	r18, 0x01	; 1
+  ac:	30 40       	sbci	r19, 0x00	; 0
+  ae:	40 40       	sbci	r20, 0x00	; 0
+  b0:	e1 f7       	brne	.-8      	; 0xaa <main+0x18>
+  b2:	00 c0       	rjmp	.+0      	; 0xb4 <main+0x22>
+  b4:	00 00       	nop
+	
+    while(1)
+    {
+		_delay_ms(1000);
+		PORTA = 0x00;
+  b6:	1b ba       	out	0x1b, r1	; 27
+  b8:	2f ef       	ldi	r18, 0xFF	; 255
+  ba:	39 e6       	ldi	r19, 0x69	; 105
+  bc:	48 e1       	ldi	r20, 0x18	; 24
+  be:	21 50       	subi	r18, 0x01	; 1
+  c0:	30 40       	sbci	r19, 0x00	; 0
+  c2:	40 40       	sbci	r20, 0x00	; 0
+  c4:	e1 f7       	brne	.-8      	; 0xbe <main+0x2c>
+  c6:	00 c0       	rjmp	.+0      	; 0xc8 <main+0x36>
+  c8:	00 00       	nop
+		_delay_ms(1000);
+		PORTA = 0xff;
+  ca:	8b bb       	out	0x1b, r24	; 27
+  cc:	eb cf       	rjmp	.-42     	; 0xa4 <main+0x12>
+
+000000ce <init_spi>:
     }
 }
 
 void init_spi()
 {
 	clearbit(DDRB, PINB4);	// SS är input
-  a6:	bc 98       	cbi	0x17, 4	; 23
+  ce:	bc 98       	cbi	0x17, 4	; 23
 	clearbit(DDRB, PORTB6);	// MOSI är input
-  a8:	be 98       	cbi	0x17, 6	; 23
+  d0:	be 98       	cbi	0x17, 6	; 23
 	setbit(DDRB, PINB5);	// MISO är output
-  aa:	bd 9a       	sbi	0x17, 5	; 23
+  d2:	bd 9a       	sbi	0x17, 5	; 23
 	setbit(DDRA, PINA7);	// Avbrottsförfrågan är output
-  ac:	d7 9a       	sbi	0x1a, 7	; 26
+  d4:	d7 9a       	sbi	0x1a, 7	; 26
 	setbit(PORTA, PINA7);	// 1 = normal, 0 = avbrottsförfrågan
-  ae:	df 9a       	sbi	0x1b, 7	; 27
+  d6:	df 9a       	sbi	0x1b, 7	; 27
 }
-  b0:	08 95       	ret
+  d8:	08 95       	ret
 
-000000b2 <init_firefly>:
+000000da <init_firefly>:
 
 void init_firefly()
 {
 	setbit(PORTD, PIND1);
-  b2:	91 9a       	sbi	0x12, 1	; 18
+  da:	91 9a       	sbi	0x12, 1	; 18
 	UBRRL = BAUD_PRESCALE;			// De minst signifikanta bitarna av baud scale
-  b4:	83 e3       	ldi	r24, 0x33	; 51
-  b6:	89 b9       	out	0x09, r24	; 9
+  dc:	83 e3       	ldi	r24, 0x33	; 51
+  de:	89 b9       	out	0x09, r24	; 9
 	UBRRH = (BAUD_PRESCALE >> 8);	// De mest signifikanta bitarna
-  b8:	10 bc       	out	0x20, r1	; 32
+  e0:	10 bc       	out	0x20, r1	; 32
 	UCSRB = ((1<<TXEN) | (1<<RXEN)); //RXCIE för att enejjbla avbrott
-  ba:	88 e1       	ldi	r24, 0x18	; 24
-  bc:	8a b9       	out	0x0a, r24	; 10
+  e2:	88 e1       	ldi	r24, 0x18	; 24
+  e4:	8a b9       	out	0x0a, r24	; 10
 }
-  be:	08 95       	ret
+  e6:	08 95       	ret
 
-000000c0 <serial_send_byte>:
+000000e8 <serial_send_byte>:
 
 void serial_send_byte(uint8_t val)
 {
 	while((UCSRA &(1<<UDRE)) == 0);	// Vänta på att föregående värde redan skickats
-  c0:	5d 9b       	sbis	0x0b, 5	; 11
-  c2:	fe cf       	rjmp	.-4      	; 0xc0 <serial_send_byte>
+  e8:	5d 9b       	sbis	0x0b, 5	; 11
+  ea:	fe cf       	rjmp	.-4      	; 0xe8 <serial_send_byte>
 	UDR = val;
-  c4:	8c b9       	out	0x0c, r24	; 12
+  ec:	8c b9       	out	0x0c, r24	; 12
 }	
-  c6:	08 95       	ret
+  ee:	08 95       	ret
 
-000000c8 <_exit>:
-  c8:	f8 94       	cli
+000000f0 <_exit>:
+  f0:	f8 94       	cli
 
-000000ca <__stop_program>:
-  ca:	ff cf       	rjmp	.-2      	; 0xca <__stop_program>
+000000f2 <__stop_program>:
+  f2:	ff cf       	rjmp	.-2      	; 0xf2 <__stop_program>
