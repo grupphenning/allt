@@ -33,10 +33,14 @@
 #define DISPLAY_ENABLE PC6
 
 
-
+uint8_t test;
 
 int main(void)
 {
+	spi_init();
+	
+	spi_send_byte(0xAA);
+	
 	//display ska ut
 	DDRA = 0xFF;
 	//DDRB = 0xFF;
@@ -106,20 +110,19 @@ int main(void)
 	init_display();
 	clear_screen();
 	update();
-	send_string("Data: 1 2 3");
+	send_string("Data: ");
 	update();
 	//tank_turn_left(180,180);
-	init_spi();
+	//init_spi();
 	uint8_t ch = 'a';
-	
-	//TEST!
-	setbit(DDRD, PD0);
 	
 	while(1)
 	{
-		_delay_ms(10);
+		_delay_ms(100);
 		send_character(ch++);	//Ä
 		update();
+		
+		spi_send_byte(0xAA);
 		
 		/*
 		//claw_in();
@@ -132,29 +135,52 @@ int main(void)
 		_delay_ms(1000);
 		*/
 		
+		tank_turn_left(200,200);
 	}
 }
 
-void init_spi()
+void spi_init()
 {
 	clearbit(DDRD, PIND3);		// Avbrott från kommunikationsenheten är input
 	clearbit(DDRD, PIND2);		// Samma för sensorenheten
 	setbit(PORTD, PORTD3);		// Slå på internt pull up-motstånd (1 är neutralt läge, 0 är avbrottsförfrågan!)
 	setbit(PORTD, PORTD2);		// Samma för sensor
 	
-	setbit(DDRB, PINB3);	// Slave Select för kommunikationsenheten är output!
-	setbit(DDRB, PINB2);	// Schutzstaffel för sensor, också output
-	setbit(PORTB, PORTB3);	// 1 är neutral för komm.
-	setbit(PORTB, PORTB2);	// Samma för sensor
+	setbit(DDRB, PINB3);	// Slave Select  (SS) för kommunikationsenheten är output!
+	setbit(DDRB, PINB2);	// Schutzstaffel (SS) för sensor, också output
+	setbit(DDRB, PINB5);	//MOSI output!
+	setbit(DDRB, PINB7);	//SCK output!
+	
+	clearbit(PORTB, PORTB3);	//välj komm!
+	setbit(PORTB, PORTB2);		//välj INTE sensor!
+	
+	//clearbit(DDRB, PINB4);	//input SS
+	setbit(DDRB, PINB4);
+	setbit(PORTB, PINB4);
+	
+	test = SPSR;
+	
+	//setbit(PORTB, PORTB3);	// 1 är neutral för komm.
+	//setbit(PORTB, PORTB2);	// Samma för sensor
 	
 	//Sätt SPCR-registret, inställningar om master/slave, spi enable, data order, klockdelning
 	SPCR = 0;
-	setbit(SPCR, SPIE);
-	setbit();
-	
-	
+	//setbit(SPCR, SPIE);
+	setbit(SPCR, SPE);
+	setbit(SPCR, MSTR);
+	setbit(SPCR, SPR0);
 }
 
+void spi_send_byte(uint8_t byte)
+{
+	SPDR = byte;
+	//SPDR = 0xaa;
+	/* Wait for transmission complete */
+	while(!(SPSR & (1 << SPIF)));
+	test = SPDR;
+	
+	PORTD = test;
+}
 
 void drive_forwards(uint8_t amount)
 {
