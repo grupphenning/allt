@@ -20,18 +20,24 @@
 
 uint8_t SPI_SlaveReceive()
 {
-	SPDR = 0x32;
+	//SPDR = 0x32;
 	/* Wait for reception complete */
+	setbit(PORTB, PB1);
+	
 	while(!(SPSR & (1<<SPIF)));
+	clearbit(PORTB, PB1);
 	/* Return data register */
 	return SPDR;
 }
 int main(void)
 {
+	PORTA = 0;
+	setbit(DDRB, PB1);
 	
-	sei(); //Enable global interupts
+	sei(); //Enable global interrupts
 
 	init_spi();
+	SPDR = 0x32;
 //  init_firefly();
 
 	/*DDRA = 0xff;
@@ -47,27 +53,29 @@ int main(void)
 	
     while(1)
     {
-		PORTA = 2;
+		//clearbit(PORTB, PB0);
+		//PORTA = 2;
+		//_delay_ms(100);
+		//setbit(SPCR, SPE);		//Enables spi
 		PORTA = SPI_SlaveReceive();
-		
-		
     }
 }
 
 
 void init_spi()
 {
-	SPCR = 0;
+	setbit(SPCR, SPE);		//Enables spi
+	//SPCR = 0;
 	clearbit(DDRB, PINB4);	// SS är input
 	clearbit(DDRB, PINB5);	// MOSI är input
 	setbit(DDRB, PINB6);	// MISO är output
-	clearbit(DDRB,PINB7);	//CLK är input 
+	clearbit(DDRB, PINB7);	//CLK är input
 	setbit(DDRA, PINA7);	// Avbrottsförfrågan är output
 	setbit(PORTA, PINA7);	// 1 = normal, 0 = avbrottsförfrågan
-	setbit(SPCR,SPE);		//Enables spi
-	/*setbit(SPCR,SPIE);		//Enable interupt
-	setbit(SPCR,SPR0);		//FCK/16
-	//setbit(SPCR,SPR1);*/		
+	//setbit(SPCR, SPE);		//Enables spi
+	//setbit(SPCR,SPIE);		//Enable interupt
+	//setbit(SPCR,SPR0);		//FCK/16
+	//setbit(SPCR,SPR1);		
 	
 }
 
