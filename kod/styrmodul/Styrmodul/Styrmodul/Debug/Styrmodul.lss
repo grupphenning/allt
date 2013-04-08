@@ -15,17 +15,17 @@ Idx Name          Size      VMA       LMA       File off  Algn
                   CONTENTS, READONLY, DEBUGGING
   5 .debug_aranges 000000a0  00000000  00000000  00000e08  2**3
                   CONTENTS, READONLY, DEBUGGING
-  6 .debug_info   00000e02  00000000  00000000  00000ea8  2**0
+  6 .debug_info   00000e01  00000000  00000000  00000ea8  2**0
                   CONTENTS, READONLY, DEBUGGING
-  7 .debug_abbrev 00000415  00000000  00000000  00001caa  2**0
+  7 .debug_abbrev 0000041e  00000000  00000000  00001ca9  2**0
                   CONTENTS, READONLY, DEBUGGING
-  8 .debug_line   00000680  00000000  00000000  000020bf  2**0
+  8 .debug_line   00000684  00000000  00000000  000020c7  2**0
                   CONTENTS, READONLY, DEBUGGING
-  9 .debug_frame  000002a4  00000000  00000000  00002740  2**2
+  9 .debug_frame  000002a4  00000000  00000000  0000274c  2**2
                   CONTENTS, READONLY, DEBUGGING
- 10 .debug_str    000002ea  00000000  00000000  000029e4  2**0
+ 10 .debug_str    000002ea  00000000  00000000  000029f0  2**0
                   CONTENTS, READONLY, DEBUGGING
- 11 .debug_loc    00000491  00000000  00000000  00002cce  2**0
+ 11 .debug_loc    00000491  00000000  00000000  00002cda  2**0
                   CONTENTS, READONLY, DEBUGGING
 
 Disassembly of section .text:
@@ -103,7 +103,7 @@ Disassembly of section .text:
   bc:	aa 34       	cpi	r26, 0x4A	; 74
   be:	b1 07       	cpc	r27, r17
   c0:	e1 f7       	brne	.-8      	; 0xba <.do_clear_bss_loop>
-  c2:	0e 94 2c 02 	call	0x458	; 0x458 <main>
+  c2:	0e 94 2f 02 	call	0x45e	; 0x45e <main>
   c6:	0c 94 f9 02 	jmp	0x5f2	; 0x5f2 <_exit>
 
 000000ca <__bad_interrupt>:
@@ -762,369 +762,373 @@ void spi_init()
  3b2:	22 9a       	sbi	0x04, 2	; 4
 	setbit(DDRB, PINB5);	//MOSI output!
  3b4:	25 9a       	sbi	0x04, 5	; 4
+	clearbit(DDRB, PINB6);	//MISO input!
+ 3b6:	26 98       	cbi	0x04, 6	; 4
 	setbit(DDRB, PINB7);	//SCK output!
- 3b6:	27 9a       	sbi	0x04, 7	; 4
+ 3b8:	27 9a       	sbi	0x04, 7	; 4
 	
-	clearbit(PORTB, PORTB3);	//välj komm!
- 3b8:	2b 98       	cbi	0x05, 3	; 5
-	setbit(PORTB, PORTB2);		//välj INTE sensor!
- 3ba:	2a 9a       	sbi	0x05, 2	; 5
+	setbit(PORTB, PORTB3);	// Ingen slav är vald 
+ 3ba:	2b 9a       	sbi	0x05, 3	; 5
+	setbit(PORTB, PORTB2);	
+ 3bc:	2a 9a       	sbi	0x05, 2	; 5
 	
-	clearbit(DDRB, PINB4);	//input SS
- 3bc:	24 98       	cbi	0x04, 4	; 4
+	clearbit(DDRB, PINB4);	//SS master input och hög
+ 3be:	24 98       	cbi	0x04, 4	; 4
 	setbit(PORTB, PINB4);
- 3be:	2c 9a       	sbi	0x05, 4	; 5
+ 3c0:	2c 9a       	sbi	0x05, 4	; 5
 	
 	test = SPSR;
- 3c0:	8d b5       	in	r24, 0x2d	; 45
- 3c2:	80 93 49 01 	sts	0x0149, r24
+ 3c2:	8d b5       	in	r24, 0x2d	; 45
+ 3c4:	80 93 49 01 	sts	0x0149, r24
 	
 	//setbit(PORTB, PORTB3);	// 1 är neutral för komm.
 	//setbit(PORTB, PORTB2);	// Samma för sensor
 	
 	//Sätt SPCR-registret, inställningar om master/slave, spi enable, data order, klockdelning
 	SPCR = 0;
- 3c6:	1c bc       	out	0x2c, r1	; 44
+ 3c8:	1c bc       	out	0x2c, r1	; 44
 	//setbit(SPCR, SPIE);
 	setbit(SPCR, SPE);
- 3c8:	8c b5       	in	r24, 0x2c	; 44
- 3ca:	80 64       	ori	r24, 0x40	; 64
- 3cc:	8c bd       	out	0x2c, r24	; 44
+ 3ca:	8c b5       	in	r24, 0x2c	; 44
+ 3cc:	80 64       	ori	r24, 0x40	; 64
+ 3ce:	8c bd       	out	0x2c, r24	; 44
 	setbit(SPCR, MSTR);
- 3ce:	8c b5       	in	r24, 0x2c	; 44
- 3d0:	80 61       	ori	r24, 0x10	; 16
- 3d2:	8c bd       	out	0x2c, r24	; 44
+ 3d0:	8c b5       	in	r24, 0x2c	; 44
+ 3d2:	80 61       	ori	r24, 0x10	; 16
+ 3d4:	8c bd       	out	0x2c, r24	; 44
 	setbit(SPCR, SPR0);
- 3d4:	8c b5       	in	r24, 0x2c	; 44
- 3d6:	81 60       	ori	r24, 0x01	; 1
- 3d8:	8c bd       	out	0x2c, r24	; 44
+ 3d6:	8c b5       	in	r24, 0x2c	; 44
+ 3d8:	81 60       	ori	r24, 0x01	; 1
+ 3da:	8c bd       	out	0x2c, r24	; 44
 }
- 3da:	08 95       	ret
+ 3dc:	08 95       	ret
 
-000003dc <spi_send_byte>:
+000003de <spi_send_byte>:
 
 void spi_send_byte(uint8_t byte)
 {
+	clearbit(PORTB, PORTB3); //Välj Komm-enheten 
+ 3de:	2b 98       	cbi	0x05, 3	; 5
 	SPDR = byte;
- 3dc:	8e bd       	out	0x2e, r24	; 46
+ 3e0:	8e bd       	out	0x2e, r24	; 46
+	
 	//SPDR = 0xaa;
 	/* Wait for transmission complete */
 	while(!(SPSR & (1 << SPIF)));
- 3de:	0d b4       	in	r0, 0x2d	; 45
- 3e0:	07 fe       	sbrs	r0, 7
- 3e2:	fd cf       	rjmp	.-6      	; 0x3de <spi_send_byte+0x2>
+ 3e2:	0d b4       	in	r0, 0x2d	; 45
+ 3e4:	07 fe       	sbrs	r0, 7
+ 3e6:	fd cf       	rjmp	.-6      	; 0x3e2 <spi_send_byte+0x4>
+	setbit(PORTB, PORTB3); //Sätt slave till sleepmode
+ 3e8:	2b 9a       	sbi	0x05, 3	; 5
 	test = SPDR;
- 3e4:	8e b5       	in	r24, 0x2e	; 46
- 3e6:	80 93 49 01 	sts	0x0149, r24
+ 3ea:	8e b5       	in	r24, 0x2e	; 46
+ 3ec:	80 93 49 01 	sts	0x0149, r24
 	
 	PORTD = test;
- 3ea:	8b b9       	out	0x0b, r24	; 11
+ 3f0:	8b b9       	out	0x0b, r24	; 11
 }
- 3ec:	08 95       	ret
+ 3f2:	08 95       	ret
 
-000003ee <tank_turn_left>:
+000003f4 <tank_turn_left>:
 }
 
 //sväng vänster som en stridsvagn!
 void tank_turn_left(uint8_t amount_l, uint8_t amount_h)
 {
 	LEFT_AMOUNT = amount_l;
- 3ee:	80 93 b3 00 	sts	0x00B3, r24
+ 3f4:	80 93 b3 00 	sts	0x00B3, r24
 	RIGHT_AMOUNT = amount_h;
- 3f2:	60 93 b4 00 	sts	0x00B4, r22
+ 3f8:	60 93 b4 00 	sts	0x00B4, r22
 	
 	clearbit(PORT_DIR, LEFT_DIR);
- 3f6:	29 98       	cbi	0x05, 1	; 5
+ 3fc:	29 98       	cbi	0x05, 1	; 5
 	setbit(PORT_DIR, RIGHT_DIR);
- 3f8:	28 9a       	sbi	0x05, 0	; 5
+ 3fe:	28 9a       	sbi	0x05, 0	; 5
 }
- 3fa:	08 95       	ret
+ 400:	08 95       	ret
 
-000003fc <display_set_two_lines>:
+00000402 <display_set_two_lines>:
 	clearbit(DISPLAY,DISPLAY_POWER);
 }
 
 void display_set_two_lines()
 {
 	DISPLAY = 0;
- 3fc:	12 b8       	out	0x02, r1	; 2
+ 402:	12 b8       	out	0x02, r1	; 2
 	setbit(DISPLAY,PA5);
- 3fe:	15 9a       	sbi	0x02, 5	; 2
+ 404:	15 9a       	sbi	0x02, 5	; 2
 	setbit(DISPLAY,PA4);
- 400:	14 9a       	sbi	0x02, 4	; 2
+ 406:	14 9a       	sbi	0x02, 4	; 2
 	setbit(DISPLAY,PA3);
- 402:	13 9a       	sbi	0x02, 3	; 2
+ 408:	13 9a       	sbi	0x02, 3	; 2
 	
 	
 	
 }
- 404:	08 95       	ret
+ 40a:	08 95       	ret
 
-00000406 <display_clear>:
+0000040c <display_clear>:
 
 
 void display_clear()
 {
 	DISPLAY = 0;
- 406:	12 b8       	out	0x02, r1	; 2
+ 40c:	12 b8       	out	0x02, r1	; 2
 	setbit(DISPLAY, PA0);
- 408:	10 9a       	sbi	0x02, 0	; 2
+ 40e:	10 9a       	sbi	0x02, 0	; 2
 }
- 40a:	08 95       	ret
+ 410:	08 95       	ret
 
-0000040c <display_home>:
+00000412 <display_home>:
 	_delay_ms(500);
 }
 
 void display_home()
 {
 	DISPLAY = 0;
- 40c:	12 b8       	out	0x02, r1	; 2
+ 412:	12 b8       	out	0x02, r1	; 2
 	setbit(DISPLAY,PA1);
- 40e:	11 9a       	sbi	0x02, 1	; 2
+ 414:	11 9a       	sbi	0x02, 1	; 2
 }
- 410:	08 95       	ret
+ 416:	08 95       	ret
 
-00000412 <display_write>:
+00000418 <display_write>:
 
 void display_write()
 {
 	setbit(PORTC, DISPLAY_RS);
- 412:	47 9a       	sbi	0x08, 7	; 8
+ 418:	47 9a       	sbi	0x08, 7	; 8
 	DISPLAY = 0b01001000;
- 414:	88 e4       	ldi	r24, 0x48	; 72
- 416:	82 b9       	out	0x02, r24	; 2
+ 41a:	88 e4       	ldi	r24, 0x48	; 72
+ 41c:	82 b9       	out	0x02, r24	; 2
 	
 }
- 418:	08 95       	ret
+ 41e:	08 95       	ret
 
-0000041a <display_enable>:
+00000420 <display_enable>:
 	setbit(DISPLAY, PA0);
 }
 
 void display_enable()
 {
 	setbit(PORTC,DISPLAY_ENABLE);
- 41a:	46 9a       	sbi	0x08, 6	; 8
- 41c:	8f ef       	ldi	r24, 0xFF	; 255
- 41e:	94 e3       	ldi	r25, 0x34	; 52
- 420:	ac e0       	ldi	r26, 0x0C	; 12
- 422:	81 50       	subi	r24, 0x01	; 1
- 424:	90 40       	sbci	r25, 0x00	; 0
- 426:	a0 40       	sbci	r26, 0x00	; 0
- 428:	e1 f7       	brne	.-8      	; 0x422 <display_enable+0x8>
- 42a:	00 c0       	rjmp	.+0      	; 0x42c <display_enable+0x12>
- 42c:	00 00       	nop
+ 420:	46 9a       	sbi	0x08, 6	; 8
+ 422:	8f ef       	ldi	r24, 0xFF	; 255
+ 424:	94 e3       	ldi	r25, 0x34	; 52
+ 426:	ac e0       	ldi	r26, 0x0C	; 12
+ 428:	81 50       	subi	r24, 0x01	; 1
+ 42a:	90 40       	sbci	r25, 0x00	; 0
+ 42c:	a0 40       	sbci	r26, 0x00	; 0
+ 42e:	e1 f7       	brne	.-8      	; 0x428 <display_enable+0x8>
+ 430:	00 c0       	rjmp	.+0      	; 0x432 <display_enable+0x12>
+ 432:	00 00       	nop
 	_delay_ms(500);
 	clearbit(PORTC,DISPLAY_ENABLE);
- 42e:	46 98       	cbi	0x08, 6	; 8
- 430:	8f ef       	ldi	r24, 0xFF	; 255
- 432:	94 e3       	ldi	r25, 0x34	; 52
- 434:	ac e0       	ldi	r26, 0x0C	; 12
- 436:	81 50       	subi	r24, 0x01	; 1
- 438:	90 40       	sbci	r25, 0x00	; 0
- 43a:	a0 40       	sbci	r26, 0x00	; 0
- 43c:	e1 f7       	brne	.-8      	; 0x436 <display_enable+0x1c>
- 43e:	00 c0       	rjmp	.+0      	; 0x440 <display_enable+0x26>
- 440:	00 00       	nop
+ 434:	46 98       	cbi	0x08, 6	; 8
+ 436:	8f ef       	ldi	r24, 0xFF	; 255
+ 438:	94 e3       	ldi	r25, 0x34	; 52
+ 43a:	ac e0       	ldi	r26, 0x0C	; 12
+ 43c:	81 50       	subi	r24, 0x01	; 1
+ 43e:	90 40       	sbci	r25, 0x00	; 0
+ 440:	a0 40       	sbci	r26, 0x00	; 0
+ 442:	e1 f7       	brne	.-8      	; 0x43c <display_enable+0x1c>
+ 444:	00 c0       	rjmp	.+0      	; 0x446 <display_enable+0x26>
+ 446:	00 00       	nop
 	_delay_ms(500);
 	setbit(PORTC,DISPLAY_ENABLE);
- 442:	46 9a       	sbi	0x08, 6	; 8
- 444:	8f ef       	ldi	r24, 0xFF	; 255
- 446:	94 e3       	ldi	r25, 0x34	; 52
- 448:	ac e0       	ldi	r26, 0x0C	; 12
- 44a:	81 50       	subi	r24, 0x01	; 1
- 44c:	90 40       	sbci	r25, 0x00	; 0
- 44e:	a0 40       	sbci	r26, 0x00	; 0
- 450:	e1 f7       	brne	.-8      	; 0x44a <display_enable+0x30>
- 452:	00 c0       	rjmp	.+0      	; 0x454 <display_enable+0x3a>
- 454:	00 00       	nop
+ 448:	46 9a       	sbi	0x08, 6	; 8
+ 44a:	8f ef       	ldi	r24, 0xFF	; 255
+ 44c:	94 e3       	ldi	r25, 0x34	; 52
+ 44e:	ac e0       	ldi	r26, 0x0C	; 12
+ 450:	81 50       	subi	r24, 0x01	; 1
+ 452:	90 40       	sbci	r25, 0x00	; 0
+ 454:	a0 40       	sbci	r26, 0x00	; 0
+ 456:	e1 f7       	brne	.-8      	; 0x450 <display_enable+0x30>
+ 458:	00 c0       	rjmp	.+0      	; 0x45a <display_enable+0x3a>
+ 45a:	00 00       	nop
 	_delay_ms(500);
 }
- 456:	08 95       	ret
+ 45c:	08 95       	ret
 
-00000458 <main>:
+0000045e <main>:
 
 uint8_t test;
 
 int main(void)
 {
 	spi_init();
- 458:	0e 94 d4 01 	call	0x3a8	; 0x3a8 <spi_init>
+ 45e:	0e 94 d4 01 	call	0x3a8	; 0x3a8 <spi_init>
 	
 	spi_send_byte(0xAA);
- 45c:	ce ee       	ldi	r28, 0xEE	; 238
- 45e:	d1 e0       	ldi	r29, 0x01	; 1
- 460:	8a ea       	ldi	r24, 0xAA	; 170
- 462:	90 e0       	ldi	r25, 0x00	; 0
- 464:	fe 01       	movw	r30, r28
- 466:	09 95       	icall
+ 462:	cf ee       	ldi	r28, 0xEF	; 239
+ 464:	d1 e0       	ldi	r29, 0x01	; 1
+ 466:	8a ea       	ldi	r24, 0xAA	; 170
+ 468:	90 e0       	ldi	r25, 0x00	; 0
+ 46a:	fe 01       	movw	r30, r28
+ 46c:	09 95       	icall
 	
 	//display ska ut
 	DDRA = 0xFF;
- 468:	8f ef       	ldi	r24, 0xFF	; 255
- 46a:	81 b9       	out	0x01, r24	; 1
+ 46e:	8f ef       	ldi	r24, 0xFF	; 255
+ 470:	81 b9       	out	0x01, r24	; 1
 	//DDRB = 0xFF;
 	//DDRC = 0xFF;
 	//DDRD = 0xFF;
 	
 	//sätt riktning på displaystyrpinnar!
 	setbit(DDRC, PC6);
- 46c:	3e 9a       	sbi	0x07, 6	; 7
+ 472:	3e 9a       	sbi	0x07, 6	; 7
 	setbit(DDRC, PC7);
- 46e:	3f 9a       	sbi	0x07, 7	; 7
+ 474:	3f 9a       	sbi	0x07, 7	; 7
 	
 	
 	//sätt riktning på motorer + gripklo
 	setbit(DDRB, PB0);
- 470:	20 9a       	sbi	0x04, 0	; 4
+ 476:	20 9a       	sbi	0x04, 0	; 4
 	setbit(DDRB, PB1);
- 472:	21 9a       	sbi	0x04, 1	; 4
+ 478:	21 9a       	sbi	0x04, 1	; 4
 	setbit(DDRD, PD7);
- 474:	57 9a       	sbi	0x0a, 7	; 10
+ 47a:	57 9a       	sbi	0x0a, 7	; 10
 	setbit(DDRD, PD6);
- 476:	56 9a       	sbi	0x0a, 6	; 10
+ 47c:	56 9a       	sbi	0x0a, 6	; 10
 	setbit(DDRD, PD5);
- 478:	55 9a       	sbi	0x0a, 5	; 10
+ 47e:	55 9a       	sbi	0x0a, 5	; 10
 	
 	
 	//pwm-styrning för gripklon, pin OC1A, register OCR1A
 	TCCR1A = 0;
- 47a:	e0 e8       	ldi	r30, 0x80	; 128
- 47c:	f0 e0       	ldi	r31, 0x00	; 0
- 47e:	10 82       	st	Z, r1
+ 480:	e0 e8       	ldi	r30, 0x80	; 128
+ 482:	f0 e0       	ldi	r31, 0x00	; 0
+ 484:	10 82       	st	Z, r1
 	setbit(TCCR1A, COM1A1);
- 480:	80 81       	ld	r24, Z
- 482:	80 68       	ori	r24, 0x80	; 128
- 484:	80 83       	st	Z, r24
-	setbit(TCCR1A, WGM11);
  486:	80 81       	ld	r24, Z
- 488:	82 60       	ori	r24, 0x02	; 2
+ 488:	80 68       	ori	r24, 0x80	; 128
  48a:	80 83       	st	Z, r24
+	setbit(TCCR1A, WGM11);
+ 48c:	80 81       	ld	r24, Z
+ 48e:	82 60       	ori	r24, 0x02	; 2
+ 490:	80 83       	st	Z, r24
 	
 	TCCR1B = 0;
- 48c:	e1 e8       	ldi	r30, 0x81	; 129
- 48e:	f0 e0       	ldi	r31, 0x00	; 0
- 490:	10 82       	st	Z, r1
+ 492:	e1 e8       	ldi	r30, 0x81	; 129
+ 494:	f0 e0       	ldi	r31, 0x00	; 0
+ 496:	10 82       	st	Z, r1
 	setbit(TCCR1B, WGM11);
- 492:	80 81       	ld	r24, Z
- 494:	82 60       	ori	r24, 0x02	; 2
- 496:	80 83       	st	Z, r24
-	setbit(TCCR1B, WGM12);
  498:	80 81       	ld	r24, Z
- 49a:	88 60       	ori	r24, 0x08	; 8
+ 49a:	82 60       	ori	r24, 0x02	; 2
  49c:	80 83       	st	Z, r24
-	setbit(TCCR1B, WGM13);
+	setbit(TCCR1B, WGM12);
  49e:	80 81       	ld	r24, Z
- 4a0:	80 61       	ori	r24, 0x10	; 16
+ 4a0:	88 60       	ori	r24, 0x08	; 8
  4a2:	80 83       	st	Z, r24
+	setbit(TCCR1B, WGM13);
+ 4a4:	80 81       	ld	r24, Z
+ 4a6:	80 61       	ori	r24, 0x10	; 16
+ 4a8:	80 83       	st	Z, r24
 	
 	
 	//sätt klockan, f = fclk/1024
 	//NEJ! Sätt f = fclk/256
 	setbit(TCCR1B, CS10);
- 4a4:	80 81       	ld	r24, Z
- 4a6:	81 60       	ori	r24, 0x01	; 1
- 4a8:	80 83       	st	Z, r24
-	setbit(TCCR1B, CS11);
  4aa:	80 81       	ld	r24, Z
- 4ac:	82 60       	ori	r24, 0x02	; 2
+ 4ac:	81 60       	ori	r24, 0x01	; 1
  4ae:	80 83       	st	Z, r24
+	setbit(TCCR1B, CS11);
+ 4b0:	80 81       	ld	r24, Z
+ 4b2:	82 60       	ori	r24, 0x02	; 2
+ 4b4:	80 83       	st	Z, r24
 	//setbit(TCCR1B, CS12);
 	
 	
 	//TCCR1A = (1 << COM1A1) | (1 << WGM11);
 	//TCCR1B = (1 << WGM11) | (1 << WGM13) | (1 << WGM12) | (1 << CS12) | (1 << CS10);
 	TIMSK1 = (1 << OCIE1A);  // Enable Interrupt TimerCounter1 Compare Match A (TIMER1_COMPA_vect)
- 4b0:	22 e0       	ldi	r18, 0x02	; 2
- 4b2:	20 93 6f 00 	sts	0x006F, r18
+ 4b6:	22 e0       	ldi	r18, 0x02	; 2
+ 4b8:	20 93 6f 00 	sts	0x006F, r18
 	//ICR1 = 390;
 	//ICR1 = 625;
 	//ICR1 = 313;
 	ICR1 = 2500;
- 4b6:	84 ec       	ldi	r24, 0xC4	; 196
- 4b8:	99 e0       	ldi	r25, 0x09	; 9
- 4ba:	90 93 87 00 	sts	0x0087, r25
- 4be:	80 93 86 00 	sts	0x0086, r24
+ 4bc:	84 ec       	ldi	r24, 0xC4	; 196
+ 4be:	99 e0       	ldi	r25, 0x09	; 9
+ 4c0:	90 93 87 00 	sts	0x0087, r25
+ 4c4:	80 93 86 00 	sts	0x0086, r24
 	//sätt OCR1A också!
 	OCR1A = 300;
- 4c2:	8c e2       	ldi	r24, 0x2C	; 44
- 4c4:	91 e0       	ldi	r25, 0x01	; 1
- 4c6:	90 93 89 00 	sts	0x0089, r25
- 4ca:	80 93 88 00 	sts	0x0088, r24
+ 4c8:	8c e2       	ldi	r24, 0x2C	; 44
+ 4ca:	91 e0       	ldi	r25, 0x01	; 1
+ 4cc:	90 93 89 00 	sts	0x0089, r25
+ 4d0:	80 93 88 00 	sts	0x0088, r24
 	
 	//pwm-styrning för motorerna, pinne OC2A, register OCR2A för vänster, pinne OC2B, register OCR2B för höger.
 	//PB1 DIR höger, PB0 vänster
 	TCCR2A=0;
- 4ce:	e0 eb       	ldi	r30, 0xB0	; 176
- 4d0:	f0 e0       	ldi	r31, 0x00	; 0
- 4d2:	10 82       	st	Z, r1
+ 4d4:	e0 eb       	ldi	r30, 0xB0	; 176
+ 4d6:	f0 e0       	ldi	r31, 0x00	; 0
+ 4d8:	10 82       	st	Z, r1
 	setbit(TCCR2A, COM2A1);
- 4d4:	80 81       	ld	r24, Z
- 4d6:	80 68       	ori	r24, 0x80	; 128
- 4d8:	80 83       	st	Z, r24
-	setbit(TCCR2A, COM2B1);
  4da:	80 81       	ld	r24, Z
- 4dc:	80 62       	ori	r24, 0x20	; 32
+ 4dc:	80 68       	ori	r24, 0x80	; 128
  4de:	80 83       	st	Z, r24
-	setbit(TCCR2A, WGM20);
+	setbit(TCCR2A, COM2B1);
  4e0:	80 81       	ld	r24, Z
- 4e2:	81 60       	ori	r24, 0x01	; 1
+ 4e2:	80 62       	ori	r24, 0x20	; 32
  4e4:	80 83       	st	Z, r24
-	setbit(TCCR2A, WGM21);
+	setbit(TCCR2A, WGM20);
  4e6:	80 81       	ld	r24, Z
- 4e8:	82 60       	ori	r24, 0x02	; 2
+ 4e8:	81 60       	ori	r24, 0x01	; 1
  4ea:	80 83       	st	Z, r24
+	setbit(TCCR2A, WGM21);
+ 4ec:	80 81       	ld	r24, Z
+ 4ee:	82 60       	ori	r24, 0x02	; 2
+ 4f0:	80 83       	st	Z, r24
 	OCR2A = 0;
- 4ec:	10 92 b3 00 	sts	0x00B3, r1
+ 4f2:	10 92 b3 00 	sts	0x00B3, r1
 	OCR2B = 0;
- 4f0:	10 92 b4 00 	sts	0x00B4, r1
+ 4f6:	10 92 b4 00 	sts	0x00B4, r1
 	
 	//TCCR2A = (1 << COM2A1) | (1 << COM2B1) | (1 << WGM21) | (1 << WGM20);
 	
 	//sätter på pwm!
 	TCCR2B=0;
- 4f4:	e1 eb       	ldi	r30, 0xB1	; 177
- 4f6:	f0 e0       	ldi	r31, 0x00	; 0
- 4f8:	10 82       	st	Z, r1
+ 4fa:	e1 eb       	ldi	r30, 0xB1	; 177
+ 4fc:	f0 e0       	ldi	r31, 0x00	; 0
+ 4fe:	10 82       	st	Z, r1
 	setbit(TCCR2B, CS20);
- 4fa:	80 81       	ld	r24, Z
- 4fc:	81 60       	ori	r24, 0x01	; 1
- 4fe:	80 83       	st	Z, r24
+ 500:	80 81       	ld	r24, Z
+ 502:	81 60       	ori	r24, 0x01	; 1
+ 504:	80 83       	st	Z, r24
 	//TCCR2B = (1 << CS20);
 	TIMSK2 = (1 << OCIE2A);
- 500:	20 93 70 00 	sts	0x0070, r18
+ 506:	20 93 70 00 	sts	0x0070, r18
 	//fullt ös på OCR=0xff, inget på 0x00
 	
 	init_display();
- 504:	0e 94 a5 01 	call	0x34a	; 0x34a <init_display>
+ 50a:	0e 94 a5 01 	call	0x34a	; 0x34a <init_display>
 	clear_screen();
- 508:	0e 94 af 00 	call	0x15e	; 0x15e <clear_screen>
+ 50e:	0e 94 af 00 	call	0x15e	; 0x15e <clear_screen>
 	update();
- 50c:	0e 94 d8 00 	call	0x1b0	; 0x1b0 <update>
+ 512:	0e 94 d8 00 	call	0x1b0	; 0x1b0 <update>
 	send_string("Data: ");
- 510:	80 e2       	ldi	r24, 0x20	; 32
- 512:	91 e0       	ldi	r25, 0x01	; 1
- 514:	0e 94 a0 00 	call	0x140	; 0x140 <send_string>
+ 516:	80 e2       	ldi	r24, 0x20	; 32
+ 518:	91 e0       	ldi	r25, 0x01	; 1
+ 51a:	0e 94 a0 00 	call	0x140	; 0x140 <send_string>
 	update();
- 518:	0e 94 d8 00 	call	0x1b0	; 0x1b0 <update>
+ 51e:	0e 94 d8 00 	call	0x1b0	; 0x1b0 <update>
 	//tank_turn_left(180,180);
 	//init_spi();
 	uint8_t ch = 'a';
- 51c:	81 e6       	ldi	r24, 0x61	; 97
- 51e:	2f ef       	ldi	r18, 0xFF	; 255
- 520:	30 e7       	ldi	r19, 0x70	; 112
- 522:	42 e0       	ldi	r20, 0x02	; 2
- 524:	21 50       	subi	r18, 0x01	; 1
- 526:	30 40       	sbci	r19, 0x00	; 0
- 528:	40 40       	sbci	r20, 0x00	; 0
- 52a:	e1 f7       	brne	.-8      	; 0x524 <main+0xcc>
- 52c:	00 c0       	rjmp	.+0      	; 0x52e <main+0xd6>
+ 522:	81 e6       	ldi	r24, 0x61	; 97
+ 524:	ef ec       	ldi	r30, 0xCF	; 207
+ 526:	f7 e0       	ldi	r31, 0x07	; 7
+ 528:	31 97       	sbiw	r30, 0x01	; 1
+ 52a:	f1 f7       	brne	.-4      	; 0x528 <main+0xca>
+ 52c:	00 c0       	rjmp	.+0      	; 0x52e <main+0xd0>
  52e:	00 00       	nop
 	
 	while(1)
 	{
-		_delay_ms(100);
+		_delay_ms(1);
 		send_character(ch++);	//Ä
  530:	18 2f       	mov	r17, r24
  532:	1f 5f       	subi	r17, 0xFF	; 255
@@ -1132,8 +1136,8 @@ int main(void)
 		update();
  538:	0e 94 d8 00 	call	0x1b0	; 0x1b0 <update>
 		
-		spi_send_byte(0xAA);
- 53c:	8a ea       	ldi	r24, 0xAA	; 170
+		spi_send_byte(0xD2); 
+ 53c:	82 ed       	ldi	r24, 0xD2	; 210
  53e:	90 e0       	ldi	r25, 0x00	; 0
  540:	fe 01       	movw	r30, r28
  542:	09 95       	icall
@@ -1147,15 +1151,15 @@ int main(void)
  546:	90 e0       	ldi	r25, 0x00	; 0
  548:	68 ec       	ldi	r22, 0xC8	; 200
  54a:	70 e0       	ldi	r23, 0x00	; 0
- 54c:	0e 94 f7 01 	call	0x3ee	; 0x3ee <tank_turn_left>
+ 54c:	0e 94 fa 01 	call	0x3f4	; 0x3f4 <tank_turn_left>
 	uint8_t ch = 'a';
 	
 	while(1)
 	{
-		_delay_ms(100);
+		_delay_ms(1);
 		send_character(ch++);	//Ä
  550:	81 2f       	mov	r24, r17
- 552:	e5 cf       	rjmp	.-54     	; 0x51e <main+0xc6>
+ 552:	e8 cf       	rjmp	.-48     	; 0x524 <main+0xc6>
 
 00000554 <drive_forwards>:
 	PORTD = test;
@@ -1287,28 +1291,28 @@ void display_on()
 	setbit(DISPLAY,PA3);
  5be:	13 9a       	sbi	0x02, 3	; 2
 	display_enable();
- 5c0:	cd e0       	ldi	r28, 0x0D	; 13
+ 5c0:	c0 e1       	ldi	r28, 0x10	; 16
  5c2:	d2 e0       	ldi	r29, 0x02	; 2
  5c4:	fe 01       	movw	r30, r28
  5c6:	09 95       	icall
 	display_set_two_lines();
- 5c8:	0e 94 fe 01 	call	0x3fc	; 0x3fc <display_set_two_lines>
+ 5c8:	0e 94 01 02 	call	0x402	; 0x402 <display_set_two_lines>
 	display_enable();
  5cc:	fe 01       	movw	r30, r28
  5ce:	09 95       	icall
 	display_home();
- 5d0:	0e 94 06 02 	call	0x40c	; 0x40c <display_home>
+ 5d0:	0e 94 09 02 	call	0x412	; 0x412 <display_home>
 	display_enable();
  5d4:	fe 01       	movw	r30, r28
  5d6:	09 95       	icall
 	display_clear();
- 5d8:	0e 94 03 02 	call	0x406	; 0x406 <display_clear>
+ 5d8:	0e 94 06 02 	call	0x40c	; 0x40c <display_clear>
 	display_enable();
  5dc:	fe 01       	movw	r30, r28
  5de:	09 95       	icall
 	
 	display_write();
- 5e0:	0e 94 09 02 	call	0x412	; 0x412 <display_write>
+ 5e0:	0e 94 0c 02 	call	0x418	; 0x418 <display_write>
 	display_enable();
  5e4:	fe 01       	movw	r30, r28
  5e6:	09 95       	icall

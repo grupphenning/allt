@@ -118,11 +118,11 @@ int main(void)
 	
 	while(1)
 	{
-		_delay_ms(100);
+		_delay_ms(1);
 		send_character(ch++);	//Ä
 		update();
 		
-		spi_send_byte(0xAA);
+		spi_send_byte(0xD2); 
 		
 		/*
 		//claw_in();
@@ -149,12 +149,13 @@ void spi_init()
 	setbit(DDRB, PINB3);	// Slave Select  (SS) för kommunikationsenheten är output!
 	setbit(DDRB, PINB2);	// Schutzstaffel (SS) för sensor, också output
 	setbit(DDRB, PINB5);	//MOSI output!
+	clearbit(DDRB, PINB6);	//MISO input!
 	setbit(DDRB, PINB7);	//SCK output!
 	
-	clearbit(PORTB, PORTB3);	//välj komm!
-	setbit(PORTB, PORTB2);		//välj INTE sensor!
+	setbit(PORTB, PORTB3);	// Ingen slav är vald 
+	setbit(PORTB, PORTB2);	
 	
-	clearbit(DDRB, PINB4);	//input SS
+	clearbit(DDRB, PINB4);	//SS master input och hög
 	setbit(PORTB, PINB4);
 	
 	test = SPSR;
@@ -172,10 +173,13 @@ void spi_init()
 
 void spi_send_byte(uint8_t byte)
 {
+	clearbit(PORTB, PORTB3); //Välj Komm-enheten 
 	SPDR = byte;
+	
 	//SPDR = 0xaa;
 	/* Wait for transmission complete */
 	while(!(SPSR & (1 << SPIF)));
+	setbit(PORTB, PORTB3); //Sätt slave till sleepmode
 	test = SPDR;
 	
 	PORTD = test;
