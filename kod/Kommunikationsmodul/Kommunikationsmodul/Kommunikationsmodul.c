@@ -20,19 +20,28 @@
 
 uint8_t SPI_SlaveReceive()
 {
-	SPDR = 0x32;
+	//SPDR = 0x32;
 	/* Wait for reception complete */
+	setbit(PORTB, PB1);
+	
 	while(!(SPSR & (1<<SPIF)));
+	clearbit(PORTB, PB1);
 	/* Return data register */
 	return SPDR;
 }
+unsigned char USART_Recieve(void);
+void USART_Init(unsigned int baud);
+void USART_Transmit(unsigned char data);
 int main(void)
 {
+	PORTA = 0;
+	setbit(DDRB, PB1);
 	
-	sei(); //Enable global interupts
+	sei(); //Enable global interrupts
 
 	init_spi();
-//  init_firefly();
+	SPDR = 0x32;
+    init_firefly();
 
 	/*DDRA = 0xff;
 	DDRB = 0xff;
@@ -42,32 +51,36 @@ int main(void)
 	PORTB = 0xff;*/
 	//PORTC = 0xff;
 	//PORTD = 0xff;
-	
+	USART_Init(9600);
 
 	
     while(1)
     {
-		PORTA = 2;
+		USART_Transmit('a');
+		//USART_Recieve();
+		//clearbit(PORTB, PB0);
+		//PORTA = 2;
+		//_delay_ms(100);
+		//setbit(SPCR, SPE);		//Enables spi
 		PORTA = SPI_SlaveReceive();
-		
-		
     }
 }
 
 
 void init_spi()
 {
-	SPCR = 0;
+	setbit(SPCR, SPE);		//Enables spi
+	//SPCR = 0;
 	clearbit(DDRB, PINB4);	// SS är input
 	clearbit(DDRB, PINB5);	// MOSI är input
 	setbit(DDRB, PINB6);	// MISO är output
-	clearbit(DDRB,PINB7);	//CLK är input 
+	clearbit(DDRB, PINB7);	//CLK är input
 	setbit(DDRA, PINA7);	// Avbrottsförfrågan är output
 	setbit(PORTA, PINA7);	// 1 = normal, 0 = avbrottsförfrågan
-	setbit(SPCR,SPE);		//Enables spi
-	/*setbit(SPCR,SPIE);		//Enable interupt
-	setbit(SPCR,SPR0);		//FCK/16
-	//setbit(SPCR,SPR1);*/		
+	//setbit(SPCR, SPE);		//Enables spi
+	//setbit(SPCR,SPIE);		//Enable interupt
+	//setbit(SPCR,SPR0);		//FCK/16
+	//setbit(SPCR,SPR1);		
 	
 }
 
@@ -85,7 +98,36 @@ void serial_send_byte(uint8_t val)
 	UDR = val;
 }
 
+void USART_Init(unsigned int baud)
+{
+	//Set baud rate
+	UBRRH = (unsigned char)(baud>>8);
+	UBRRL = (unsigned char)baud;
+	
+	//Enable reciever and transmitter
+	UCSRB = (1<<RXEN)|(1<<TXEN);
+	
+	//Set frame format: 8data, 2stop bit
+	UCSRC = (1<<URSEL)|(1<<USBS)|(3<<UCSZ0);
+}
 
+void USART_Transmit(unsigned char data)
+{
+	//Wait for empty transmit buffer
+	while(!(UCSRA & (1<<UDRE)));
+	
+	//Put data into buffer, sends the data
+	UDR = data;
+}
+
+unsigned char USART_Recieve(void)
+{
+	//Wait for data to be recieved
+	while(!(UCSRA & (1<<RXC)));
+	
+	//Get and return recieved data from buffer
+	return UDR;
+}
 
 ISR(SPI_STC_vect)
 {
