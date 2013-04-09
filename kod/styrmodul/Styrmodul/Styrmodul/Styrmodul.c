@@ -133,7 +133,7 @@ int main(void)
 		send_character(ch++);	//Ä
 		update();
 		
-		spi_send_byte(0xD2); 
+		//spi_send_byte(0xD2);
 		
 		/*
 		//claw_in();
@@ -348,12 +348,12 @@ void display_write()
 	
 }
 
-uint8_t break_prot = 0b00000000;
-uint8_t drive_prot = 0b00100000;
-uint8_t back_prot = 0b00100100;
-uint8_t stop_prot = 0b00101000;
-uint8_t tank_turn_left_prot = 0b00101100;
-uint8_t tank_turn_right_prot = 0b00110000;
+uint8_t break_prot = 0;
+uint8_t drive_prot = 'd';
+uint8_t back_prot = 'b';
+uint8_t stop_prot = 's';
+uint8_t tank_turn_left_prot = 'l';
+uint8_t tank_turn_right_prot = 'r';
 uint8_t drive_turn_prot = 0b00110100;
 
 
@@ -365,31 +365,31 @@ ISR(INT1_vect)
 
 void decode_comm(uint8_t byte)
 {
-	if (byte = break_prot)
+	if (byte == break_prot)
 	{
 		// Någon som vet vilken "Avbryt"-funktion som avses i designspecen!?!?!?
 	}
-	else if (byte = drive_prot)
+	else if (byte == drive_prot)
 	{
 		drive_forwards(120); //Random värde!!!!
 	}
-	else if (byte = back_prot)
+	else if (byte == back_prot)
 	{
 		drive_backwards(120); //Random värde!!!!
 	}
-	else if (byte = stop_prot)
+	else if (byte == stop_prot)
 	{
 		stop_motors();
 	}
-	else if (byte = tank_turn_left_prot)
+	else if (byte == tank_turn_left_prot)
 	{
 		tank_turn_left(120, 120); //Random värde!!!!
 	}
-	else if (byte = tank_turn_right_prot)
+	else if (byte == tank_turn_right_prot)
 	{
 		tank_turn_right(120); //Random värde!!!!
 	}
-	else if (byte = drive_turn_prot)
+	else if (byte == drive_turn_prot)
 	{
 		spi_get_data_from_comm();
 		turn_left(spi_data_from_comm);

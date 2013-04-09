@@ -18,6 +18,9 @@ public:
 protected:
     bool eventFilter(QObject *recipient, QEvent *event);
 
+private slots:
+    void on_pushButton_3_released();
+
 private:
     MainWindow *w;
 };
@@ -38,6 +41,7 @@ private:
     unsigned current_direction;
     Ui::MainWindow *ui;
     KeyPressEater *eat;
+    QextSerialPort *port;
 
 private slots:
     void on_pushButton_2_clicked();
@@ -47,6 +51,16 @@ private slots:
     void on_pushButton_6_clicked();
     void on_pushButton_7_clicked();
     void on_pushButton_10_clicked();
+
+    void on_pushButton_2_released();
+    void on_pushButton_3_released();
+    void on_pushButton_4_released();
+    void on_pushButton_5_released();
+    void on_pushButton_6_released();
+    void on_pushButton_7_released();
+    void on_pushButton_10_released();
+
+    void onDataAvailable();
 };
 
 #endif // MAINWINDOW_H

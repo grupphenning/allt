@@ -5,7 +5,7 @@
  *  Author: rasme879
  */
 //Måste definieras först!
-#define F_CPU 8000000UL
+//#define F_CPU 8000000UL
 
 #include <avr/io.h>
 #include <avr/delay.h>
@@ -60,7 +60,6 @@ int main(void)
 
 	init_spi();
 	SPDR = 0x32;
-    init_firefly();
 
 	/*DDRA = 0xff;
 	DDRB = 0xff;
@@ -70,18 +69,40 @@ int main(void)
 	PORTB = 0xff;*/
 	//PORTC = 0xff;
 	//PORTD = 0xff;
-	USART_Init(9600);
+//	USART_Init(9600);
 
-	
+// kom (ff) cts=(is) clear to send (?), rts=request to send
+// d0 cts <- (rts)
+// d1 tx  -> (rx)
+// d2 rx  <- (tx)
+// d3 rts -> (cts)
+
+// 1 byte ska ta runt 80 us
+// Ok nu kör vi 2400 baud i stället
+//UCSRB = (1<<RXEN)|(1<<TXEN);
+
+//ggr 20 us det tar att överföra 'a' då UBRR=3:
+//c0:4.3 b0:4.3 a0:4.3 90:5 80:5 70:5.4 60:5.7 50:6 40:6.4 30:6.7 20:7
+OSCCAL = 0x70;
+unsigned ubrr = F_CPU / (16 * 9600) - 1;
+//UBRRH = (unsigned char)(ubrr>>8);
+//UBRRL = (unsigned char)ubrr;
+UBRRH = 0x00;
+UBRRL = 0x02;
+	UCSRC = (1<<URSEL)|(1<<USBS)|(3<<UCSZ0);
+UCSRB = (1<<TXEN)|(1<<RXEN);
+
     while(1)
     {
-		USART_Transmit('a');
-		//USART_Recieve();
+		unsigned b;
+		b = USART_Recieve();
+		USART_Transmit(b);
+		send_to_master(b);
 		//clearbit(PORTB, PB0);
 		//PORTA = 2;
 		//_delay_ms(100);
 		//setbit(SPCR, SPE);		//Enables spi
-		PORTA = SPI_SlaveReceive();
+		//PORTA = SPI_SlaveReceive();
     }
 }
 
@@ -103,14 +124,6 @@ void init_spi()
 	
 }
 
-void init_firefly()
-{
-	setbit(PORTD, PIND1);
-	UBRRL = BAUD_PRESCALE;			// De minst signifikanta bitarna av baud scale
-	UBRRH = (BAUD_PRESCALE >> 8);	// De mest signifikanta bitarna
-	UCSRB = ((1<<TXEN) | (1<<RXEN)); //RXCIE för att enejjbla avbrott
-}
-
 void serial_send_byte(uint8_t val)
 {
 	while((UCSRA &(1<<UDRE)) == 0);	// Vänta på att föregående värde redan skickats
@@ -119,31 +132,50 @@ void serial_send_byte(uint8_t val)
 
 void USART_Init(unsigned int baud)
 {
-	//Set baud rate
-	UBRRH = (unsigned char)(baud>>8);
-	UBRRL = (unsigned char)baud;
+	unsigned ubrr;
+	ubrr = F_CPU / (16 * baud) - 1;
 	
-	//Enable reciever and transmitter
+	//Set baud rate
+	UBRRH = (unsigned char)(ubrr>>8);
+	UBRRL = (unsigned char)ubrr;
+	
+	//Enable receiver and transmitter
 	UCSRB = (1<<RXEN)|(1<<TXEN);
 	
 	//Set frame format: 8data, 2stop bit
 	UCSRC = (1<<URSEL)|(1<<USBS)|(3<<UCSZ0);
+	
+	// Set RTS output and 1
+	setbit(DDRC, PINC0);
+	setbit(PORTC, PINC0);
+	
+	// CTS input
+	clearbit(DDRC, PINC1);
 }
 
 void USART_Transmit(unsigned char data)
 {
-	//Wait for empty transmit buffer
-	while(!(UCSRA & (1<<UDRE)));
+	// Wait until firefly is redy to receive
+	while(PORTC & (1<<PINC1));
 	
 	//Put data into buffer, sends the data
 	UDR = data;
+	
+	//Wait for empty transmit buffer
+	while(!(UCSRA & (1<<UDRE)));
 }
 
 unsigned char USART_Recieve(void)
 {
+	// Ready to receive
+	clearbit(PORTC, PINC0);
+	
 	//Wait for data to be recieved
 	while(!(UCSRA & (1<<RXC)));
 	
+	// Not ready to receive anymore
+	setbit(PORTC, PINC0);
+
 	//Get and return recieved data from buffer
 	return UDR;
 }
@@ -157,7 +189,7 @@ ISR(SPI_STC_vect)
 
 void create_master_interrupt() 
 {
-	PORTA |= ~(1 << PINA7);
+	PORTA &= ~(1 << PINA7);
 }
 
 // ------------------------------------------------------------------------
