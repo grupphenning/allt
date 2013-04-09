@@ -16,14 +16,12 @@ interrupt-funktioner:
 ISR(INT0_vect)
 {
 //vad ska köras när sensorn vill nåt?
-
 }
 
 
 ISR(INT1_vect)
 {
 //vad ska köras när komm vill nåt?
-
 }
 
 
