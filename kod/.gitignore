@@ -1,2 +1,9 @@
 fjarr-build-*
 fjarr/fjarr.pro.user
+*/*.atsuo
+*.o
+*.elf
+*.hex
+*.lss
+*.map
+*.orig
