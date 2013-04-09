@@ -183,10 +183,10 @@ void spi_init()
 	setbit(SPCR, SPR0);
 }
 
-void spi_get_data_from_comm()
+void spi_get_data_from_comm(uint8_t message_byte)
 {
 	clearbit(PORTB, PORTB3);	//Väljer komm
-	SPDR = 0xFF;				//Lägger in junk i SPDR, startar överföringen
+	SPDR = message_byte;		//Lägger in meddelande i SPDR, startar överföringen
 	while(!(SPSR & (1 << SPIF)));
 	setbit(PORTB, PORTB3);		//Sätter komm till sleepmode
 	spi_data_from_comm = SPDR;
@@ -347,8 +347,9 @@ void display_write()
 	DISPLAY = 0b01001000;
 	
 }
-
+//-----------------AVBRYT-------------------
 uint8_t break_prot = 0b00000000;
+//-------------STYRKOMMANDON----------------
 uint8_t drive_prot = 0b00100000;
 uint8_t back_prot = 0b00100100;
 uint8_t stop_prot = 0b00101000;
@@ -356,46 +357,78 @@ uint8_t tank_turn_left_prot = 0b00101100;
 uint8_t tank_turn_right_prot = 0b00110000;
 uint8_t drive_turn_prot = 0b00110100;
 
+uint8_t drive_turn_left_request = 0b00111000;
+uint8_t drive_turn_right_request = 0b00111100;
+//-----------KALIBRERING AV SENSORER---------
+
+//-------------GRIPKLOKOMMANDON--------------
+uint8_t claw_in_prot = 0b01100000;
+uint8_t claw_out_prot = 0b01110000;
+//----------SÄTT PD-KONSTANTER---------------
+
 
 ISR(INT1_vect)
 {
-	spi_get_data_from_comm();	//Sparar undan data från comm
+	spi_get_data_from_comm(0xFF);	//Sparar undan data från comm
 	decode_comm(spi_data_from_comm); 
 }
 
 void decode_comm(uint8_t byte)
 {
-	if (byte = break_prot)
+	uint8_t command_type = byte & 0b11100000;
+	
+	if (command_type = 0b00000000) // OM AVBRYT
 	{
 		// Någon som vet vilken "Avbryt"-funktion som avses i designspecen!?!?!?
+		// Kör iaf den avbrytfunktion som avses i designspecen!!!!!!
 	}
-	else if (byte = drive_prot)
-	{
-		drive_forwards(120); //Random värde!!!!
+	else if (command_type = 0b00100000) // OM STYRKOMMANDO
+	{	
+		if (byte = drive_prot)
+		{
+			drive_forwards(120); //Random värde!!!!
+		}
+		else if (byte = back_prot)
+		{
+			drive_backwards(120); //Random värde!!!!
+		}
+		else if (byte = stop_prot)
+		{
+			stop_motors();
+		}
+		else if (byte = tank_turn_left_prot)
+		{
+			tank_turn_left(120, 120); //Random värde!!!!
+		}
+		else if (byte = tank_turn_right_prot)
+		{
+			tank_turn_right(120); //Random värde!!!!
+		}
+		else if (byte = drive_turn_prot)
+		{
+			spi_get_data_from_comm(drive_turn_left_request);
+			turn_left(spi_data_from_comm);
+			spi_get_data_from_comm(drive_turn_right_request);
+			turn_right(spi_data_from_comm);
+		}
 	}
-	else if (byte = back_prot)
+	else if (command_type = 0b01000000) // OM KALIBRERING AV SENSORER
 	{
-		drive_backwards(120); //Random värde!!!!
-	}
-	else if (byte = stop_prot)
-	{
-		stop_motors();
-	}
-	else if (byte = tank_turn_left_prot)
-	{
-		tank_turn_left(120, 120); //Random värde!!!!
-	}
-	else if (byte = tank_turn_right_prot)
-	{
-		tank_turn_right(120); //Random värde!!!!
-	}
-	else if (byte = drive_turn_prot)
-	{
-		spi_get_data_from_comm();
-		turn_left(spi_data_from_comm);
-		spi_get_data_from_comm();
-		turn_right(spi_data_from_comm);
 		
 	}
-	
+	else if (command_type = 0b01100000) // OM GRIPKLOKOMMANDO
+	{
+		if (byte = claw_in_prot)
+		{
+			claw_in();
+		}
+		else if (byte = claw_out_prot)
+		{
+			claw_out();
+		}
+	}
+	else if (command_type = 0b10000000) // OM SÄTT PD-KONSTANTER
+	{
+		
+	}
 }
