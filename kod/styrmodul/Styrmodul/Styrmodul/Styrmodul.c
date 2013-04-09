@@ -183,10 +183,10 @@ void spi_init()
 	setbit(SPCR, SPR0);
 }
 
-void spi_get_data_from_comm()
+void spi_get_data_from_comm(uint8_t message_byte)
 {
 	clearbit(PORTB, PORTB3);	//Väljer komm
-	SPDR = 0xFF;				//Lägger in junk i SPDR, startar överföringen
+	SPDR = message_byte;		//Lägger in meddelande i SPDR, startar överföringen
 	while(!(SPSR & (1 << SPIF)));
 	setbit(PORTB, PORTB3);		//Sätter komm till sleepmode
 	spi_data_from_comm = SPDR;
@@ -347,7 +347,7 @@ void display_write()
 	DISPLAY = 0b01001000;
 	
 }
-
+//-----------------AVBRYT-------------------
 uint8_t break_prot = 0;
 uint8_t drive_prot = 'd';
 uint8_t back_prot = 'b';
@@ -356,10 +356,19 @@ uint8_t tank_turn_left_prot = 'l';
 uint8_t tank_turn_right_prot = 'r';
 uint8_t drive_turn_prot = 0b00110100;
 
+uint8_t drive_turn_left_request = 0b00111000;
+uint8_t drive_turn_right_request = 0b00111100;
+//-----------KALIBRERING AV SENSORER---------
+
+//-------------GRIPKLOKOMMANDON--------------
+uint8_t claw_in_prot = 0b01100000;
+uint8_t claw_out_prot = 0b01110000;
+//----------SÄTT PD-KONSTANTER---------------
+
 
 ISR(INT1_vect)
 {
-	spi_get_data_from_comm();	//Sparar undan data från comm
+	spi_get_data_from_comm(0xFF);	//Sparar undan data från comm
 	decode_comm(spi_data_from_comm); 
 }
 
@@ -368,6 +377,7 @@ void decode_comm(uint8_t byte)
 	if (byte == break_prot)
 	{
 		// Någon som vet vilken "Avbryt"-funktion som avses i designspecen!?!?!?
+		// Kör iaf den avbrytfunktion som avses i designspecen!!!!!!
 	}
 	else if (byte == drive_prot)
 	{
@@ -375,11 +385,18 @@ void decode_comm(uint8_t byte)
 	}
 	else if (byte == back_prot)
 	{
-		drive_backwards(120); //Random värde!!!!
+		
 	}
 	else if (byte == stop_prot)
 	{
-		stop_motors();
+		if (byte = claw_in_prot)
+		{
+			claw_in();
+		}
+		else if (byte = claw_out_prot)
+		{
+			claw_out();
+		}
 	}
 	else if (byte == tank_turn_left_prot)
 	{
@@ -397,5 +414,4 @@ void decode_comm(uint8_t byte)
 		turn_right(spi_data_from_comm);
 		
 	}
-	
 }
