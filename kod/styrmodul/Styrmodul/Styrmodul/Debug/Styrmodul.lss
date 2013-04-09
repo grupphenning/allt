@@ -3,29 +3,29 @@ Styrmodul.elf:     file format elf32-avr
 
 Sections:
 Idx Name          Size      VMA       LMA       File off  Algn
-  0 .data         00000028  00800100  000005f6  0000068a  2**0
+  0 .data         00000028  00800100  000005f0  00000684  2**0
                   CONTENTS, ALLOC, LOAD, DATA
-  1 .text         000005f6  00000000  00000000  00000094  2**1
+  1 .text         000005f0  00000000  00000000  00000094  2**1
                   CONTENTS, ALLOC, LOAD, READONLY, CODE
-  2 .bss          00000022  00800128  00800128  000006b2  2**0
+  2 .bss          00000022  00800128  00800128  000006ac  2**0
                   ALLOC
-  3 .stab         000006cc  00000000  00000000  000006b4  2**2
+  3 .stab         000006cc  00000000  00000000  000006ac  2**2
                   CONTENTS, READONLY, DEBUGGING
-  4 .stabstr      00000085  00000000  00000000  00000d80  2**0
+  4 .stabstr      00000085  00000000  00000000  00000d78  2**0
                   CONTENTS, READONLY, DEBUGGING
-  5 .debug_aranges 000000a0  00000000  00000000  00000e08  2**3
+  5 .debug_aranges 000000a0  00000000  00000000  00000e00  2**3
                   CONTENTS, READONLY, DEBUGGING
-  6 .debug_info   00000e01  00000000  00000000  00000ea8  2**0
+  6 .debug_info   00000de6  00000000  00000000  00000ea0  2**0
                   CONTENTS, READONLY, DEBUGGING
-  7 .debug_abbrev 0000041e  00000000  00000000  00001ca9  2**0
+  7 .debug_abbrev 00000415  00000000  00000000  00001c86  2**0
                   CONTENTS, READONLY, DEBUGGING
-  8 .debug_line   00000684  00000000  00000000  000020c7  2**0
+  8 .debug_line   00000678  00000000  00000000  0000209b  2**0
                   CONTENTS, READONLY, DEBUGGING
-  9 .debug_frame  000002a4  00000000  00000000  0000274c  2**2
+  9 .debug_frame  000002a4  00000000  00000000  00002714  2**2
                   CONTENTS, READONLY, DEBUGGING
- 10 .debug_str    000002ea  00000000  00000000  000029f0  2**0
+ 10 .debug_str    000002ea  00000000  00000000  000029b8  2**0
                   CONTENTS, READONLY, DEBUGGING
- 11 .debug_loc    00000491  00000000  00000000  00002cda  2**0
+ 11 .debug_loc    00000491  00000000  00000000  00002ca2  2**0
                   CONTENTS, READONLY, DEBUGGING
 
 Disassembly of section .text:
@@ -79,7 +79,7 @@ Disassembly of section .text:
   98:	11 e0       	ldi	r17, 0x01	; 1
   9a:	a0 e0       	ldi	r26, 0x00	; 0
   9c:	b1 e0       	ldi	r27, 0x01	; 1
-  9e:	e6 ef       	ldi	r30, 0xF6	; 246
+  9e:	e0 ef       	ldi	r30, 0xF0	; 240
   a0:	f5 e0       	ldi	r31, 0x05	; 5
   a2:	00 e0       	ldi	r16, 0x00	; 0
   a4:	0b bf       	out	0x3b, r16	; 59
@@ -103,8 +103,8 @@ Disassembly of section .text:
   bc:	aa 34       	cpi	r26, 0x4A	; 74
   be:	b1 07       	cpc	r27, r17
   c0:	e1 f7       	brne	.-8      	; 0xba <.do_clear_bss_loop>
-  c2:	0e 94 2f 02 	call	0x45e	; 0x45e <main>
-  c6:	0c 94 f9 02 	jmp	0x5f2	; 0x5f2 <_exit>
+  c2:	0e 94 28 02 	call	0x450	; 0x450 <main>
+  c6:	0c 94 f6 02 	jmp	0x5ec	; 0x5ec <_exit>
 
 000000ca <__bad_interrupt>:
   ca:	0c 94 00 00 	jmp	0	; 0x0 <__vectors>
@@ -829,509 +829,500 @@ void spi_send_byte(uint8_t byte)
 }
  3f2:	08 95       	ret
 
-000003f4 <tank_turn_left>:
-}
-
-//sväng vänster som en stridsvagn!
-void tank_turn_left(uint8_t amount_l, uint8_t amount_h)
-{
-	LEFT_AMOUNT = amount_l;
- 3f4:	80 93 b3 00 	sts	0x00B3, r24
-	RIGHT_AMOUNT = amount_h;
- 3f8:	60 93 b4 00 	sts	0x00B4, r22
-	
-	clearbit(PORT_DIR, LEFT_DIR);
- 3fc:	29 98       	cbi	0x05, 1	; 5
-	setbit(PORT_DIR, RIGHT_DIR);
- 3fe:	28 9a       	sbi	0x05, 0	; 5
-}
- 400:	08 95       	ret
-
-00000402 <display_set_two_lines>:
+000003f4 <display_set_two_lines>:
 	clearbit(DISPLAY,DISPLAY_POWER);
 }
 
 void display_set_two_lines()
 {
 	DISPLAY = 0;
- 402:	12 b8       	out	0x02, r1	; 2
+ 3f4:	12 b8       	out	0x02, r1	; 2
 	setbit(DISPLAY,PA5);
- 404:	15 9a       	sbi	0x02, 5	; 2
+ 3f6:	15 9a       	sbi	0x02, 5	; 2
 	setbit(DISPLAY,PA4);
- 406:	14 9a       	sbi	0x02, 4	; 2
+ 3f8:	14 9a       	sbi	0x02, 4	; 2
 	setbit(DISPLAY,PA3);
- 408:	13 9a       	sbi	0x02, 3	; 2
+ 3fa:	13 9a       	sbi	0x02, 3	; 2
 	
 	
 	
 }
- 40a:	08 95       	ret
+ 3fc:	08 95       	ret
 
-0000040c <display_clear>:
+000003fe <display_clear>:
 
 
 void display_clear()
 {
 	DISPLAY = 0;
- 40c:	12 b8       	out	0x02, r1	; 2
+ 3fe:	12 b8       	out	0x02, r1	; 2
 	setbit(DISPLAY, PA0);
- 40e:	10 9a       	sbi	0x02, 0	; 2
+ 400:	10 9a       	sbi	0x02, 0	; 2
 }
- 410:	08 95       	ret
+ 402:	08 95       	ret
 
-00000412 <display_home>:
+00000404 <display_home>:
 	_delay_ms(500);
 }
 
 void display_home()
 {
 	DISPLAY = 0;
- 412:	12 b8       	out	0x02, r1	; 2
+ 404:	12 b8       	out	0x02, r1	; 2
 	setbit(DISPLAY,PA1);
- 414:	11 9a       	sbi	0x02, 1	; 2
+ 406:	11 9a       	sbi	0x02, 1	; 2
 }
- 416:	08 95       	ret
+ 408:	08 95       	ret
 
-00000418 <display_write>:
+0000040a <display_write>:
 
 void display_write()
 {
 	setbit(PORTC, DISPLAY_RS);
- 418:	47 9a       	sbi	0x08, 7	; 8
+ 40a:	47 9a       	sbi	0x08, 7	; 8
 	DISPLAY = 0b01001000;
- 41a:	88 e4       	ldi	r24, 0x48	; 72
- 41c:	82 b9       	out	0x02, r24	; 2
+ 40c:	88 e4       	ldi	r24, 0x48	; 72
+ 40e:	82 b9       	out	0x02, r24	; 2
 	
 }
- 41e:	08 95       	ret
+ 410:	08 95       	ret
 
-00000420 <display_enable>:
+00000412 <display_enable>:
 	setbit(DISPLAY, PA0);
 }
 
 void display_enable()
 {
 	setbit(PORTC,DISPLAY_ENABLE);
- 420:	46 9a       	sbi	0x08, 6	; 8
- 422:	8f ef       	ldi	r24, 0xFF	; 255
- 424:	94 e3       	ldi	r25, 0x34	; 52
- 426:	ac e0       	ldi	r26, 0x0C	; 12
- 428:	81 50       	subi	r24, 0x01	; 1
- 42a:	90 40       	sbci	r25, 0x00	; 0
- 42c:	a0 40       	sbci	r26, 0x00	; 0
- 42e:	e1 f7       	brne	.-8      	; 0x428 <display_enable+0x8>
- 430:	00 c0       	rjmp	.+0      	; 0x432 <display_enable+0x12>
- 432:	00 00       	nop
+ 412:	46 9a       	sbi	0x08, 6	; 8
+ 414:	8f ef       	ldi	r24, 0xFF	; 255
+ 416:	94 e3       	ldi	r25, 0x34	; 52
+ 418:	ac e0       	ldi	r26, 0x0C	; 12
+ 41a:	81 50       	subi	r24, 0x01	; 1
+ 41c:	90 40       	sbci	r25, 0x00	; 0
+ 41e:	a0 40       	sbci	r26, 0x00	; 0
+ 420:	e1 f7       	brne	.-8      	; 0x41a <display_enable+0x8>
+ 422:	00 c0       	rjmp	.+0      	; 0x424 <display_enable+0x12>
+ 424:	00 00       	nop
 	_delay_ms(500);
 	clearbit(PORTC,DISPLAY_ENABLE);
- 434:	46 98       	cbi	0x08, 6	; 8
- 436:	8f ef       	ldi	r24, 0xFF	; 255
- 438:	94 e3       	ldi	r25, 0x34	; 52
- 43a:	ac e0       	ldi	r26, 0x0C	; 12
- 43c:	81 50       	subi	r24, 0x01	; 1
- 43e:	90 40       	sbci	r25, 0x00	; 0
- 440:	a0 40       	sbci	r26, 0x00	; 0
- 442:	e1 f7       	brne	.-8      	; 0x43c <display_enable+0x1c>
- 444:	00 c0       	rjmp	.+0      	; 0x446 <display_enable+0x26>
- 446:	00 00       	nop
+ 426:	46 98       	cbi	0x08, 6	; 8
+ 428:	8f ef       	ldi	r24, 0xFF	; 255
+ 42a:	94 e3       	ldi	r25, 0x34	; 52
+ 42c:	ac e0       	ldi	r26, 0x0C	; 12
+ 42e:	81 50       	subi	r24, 0x01	; 1
+ 430:	90 40       	sbci	r25, 0x00	; 0
+ 432:	a0 40       	sbci	r26, 0x00	; 0
+ 434:	e1 f7       	brne	.-8      	; 0x42e <display_enable+0x1c>
+ 436:	00 c0       	rjmp	.+0      	; 0x438 <display_enable+0x26>
+ 438:	00 00       	nop
 	_delay_ms(500);
 	setbit(PORTC,DISPLAY_ENABLE);
- 448:	46 9a       	sbi	0x08, 6	; 8
- 44a:	8f ef       	ldi	r24, 0xFF	; 255
- 44c:	94 e3       	ldi	r25, 0x34	; 52
- 44e:	ac e0       	ldi	r26, 0x0C	; 12
- 450:	81 50       	subi	r24, 0x01	; 1
- 452:	90 40       	sbci	r25, 0x00	; 0
- 454:	a0 40       	sbci	r26, 0x00	; 0
- 456:	e1 f7       	brne	.-8      	; 0x450 <display_enable+0x30>
- 458:	00 c0       	rjmp	.+0      	; 0x45a <display_enable+0x3a>
- 45a:	00 00       	nop
+ 43a:	46 9a       	sbi	0x08, 6	; 8
+ 43c:	8f ef       	ldi	r24, 0xFF	; 255
+ 43e:	94 e3       	ldi	r25, 0x34	; 52
+ 440:	ac e0       	ldi	r26, 0x0C	; 12
+ 442:	81 50       	subi	r24, 0x01	; 1
+ 444:	90 40       	sbci	r25, 0x00	; 0
+ 446:	a0 40       	sbci	r26, 0x00	; 0
+ 448:	e1 f7       	brne	.-8      	; 0x442 <display_enable+0x30>
+ 44a:	00 c0       	rjmp	.+0      	; 0x44c <display_enable+0x3a>
+ 44c:	00 00       	nop
 	_delay_ms(500);
 }
- 45c:	08 95       	ret
+ 44e:	08 95       	ret
 
-0000045e <main>:
+00000450 <main>:
 
 uint8_t test;
 
 int main(void)
 {
 	spi_init();
- 45e:	0e 94 d4 01 	call	0x3a8	; 0x3a8 <spi_init>
+ 450:	0e 94 d4 01 	call	0x3a8	; 0x3a8 <spi_init>
 	
 	spi_send_byte(0xAA);
- 462:	cf ee       	ldi	r28, 0xEF	; 239
- 464:	d1 e0       	ldi	r29, 0x01	; 1
- 466:	8a ea       	ldi	r24, 0xAA	; 170
- 468:	90 e0       	ldi	r25, 0x00	; 0
- 46a:	fe 01       	movw	r30, r28
- 46c:	09 95       	icall
+ 454:	cf ee       	ldi	r28, 0xEF	; 239
+ 456:	d1 e0       	ldi	r29, 0x01	; 1
+ 458:	8a ea       	ldi	r24, 0xAA	; 170
+ 45a:	90 e0       	ldi	r25, 0x00	; 0
+ 45c:	fe 01       	movw	r30, r28
+ 45e:	09 95       	icall
 	
 	//display ska ut
 	DDRA = 0xFF;
- 46e:	8f ef       	ldi	r24, 0xFF	; 255
- 470:	81 b9       	out	0x01, r24	; 1
+ 460:	8f ef       	ldi	r24, 0xFF	; 255
+ 462:	81 b9       	out	0x01, r24	; 1
 	//DDRB = 0xFF;
 	//DDRC = 0xFF;
 	//DDRD = 0xFF;
 	
 	//sätt riktning på displaystyrpinnar!
 	setbit(DDRC, PC6);
- 472:	3e 9a       	sbi	0x07, 6	; 7
+ 464:	3e 9a       	sbi	0x07, 6	; 7
 	setbit(DDRC, PC7);
- 474:	3f 9a       	sbi	0x07, 7	; 7
+ 466:	3f 9a       	sbi	0x07, 7	; 7
 	
 	
 	//sätt riktning på motorer + gripklo
 	setbit(DDRB, PB0);
- 476:	20 9a       	sbi	0x04, 0	; 4
+ 468:	20 9a       	sbi	0x04, 0	; 4
 	setbit(DDRB, PB1);
- 478:	21 9a       	sbi	0x04, 1	; 4
+ 46a:	21 9a       	sbi	0x04, 1	; 4
 	setbit(DDRD, PD7);
- 47a:	57 9a       	sbi	0x0a, 7	; 10
+ 46c:	57 9a       	sbi	0x0a, 7	; 10
 	setbit(DDRD, PD6);
- 47c:	56 9a       	sbi	0x0a, 6	; 10
+ 46e:	56 9a       	sbi	0x0a, 6	; 10
 	setbit(DDRD, PD5);
- 47e:	55 9a       	sbi	0x0a, 5	; 10
+ 470:	55 9a       	sbi	0x0a, 5	; 10
 	
 	
 	//pwm-styrning för gripklon, pin OC1A, register OCR1A
 	TCCR1A = 0;
- 480:	e0 e8       	ldi	r30, 0x80	; 128
- 482:	f0 e0       	ldi	r31, 0x00	; 0
- 484:	10 82       	st	Z, r1
+ 472:	e0 e8       	ldi	r30, 0x80	; 128
+ 474:	f0 e0       	ldi	r31, 0x00	; 0
+ 476:	10 82       	st	Z, r1
 	setbit(TCCR1A, COM1A1);
- 486:	80 81       	ld	r24, Z
- 488:	80 68       	ori	r24, 0x80	; 128
- 48a:	80 83       	st	Z, r24
+ 478:	80 81       	ld	r24, Z
+ 47a:	80 68       	ori	r24, 0x80	; 128
+ 47c:	80 83       	st	Z, r24
 	setbit(TCCR1A, WGM11);
- 48c:	80 81       	ld	r24, Z
- 48e:	82 60       	ori	r24, 0x02	; 2
- 490:	80 83       	st	Z, r24
+ 47e:	80 81       	ld	r24, Z
+ 480:	82 60       	ori	r24, 0x02	; 2
+ 482:	80 83       	st	Z, r24
 	
 	TCCR1B = 0;
- 492:	e1 e8       	ldi	r30, 0x81	; 129
- 494:	f0 e0       	ldi	r31, 0x00	; 0
- 496:	10 82       	st	Z, r1
+ 484:	e1 e8       	ldi	r30, 0x81	; 129
+ 486:	f0 e0       	ldi	r31, 0x00	; 0
+ 488:	10 82       	st	Z, r1
 	setbit(TCCR1B, WGM11);
- 498:	80 81       	ld	r24, Z
- 49a:	82 60       	ori	r24, 0x02	; 2
- 49c:	80 83       	st	Z, r24
+ 48a:	80 81       	ld	r24, Z
+ 48c:	82 60       	ori	r24, 0x02	; 2
+ 48e:	80 83       	st	Z, r24
 	setbit(TCCR1B, WGM12);
- 49e:	80 81       	ld	r24, Z
- 4a0:	88 60       	ori	r24, 0x08	; 8
- 4a2:	80 83       	st	Z, r24
+ 490:	80 81       	ld	r24, Z
+ 492:	88 60       	ori	r24, 0x08	; 8
+ 494:	80 83       	st	Z, r24
 	setbit(TCCR1B, WGM13);
- 4a4:	80 81       	ld	r24, Z
- 4a6:	80 61       	ori	r24, 0x10	; 16
- 4a8:	80 83       	st	Z, r24
+ 496:	80 81       	ld	r24, Z
+ 498:	80 61       	ori	r24, 0x10	; 16
+ 49a:	80 83       	st	Z, r24
 	
 	
 	//sätt klockan, f = fclk/1024
 	//NEJ! Sätt f = fclk/256
 	setbit(TCCR1B, CS10);
- 4aa:	80 81       	ld	r24, Z
- 4ac:	81 60       	ori	r24, 0x01	; 1
- 4ae:	80 83       	st	Z, r24
+ 49c:	80 81       	ld	r24, Z
+ 49e:	81 60       	ori	r24, 0x01	; 1
+ 4a0:	80 83       	st	Z, r24
 	setbit(TCCR1B, CS11);
- 4b0:	80 81       	ld	r24, Z
- 4b2:	82 60       	ori	r24, 0x02	; 2
- 4b4:	80 83       	st	Z, r24
+ 4a2:	80 81       	ld	r24, Z
+ 4a4:	82 60       	ori	r24, 0x02	; 2
+ 4a6:	80 83       	st	Z, r24
 	//setbit(TCCR1B, CS12);
 	
 	
 	//TCCR1A = (1 << COM1A1) | (1 << WGM11);
 	//TCCR1B = (1 << WGM11) | (1 << WGM13) | (1 << WGM12) | (1 << CS12) | (1 << CS10);
 	TIMSK1 = (1 << OCIE1A);  // Enable Interrupt TimerCounter1 Compare Match A (TIMER1_COMPA_vect)
- 4b6:	22 e0       	ldi	r18, 0x02	; 2
- 4b8:	20 93 6f 00 	sts	0x006F, r18
+ 4a8:	22 e0       	ldi	r18, 0x02	; 2
+ 4aa:	20 93 6f 00 	sts	0x006F, r18
 	//ICR1 = 390;
 	//ICR1 = 625;
 	//ICR1 = 313;
 	ICR1 = 2500;
- 4bc:	84 ec       	ldi	r24, 0xC4	; 196
- 4be:	99 e0       	ldi	r25, 0x09	; 9
- 4c0:	90 93 87 00 	sts	0x0087, r25
- 4c4:	80 93 86 00 	sts	0x0086, r24
+ 4ae:	84 ec       	ldi	r24, 0xC4	; 196
+ 4b0:	99 e0       	ldi	r25, 0x09	; 9
+ 4b2:	90 93 87 00 	sts	0x0087, r25
+ 4b6:	80 93 86 00 	sts	0x0086, r24
 	//sätt OCR1A också!
 	OCR1A = 300;
- 4c8:	8c e2       	ldi	r24, 0x2C	; 44
- 4ca:	91 e0       	ldi	r25, 0x01	; 1
- 4cc:	90 93 89 00 	sts	0x0089, r25
- 4d0:	80 93 88 00 	sts	0x0088, r24
+ 4ba:	8c e2       	ldi	r24, 0x2C	; 44
+ 4bc:	91 e0       	ldi	r25, 0x01	; 1
+ 4be:	90 93 89 00 	sts	0x0089, r25
+ 4c2:	80 93 88 00 	sts	0x0088, r24
 	
 	//pwm-styrning för motorerna, pinne OC2A, register OCR2A för vänster, pinne OC2B, register OCR2B för höger.
 	//PB1 DIR höger, PB0 vänster
 	TCCR2A=0;
- 4d4:	e0 eb       	ldi	r30, 0xB0	; 176
- 4d6:	f0 e0       	ldi	r31, 0x00	; 0
- 4d8:	10 82       	st	Z, r1
+ 4c6:	e0 eb       	ldi	r30, 0xB0	; 176
+ 4c8:	f0 e0       	ldi	r31, 0x00	; 0
+ 4ca:	10 82       	st	Z, r1
 	setbit(TCCR2A, COM2A1);
- 4da:	80 81       	ld	r24, Z
- 4dc:	80 68       	ori	r24, 0x80	; 128
- 4de:	80 83       	st	Z, r24
+ 4cc:	80 81       	ld	r24, Z
+ 4ce:	80 68       	ori	r24, 0x80	; 128
+ 4d0:	80 83       	st	Z, r24
 	setbit(TCCR2A, COM2B1);
- 4e0:	80 81       	ld	r24, Z
- 4e2:	80 62       	ori	r24, 0x20	; 32
- 4e4:	80 83       	st	Z, r24
+ 4d2:	80 81       	ld	r24, Z
+ 4d4:	80 62       	ori	r24, 0x20	; 32
+ 4d6:	80 83       	st	Z, r24
 	setbit(TCCR2A, WGM20);
- 4e6:	80 81       	ld	r24, Z
- 4e8:	81 60       	ori	r24, 0x01	; 1
- 4ea:	80 83       	st	Z, r24
+ 4d8:	80 81       	ld	r24, Z
+ 4da:	81 60       	ori	r24, 0x01	; 1
+ 4dc:	80 83       	st	Z, r24
 	setbit(TCCR2A, WGM21);
- 4ec:	80 81       	ld	r24, Z
- 4ee:	82 60       	ori	r24, 0x02	; 2
- 4f0:	80 83       	st	Z, r24
+ 4de:	80 81       	ld	r24, Z
+ 4e0:	82 60       	ori	r24, 0x02	; 2
+ 4e2:	80 83       	st	Z, r24
 	OCR2A = 0;
- 4f2:	10 92 b3 00 	sts	0x00B3, r1
+ 4e4:	10 92 b3 00 	sts	0x00B3, r1
 	OCR2B = 0;
- 4f6:	10 92 b4 00 	sts	0x00B4, r1
+ 4e8:	10 92 b4 00 	sts	0x00B4, r1
 	
 	//TCCR2A = (1 << COM2A1) | (1 << COM2B1) | (1 << WGM21) | (1 << WGM20);
 	
 	//sätter på pwm!
 	TCCR2B=0;
- 4fa:	e1 eb       	ldi	r30, 0xB1	; 177
- 4fc:	f0 e0       	ldi	r31, 0x00	; 0
- 4fe:	10 82       	st	Z, r1
+ 4ec:	e1 eb       	ldi	r30, 0xB1	; 177
+ 4ee:	f0 e0       	ldi	r31, 0x00	; 0
+ 4f0:	10 82       	st	Z, r1
 	setbit(TCCR2B, CS20);
- 500:	80 81       	ld	r24, Z
- 502:	81 60       	ori	r24, 0x01	; 1
- 504:	80 83       	st	Z, r24
+ 4f2:	80 81       	ld	r24, Z
+ 4f4:	81 60       	ori	r24, 0x01	; 1
+ 4f6:	80 83       	st	Z, r24
 	//TCCR2B = (1 << CS20);
 	TIMSK2 = (1 << OCIE2A);
- 506:	20 93 70 00 	sts	0x0070, r18
+ 4f8:	20 93 70 00 	sts	0x0070, r18
 	//fullt ös på OCR=0xff, inget på 0x00
 	
 	init_display();
- 50a:	0e 94 a5 01 	call	0x34a	; 0x34a <init_display>
+ 4fc:	0e 94 a5 01 	call	0x34a	; 0x34a <init_display>
 	clear_screen();
- 50e:	0e 94 af 00 	call	0x15e	; 0x15e <clear_screen>
+ 500:	0e 94 af 00 	call	0x15e	; 0x15e <clear_screen>
 	update();
- 512:	0e 94 d8 00 	call	0x1b0	; 0x1b0 <update>
+ 504:	0e 94 d8 00 	call	0x1b0	; 0x1b0 <update>
 	send_string("Data: ");
- 516:	80 e2       	ldi	r24, 0x20	; 32
- 518:	91 e0       	ldi	r25, 0x01	; 1
- 51a:	0e 94 a0 00 	call	0x140	; 0x140 <send_string>
+ 508:	80 e2       	ldi	r24, 0x20	; 32
+ 50a:	91 e0       	ldi	r25, 0x01	; 1
+ 50c:	0e 94 a0 00 	call	0x140	; 0x140 <send_string>
 	update();
- 51e:	0e 94 d8 00 	call	0x1b0	; 0x1b0 <update>
+ 510:	0e 94 d8 00 	call	0x1b0	; 0x1b0 <update>
 	//tank_turn_left(180,180);
 	//init_spi();
 	uint8_t ch = 'a';
- 522:	81 e6       	ldi	r24, 0x61	; 97
- 524:	ef ec       	ldi	r30, 0xCF	; 207
- 526:	f7 e0       	ldi	r31, 0x07	; 7
- 528:	31 97       	sbiw	r30, 0x01	; 1
- 52a:	f1 f7       	brne	.-4      	; 0x528 <main+0xca>
- 52c:	00 c0       	rjmp	.+0      	; 0x52e <main+0xd0>
- 52e:	00 00       	nop
+ 514:	81 e6       	ldi	r24, 0x61	; 97
+ 516:	2f ef       	ldi	r18, 0xFF	; 255
+ 518:	30 e7       	ldi	r19, 0x70	; 112
+ 51a:	42 e0       	ldi	r20, 0x02	; 2
+ 51c:	21 50       	subi	r18, 0x01	; 1
+ 51e:	30 40       	sbci	r19, 0x00	; 0
+ 520:	40 40       	sbci	r20, 0x00	; 0
+ 522:	e1 f7       	brne	.-8      	; 0x51c <main+0xcc>
+ 524:	00 c0       	rjmp	.+0      	; 0x526 <main+0xd6>
+ 526:	00 00       	nop
 	
 	while(1)
 	{
-		_delay_ms(1);
+		_delay_ms(100);
 		send_character(ch++);	//Ä
- 530:	18 2f       	mov	r17, r24
- 532:	1f 5f       	subi	r17, 0xFF	; 255
- 534:	0e 94 91 00 	call	0x122	; 0x122 <send_character>
+ 528:	18 2f       	mov	r17, r24
+ 52a:	1f 5f       	subi	r17, 0xFF	; 255
+ 52c:	0e 94 91 00 	call	0x122	; 0x122 <send_character>
 		update();
- 538:	0e 94 d8 00 	call	0x1b0	; 0x1b0 <update>
+ 530:	0e 94 d8 00 	call	0x1b0	; 0x1b0 <update>
 		
 		spi_send_byte(0xD2); 
- 53c:	82 ed       	ldi	r24, 0xD2	; 210
- 53e:	90 e0       	ldi	r25, 0x00	; 0
- 540:	fe 01       	movw	r30, r28
- 542:	09 95       	icall
-		claw_in();
-		clearbit(PORTD, PD0);
-		_delay_ms(1000);
-		*/
-		
-		tank_turn_left(200,200);
- 544:	88 ec       	ldi	r24, 0xC8	; 200
- 546:	90 e0       	ldi	r25, 0x00	; 0
- 548:	68 ec       	ldi	r22, 0xC8	; 200
- 54a:	70 e0       	ldi	r23, 0x00	; 0
- 54c:	0e 94 fa 01 	call	0x3f4	; 0x3f4 <tank_turn_left>
+ 534:	82 ed       	ldi	r24, 0xD2	; 210
+ 536:	90 e0       	ldi	r25, 0x00	; 0
+ 538:	fe 01       	movw	r30, r28
+ 53a:	09 95       	icall
 	uint8_t ch = 'a';
 	
 	while(1)
 	{
-		_delay_ms(1);
+		_delay_ms(100);
 		send_character(ch++);	//Ä
- 550:	81 2f       	mov	r24, r17
- 552:	e8 cf       	rjmp	.-48     	; 0x524 <main+0xc6>
+ 53c:	81 2f       	mov	r24, r17
+ 53e:	eb cf       	rjmp	.-42     	; 0x516 <main+0xc6>
 
-00000554 <drive_forwards>:
+00000540 <drive_forwards>:
 	PORTD = test;
 }
 
 void drive_forwards(uint8_t amount)
 {
 	LEFT_AMOUNT = amount;
- 554:	80 93 b3 00 	sts	0x00B3, r24
+ 540:	80 93 b3 00 	sts	0x00B3, r24
 	RIGHT_AMOUNT = amount;
- 558:	80 93 b4 00 	sts	0x00B4, r24
+ 544:	80 93 b4 00 	sts	0x00B4, r24
 	
 	//sätt ettor (framåt) på DIR-pinnarna
 	setbit(PORT_DIR, LEFT_DIR);
- 55c:	29 9a       	sbi	0x05, 1	; 5
+ 548:	29 9a       	sbi	0x05, 1	; 5
 	setbit(PORT_DIR, RIGHT_DIR);
- 55e:	28 9a       	sbi	0x05, 0	; 5
+ 54a:	28 9a       	sbi	0x05, 0	; 5
 }
- 560:	08 95       	ret
+ 54c:	08 95       	ret
 
-00000562 <drive_backwards>:
+0000054e <drive_backwards>:
 
 void drive_backwards(uint8_t amount)
 {
 	LEFT_AMOUNT = amount;
- 562:	80 93 b3 00 	sts	0x00B3, r24
+ 54e:	80 93 b3 00 	sts	0x00B3, r24
 	RIGHT_AMOUNT = amount;
- 566:	80 93 b4 00 	sts	0x00B4, r24
+ 552:	80 93 b4 00 	sts	0x00B4, r24
 	
 	//sätt nollor (bakåt) på DIR-pinnarna
 	clearbit(PORT_DIR, LEFT_DIR);
- 56a:	29 98       	cbi	0x05, 1	; 5
+ 556:	29 98       	cbi	0x05, 1	; 5
 	clearbit(PORT_DIR, RIGHT_DIR);
- 56c:	28 98       	cbi	0x05, 0	; 5
+ 558:	28 98       	cbi	0x05, 0	; 5
 }
- 56e:	08 95       	ret
+ 55a:	08 95       	ret
 
-00000570 <turn_left>:
+0000055c <turn_left>:
 
 //sväng vänster!
 void turn_left(uint8_t amount)
 {
 	LEFT_AMOUNT = amount;
- 570:	80 93 b3 00 	sts	0x00B3, r24
+ 55c:	80 93 b3 00 	sts	0x00B3, r24
 }
- 574:	08 95       	ret
+ 560:	08 95       	ret
 
-00000576 <turn_right>:
+00000562 <turn_right>:
 
 //sväng höger!
 void turn_right(uint8_t amount)
 {
 	RIGHT_AMOUNT = amount;
- 576:	80 93 b4 00 	sts	0x00B4, r24
+ 562:	80 93 b4 00 	sts	0x00B4, r24
 }
- 57a:	08 95       	ret
+ 566:	08 95       	ret
 
-0000057c <stop_motors>:
+00000568 <stop_motors>:
 	//clearbit(TCCR2B, CS20);
 	//clearbit(TCCR2B, CS21);
 	//clearbit(TCCR2B, CS22);
 	//LEFT_PWM = 0;
 	//RIGHT_PWM = 0;
 	LEFT_AMOUNT = 0;
- 57c:	10 92 b3 00 	sts	0x00B3, r1
+ 568:	10 92 b3 00 	sts	0x00B3, r1
 	RIGHT_AMOUNT = 0;
- 580:	10 92 b4 00 	sts	0x00B4, r1
+ 56c:	10 92 b4 00 	sts	0x00B4, r1
 }
- 584:	08 95       	ret
+ 570:	08 95       	ret
 
-00000586 <tank_turn_right>:
+00000572 <tank_turn_left>:
+
+//sväng vänster som en stridsvagn!
+void tank_turn_left(uint8_t amount_l, uint8_t amount_h)
+{
+	LEFT_AMOUNT = amount_l;
+ 572:	80 93 b3 00 	sts	0x00B3, r24
+	RIGHT_AMOUNT = amount_h;
+ 576:	60 93 b4 00 	sts	0x00B4, r22
+	
+	clearbit(PORT_DIR, LEFT_DIR);
+ 57a:	29 98       	cbi	0x05, 1	; 5
+	setbit(PORT_DIR, RIGHT_DIR);
+ 57c:	28 9a       	sbi	0x05, 0	; 5
+}
+ 57e:	08 95       	ret
+
+00000580 <tank_turn_right>:
 
 
 //sväng höger som en stridsvagn!
 void tank_turn_right(uint8_t amount)
 {
 	LEFT_AMOUNT = amount;
- 586:	80 93 b3 00 	sts	0x00B3, r24
+ 580:	80 93 b3 00 	sts	0x00B3, r24
 	RIGHT_AMOUNT = amount;
- 58a:	80 93 b4 00 	sts	0x00B4, r24
+ 584:	80 93 b4 00 	sts	0x00B4, r24
 	
 	setbit(PORT_DIR, LEFT_DIR);
- 58e:	29 9a       	sbi	0x05, 1	; 5
+ 588:	29 9a       	sbi	0x05, 1	; 5
 	clearbit(PORT_DIR, RIGHT_DIR);
- 590:	28 98       	cbi	0x05, 0	; 5
+ 58a:	28 98       	cbi	0x05, 0	; 5
 }
- 592:	08 95       	ret
+ 58c:	08 95       	ret
 
-00000594 <claw_out>:
+0000058e <claw_out>:
 
 void claw_out()
 {
 	CLAW_AMOUNT = 64;
- 594:	80 e4       	ldi	r24, 0x40	; 64
- 596:	90 e0       	ldi	r25, 0x00	; 0
- 598:	90 93 89 00 	sts	0x0089, r25
- 59c:	80 93 88 00 	sts	0x0088, r24
+ 58e:	80 e4       	ldi	r24, 0x40	; 64
+ 590:	90 e0       	ldi	r25, 0x00	; 0
+ 592:	90 93 89 00 	sts	0x0089, r25
+ 596:	80 93 88 00 	sts	0x0088, r24
 }
- 5a0:	08 95       	ret
+ 59a:	08 95       	ret
 
-000005a2 <claw_in>:
+0000059c <claw_in>:
 
 void claw_in()
 {
 	CLAW_AMOUNT = 314;
- 5a2:	8a e3       	ldi	r24, 0x3A	; 58
- 5a4:	91 e0       	ldi	r25, 0x01	; 1
- 5a6:	90 93 89 00 	sts	0x0089, r25
- 5aa:	80 93 88 00 	sts	0x0088, r24
+ 59c:	8a e3       	ldi	r24, 0x3A	; 58
+ 59e:	91 e0       	ldi	r25, 0x01	; 1
+ 5a0:	90 93 89 00 	sts	0x0089, r25
+ 5a4:	80 93 88 00 	sts	0x0088, r24
 }
- 5ae:	08 95       	ret
+ 5a8:	08 95       	ret
 
-000005b0 <display_on>:
+000005aa <display_on>:
 
 void display_on()
 {
- 5b0:	cf 93       	push	r28
- 5b2:	df 93       	push	r29
+ 5aa:	cf 93       	push	r28
+ 5ac:	df 93       	push	r29
 	DISPLAY = 0;
- 5b4:	12 b8       	out	0x02, r1	; 2
+ 5ae:	12 b8       	out	0x02, r1	; 2
 	clearbit(PORTC, DISPLAY_RS);
- 5b6:	47 98       	cbi	0x08, 7	; 8
+ 5b0:	47 98       	cbi	0x08, 7	; 8
 	setbit(DISPLAY, DISPLAY_BLINK);
- 5b8:	10 9a       	sbi	0x02, 0	; 2
+ 5b2:	10 9a       	sbi	0x02, 0	; 2
 	setbit(DISPLAY, DISPLAY_CURSOR);
- 5ba:	11 9a       	sbi	0x02, 1	; 2
+ 5b4:	11 9a       	sbi	0x02, 1	; 2
 	setbit(DISPLAY,DISPLAY_POWER);
- 5bc:	12 9a       	sbi	0x02, 2	; 2
+ 5b6:	12 9a       	sbi	0x02, 2	; 2
 	setbit(DISPLAY,PA3);
- 5be:	13 9a       	sbi	0x02, 3	; 2
+ 5b8:	13 9a       	sbi	0x02, 3	; 2
 	display_enable();
- 5c0:	c0 e1       	ldi	r28, 0x10	; 16
- 5c2:	d2 e0       	ldi	r29, 0x02	; 2
- 5c4:	fe 01       	movw	r30, r28
- 5c6:	09 95       	icall
+ 5ba:	c9 e0       	ldi	r28, 0x09	; 9
+ 5bc:	d2 e0       	ldi	r29, 0x02	; 2
+ 5be:	fe 01       	movw	r30, r28
+ 5c0:	09 95       	icall
 	display_set_two_lines();
- 5c8:	0e 94 01 02 	call	0x402	; 0x402 <display_set_two_lines>
+ 5c2:	0e 94 fa 01 	call	0x3f4	; 0x3f4 <display_set_two_lines>
 	display_enable();
- 5cc:	fe 01       	movw	r30, r28
- 5ce:	09 95       	icall
+ 5c6:	fe 01       	movw	r30, r28
+ 5c8:	09 95       	icall
 	display_home();
- 5d0:	0e 94 09 02 	call	0x412	; 0x412 <display_home>
+ 5ca:	0e 94 02 02 	call	0x404	; 0x404 <display_home>
 	display_enable();
- 5d4:	fe 01       	movw	r30, r28
- 5d6:	09 95       	icall
+ 5ce:	fe 01       	movw	r30, r28
+ 5d0:	09 95       	icall
 	display_clear();
- 5d8:	0e 94 06 02 	call	0x40c	; 0x40c <display_clear>
+ 5d2:	0e 94 ff 01 	call	0x3fe	; 0x3fe <display_clear>
 	display_enable();
- 5dc:	fe 01       	movw	r30, r28
- 5de:	09 95       	icall
+ 5d6:	fe 01       	movw	r30, r28
+ 5d8:	09 95       	icall
 	
 	display_write();
- 5e0:	0e 94 0c 02 	call	0x418	; 0x418 <display_write>
+ 5da:	0e 94 05 02 	call	0x40a	; 0x40a <display_write>
 	display_enable();
- 5e4:	fe 01       	movw	r30, r28
- 5e6:	09 95       	icall
+ 5de:	fe 01       	movw	r30, r28
+ 5e0:	09 95       	icall
 }
- 5e8:	df 91       	pop	r29
- 5ea:	cf 91       	pop	r28
- 5ec:	08 95       	ret
+ 5e2:	df 91       	pop	r29
+ 5e4:	cf 91       	pop	r28
+ 5e6:	08 95       	ret
 
-000005ee <display_off>:
+000005e8 <display_off>:
 
 void display_off()
 {
 	clearbit(DISPLAY,DISPLAY_POWER);
- 5ee:	12 98       	cbi	0x02, 2	; 2
+ 5e8:	12 98       	cbi	0x02, 2	; 2
 }
- 5f0:	08 95       	ret
+ 5ea:	08 95       	ret
 
-000005f2 <_exit>:
- 5f2:	f8 94       	cli
+000005ec <_exit>:
+ 5ec:	f8 94       	cli
 
-000005f4 <__stop_program>:
- 5f4:	ff cf       	rjmp	.-2      	; 0x5f4 <__stop_program>
+000005ee <__stop_program>:
+ 5ee:	ff cf       	rjmp	.-2      	; 0x5ee <__stop_program>

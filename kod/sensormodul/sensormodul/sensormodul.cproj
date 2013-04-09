@@ -65,6 +65,9 @@
     </ToolchainSettings>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="bitmacros.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="sensormodul.c">
       <SubType>compile</SubType>
     </Compile>
