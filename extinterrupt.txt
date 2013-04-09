@@ -1,0 +1,33 @@
+allt detta i main:
+
+//aktivera interrupt på INT0 och INT1
+setbit(EIMSK, INT0);
+setbit(EIMSK, INT1);
+
+//aktivera interrupt-request på "any change"
+setbit(EICRA, ISC00);
+//aktivera global interrupts
+sei();
+
+
+interrupt-funktioner:
+
+
+ISR(INT0_vect)
+{
+//vad ska köras när sensorn vill nåt?
+
+}
+
+
+ISR(INT1_vect)
+{
+//vad ska köras när komm vill nåt?
+
+}
+
+
+!!!OBS!!!
+Om globala variabler måste ändras i interruptrutinerna måste de definieras som volatile!
+Exempelvis:
+volatile uint8_t hejs;
