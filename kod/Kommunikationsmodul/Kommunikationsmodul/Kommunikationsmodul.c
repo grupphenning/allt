@@ -29,13 +29,32 @@ uint8_t SPI_SlaveReceive()
 	/* Return data register */
 	return SPDR;
 }
+
+uint8_t spi_data_from_master;
+uint8_t spi_data_to_master;
+
+void SPI_read_byte()
+{
+	PORTA = SPDR;	// Bra för felsökning!
+	spi_data_from_master = SPDR;
+}
+
+
+void SPI_write_byte(uint8_t byte)
+{
+	SPDR = byte;
+}
+
+
 unsigned char USART_Recieve(void);
 void USART_Init(unsigned int baud);
 void USART_Transmit(unsigned char data);
+
 int main(void)
 {
 	PORTA = 0;
 	setbit(DDRB, PB1);
+	setbit(DDRA, PA7);
 	
 	sei(); //Enable global interrupts
 
@@ -131,5 +150,112 @@ unsigned char USART_Recieve(void)
 
 ISR(SPI_STC_vect)
 {
-	//PORTA=SPI_SlaveReceive();
+	SPI_read_byte();
+	decode_spi_from_master();
+	SPI_write_byte(spi_data_to_master);  //Ska ta något argument!
 }	
+
+void create_master_interrupt() 
+{
+	PORTA |= ~(1 << PINA7);
+}
+
+// ------------------------------------------------------------------------
+// --------------------------------PROTOKOLL-------------------------------
+// ------------------------------------------------------------------------
+
+/*
+uint8_t break_prot = 0b00000000;
+uint8_t drive_prot = 0b00100000;
+uint8_t back_prot = 0b00100100;
+uint8_t stop_prot = 0b00101000;
+uint8_t tank_turn_left_prot = 0b00101100;
+uint8_t tank_turn_right_prot = 0b00110000;
+*/
+uint8_t drive_turn_prot = 0b00110100;
+uint8_t drive_turn_left_request;
+uint8_t drive_turn_right_request;  // Ska sättas till ngt fint!!!!
+uint8_t drive_turn_left_value;
+uint8_t drive_turn_right_value;
+
+void decode_remote()
+{
+	uint8_t commando;
+	// Programmeras senare då vi vet hur vi får info från fjärr!!!
+	if (commando = drive_turn_prot)
+	{
+		// Sparar undan värdet för vänster resp. höger hjulpar!!!
+		drive_turn_left_value = 0x00; // OBS!!!! Blajvärde!!!!
+		drive_turn_right_value = 0xFF; // OBS!!!! Blajvärde!!!!
+	}
+	send_to_master(commando);
+}
+
+void decode_spi_from_master()
+{
+	if (spi_data_from_master = drive_turn_left_request)
+	{
+		
+	}
+	else if (spi_data_from_master = drive_turn_left_request)
+	{
+		
+	}
+}
+
+void send_to_master(uint8_t byte)
+{
+	SPDR = byte;
+	create_master_interrupt();
+}
+
+/*
+void send_break()
+{
+	SPDR = break_prot;
+	create_master_interrupt();
+}
+
+void send_control_command_drive()
+{
+	SPDR = drive_prot;
+	create_master_interrupt();
+}
+
+void send_control_command_back()
+{
+	SPDR = back_prot;
+	create_master_interrupt();
+}
+
+void send_control_command_stop()
+{
+	SPDR = stop_prot;
+	create_master_interrupt();
+}
+
+void send_control_command_tank_turn_left()
+{
+	SPDR = tank_turn_left_prot;
+	create_master_interrupt();
+}
+
+void send_control_command_tank_turn_right()
+{
+	SPDR = tank_turn_right_prot;
+	create_master_interrupt();
+}
+
+void send_control_command_drive_left()
+{
+	SPDR = drive_left_prot;
+	create_master_interrupt();
+}
+
+void send_control_command_drive_right()
+{
+	SPDR = drive_right_prot;
+	create_master_interrupt();
+}
+*/
+
