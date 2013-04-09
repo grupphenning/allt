@@ -3,25 +3,27 @@ Kommunikationsmodul.elf:     file format elf32-avr
 
 Sections:
 Idx Name          Size      VMA       LMA       File off  Algn
-  0 .text         00000122  00000000  00000000  00000054  2**1
+  0 .text         0000018a  00000000  00000000  00000074  2**1
                   CONTENTS, ALLOC, LOAD, READONLY, CODE
-  1 .stab         000006cc  00000000  00000000  00000178  2**2
+  1 .bss          00000002  00800060  00800060  000001fe  2**0
+                  ALLOC
+  2 .stab         000006cc  00000000  00000000  00000200  2**2
                   CONTENTS, READONLY, DEBUGGING
-  2 .stabstr      00000085  00000000  00000000  00000844  2**0
+  3 .stabstr      00000085  00000000  00000000  000008cc  2**0
                   CONTENTS, READONLY, DEBUGGING
-  3 .debug_aranges 00000080  00000000  00000000  000008d0  2**3
+  4 .debug_aranges 00000080  00000000  00000000  00000958  2**3
                   CONTENTS, READONLY, DEBUGGING
-  4 .debug_info   00000425  00000000  00000000  00000950  2**0
+  5 .debug_info   0000050e  00000000  00000000  000009d8  2**0
                   CONTENTS, READONLY, DEBUGGING
-  5 .debug_abbrev 0000014d  00000000  00000000  00000d75  2**0
+  6 .debug_abbrev 00000191  00000000  00000000  00000ee6  2**0
                   CONTENTS, READONLY, DEBUGGING
-  6 .debug_line   000002d9  00000000  00000000  00000ec2  2**0
+  7 .debug_line   000002f2  00000000  00000000  00001077  2**0
                   CONTENTS, READONLY, DEBUGGING
-  7 .debug_frame  000000b0  00000000  00000000  0000119c  2**2
+  8 .debug_frame  0000013c  00000000  00000000  0000136c  2**2
                   CONTENTS, READONLY, DEBUGGING
-  8 .debug_str    0000012d  00000000  00000000  0000124c  2**0
+  9 .debug_str    000001b0  00000000  00000000  000014a8  2**0
                   CONTENTS, READONLY, DEBUGGING
-  9 .debug_loc    00000047  00000000  00000000  00001379  2**0
+ 10 .debug_loc    000000f6  00000000  00000000  00001658  2**0
                   CONTENTS, READONLY, DEBUGGING
 
 Disassembly of section .text:
@@ -61,7 +63,7 @@ Disassembly of section .text:
   60:	10 e0       	ldi	r17, 0x00	; 0
   62:	a0 e6       	ldi	r26, 0x60	; 96
   64:	b0 e0       	ldi	r27, 0x00	; 0
-  66:	e2 e2       	ldi	r30, 0x22	; 34
+  66:	ea e8       	ldi	r30, 0x8A	; 138
   68:	f1 e0       	ldi	r31, 0x01	; 1
   6a:	02 c0       	rjmp	.+4      	; 0x70 <__do_copy_data+0x10>
   6c:	05 90       	lpm	r0, Z+
@@ -80,11 +82,11 @@ Disassembly of section .text:
   7e:	1d 92       	st	X+, r1
 
 00000080 <.do_clear_bss_start>:
-  80:	a0 36       	cpi	r26, 0x60	; 96
+  80:	a2 36       	cpi	r26, 0x62	; 98
   82:	b1 07       	cpc	r27, r17
   84:	e1 f7       	brne	.-8      	; 0x7e <.do_clear_bss_loop>
-  86:	0e 94 6d 00 	call	0xda	; 0xda <main>
-  8a:	0c 94 8f 00 	jmp	0x11e	; 0x11e <_exit>
+  86:	0e 94 75 00 	call	0xea	; 0xea <main>
+  8a:	0c 94 c3 00 	jmp	0x186	; 0x186 <_exit>
 
 0000008e <__bad_interrupt>:
   8e:	0c 94 00 00 	jmp	0	; 0x0 <__vectors>
@@ -155,139 +157,230 @@ uint8_t SPI_SlaveReceive()
 }
   ba:	08 95       	ret
 
-000000bc <serial_send_byte>:
+000000bc <SPI_read_byte>:
+uint8_t spi_data_from_master;
+uint8_t spi_data_to_master;
+
+void SPI_read_byte()
+{
+	PORTA = SPDR;	// Bra för felsökning!
+  bc:	8f b1       	in	r24, 0x0f	; 15
+  be:	8b bb       	out	0x1b, r24	; 27
+	spi_data_from_master = SPDR;
+  c0:	8f b1       	in	r24, 0x0f	; 15
+  c2:	80 93 61 00 	sts	0x0061, r24
+}
+  c6:	08 95       	ret
+
+000000c8 <SPI_write_byte>:
+
+void SPI_write_byte(uint8_t byte)
+{
+	SPDR = byte;
+  c8:	8f b9       	out	0x0f, r24	; 15
+}
+  ca:	08 95       	ret
+
+000000cc <serial_send_byte>:
 	UCSRB = ((1<<TXEN) | (1<<RXEN)); //RXCIE för att enejjbla avbrott
 }
 
 void serial_send_byte(uint8_t val)
 {
 	while((UCSRA &(1<<UDRE)) == 0);	// Vänta på att föregående värde redan skickats
-  bc:	5d 9b       	sbis	0x0b, 5	; 11
-  be:	fe cf       	rjmp	.-4      	; 0xbc <serial_send_byte>
+  cc:	5d 9b       	sbis	0x0b, 5	; 11
+  ce:	fe cf       	rjmp	.-4      	; 0xcc <serial_send_byte>
 	UDR = val;
-  c0:	8c b9       	out	0x0c, r24	; 12
+  d0:	8c b9       	out	0x0c, r24	; 12
 }
-  c2:	08 95       	ret
+  d2:	08 95       	ret
 
-000000c4 <USART_Init>:
+000000d4 <USART_Init>:
 
 void USART_Init(unsigned int baud)
 {
 	//Set baud rate
 	UBRRH = (unsigned char)(baud>>8);
-  c4:	90 bd       	out	0x20, r25	; 32
+  d4:	90 bd       	out	0x20, r25	; 32
 	UBRRL = (unsigned char)baud;
-  c6:	89 b9       	out	0x09, r24	; 9
+  d6:	89 b9       	out	0x09, r24	; 9
 	
 	//Enable reciever and transmitter
 	UCSRB = (1<<RXEN)|(1<<TXEN);
-  c8:	88 e1       	ldi	r24, 0x18	; 24
-  ca:	8a b9       	out	0x0a, r24	; 10
+  d8:	88 e1       	ldi	r24, 0x18	; 24
+  da:	8a b9       	out	0x0a, r24	; 10
 	
 	//Set frame format: 8data, 2stop bit
 	UCSRC = (1<<URSEL)|(1<<USBS)|(3<<UCSZ0);
-  cc:	8e e8       	ldi	r24, 0x8E	; 142
-  ce:	80 bd       	out	0x20, r24	; 32
+  dc:	8e e8       	ldi	r24, 0x8E	; 142
+  de:	80 bd       	out	0x20, r24	; 32
 }
-  d0:	08 95       	ret
+  e0:	08 95       	ret
 
-000000d2 <USART_Transmit>:
+000000e2 <USART_Transmit>:
 
 void USART_Transmit(unsigned char data)
 {
 	//Wait for empty transmit buffer
 	while(!(UCSRA & (1<<UDRE)));
-  d2:	5d 9b       	sbis	0x0b, 5	; 11
-  d4:	fe cf       	rjmp	.-4      	; 0xd2 <USART_Transmit>
+  e2:	5d 9b       	sbis	0x0b, 5	; 11
+  e4:	fe cf       	rjmp	.-4      	; 0xe2 <USART_Transmit>
 	
 	//Put data into buffer, sends the data
 	UDR = data;
-  d6:	8c b9       	out	0x0c, r24	; 12
+  e6:	8c b9       	out	0x0c, r24	; 12
 }
-  d8:	08 95       	ret
+  e8:	08 95       	ret
 
-000000da <main>:
-unsigned char USART_Recieve(void);
+000000ea <main>:
 void USART_Init(unsigned int baud);
 void USART_Transmit(unsigned char data);
+
 int main(void)
 {
 	PORTA = 0;
-  da:	1b ba       	out	0x1b, r1	; 27
+  ea:	1b ba       	out	0x1b, r1	; 27
 	setbit(DDRB, PB1);
-  dc:	b9 9a       	sbi	0x17, 1	; 23
+  ec:	b9 9a       	sbi	0x17, 1	; 23
+	setbit(DDRA, PA7);
+  ee:	d7 9a       	sbi	0x1a, 7	; 26
 	
 	sei(); //Enable global interrupts
-  de:	78 94       	sei
+  f0:	78 94       	sei
 
 	init_spi();
-  e0:	0e 94 49 00 	call	0x92	; 0x92 <init_spi>
+  f2:	0e 94 49 00 	call	0x92	; 0x92 <init_spi>
 	SPDR = 0x32;
-  e4:	82 e3       	ldi	r24, 0x32	; 50
-  e6:	8f b9       	out	0x0f, r24	; 15
+  f6:	82 e3       	ldi	r24, 0x32	; 50
+  f8:	8f b9       	out	0x0f, r24	; 15
     init_firefly();
-  e8:	0e 94 51 00 	call	0xa2	; 0xa2 <init_firefly>
+  fa:	0e 94 51 00 	call	0xa2	; 0xa2 <init_firefly>
 	DDRD = 0xff;
 	PORTA = 0xff;
 	PORTB = 0xff;*/
 	//PORTC = 0xff;
 	//PORTD = 0xff;
 	USART_Init(9600);
-  ec:	80 e8       	ldi	r24, 0x80	; 128
-  ee:	95 e2       	ldi	r25, 0x25	; 37
-  f0:	0e 94 62 00 	call	0xc4	; 0xc4 <USART_Init>
+  fe:	80 e8       	ldi	r24, 0x80	; 128
+ 100:	95 e2       	ldi	r25, 0x25	; 37
+ 102:	0e 94 6a 00 	call	0xd4	; 0xd4 <USART_Init>
 
 	
     while(1)
     {
 		USART_Transmit('a');
-  f4:	81 e6       	ldi	r24, 0x61	; 97
-  f6:	0e 94 69 00 	call	0xd2	; 0xd2 <USART_Transmit>
+ 106:	81 e6       	ldi	r24, 0x61	; 97
+ 108:	0e 94 71 00 	call	0xe2	; 0xe2 <USART_Transmit>
 		//USART_Recieve();
 		//clearbit(PORTB, PB0);
 		//PORTA = 2;
 		//_delay_ms(100);
 		//setbit(SPCR, SPE);		//Enables spi
 		PORTA = SPI_SlaveReceive();
-  fa:	0e 94 58 00 	call	0xb0	; 0xb0 <SPI_SlaveReceive>
-  fe:	8b bb       	out	0x1b, r24	; 27
- 100:	f9 cf       	rjmp	.-14     	; 0xf4 <main+0x1a>
+ 10c:	0e 94 58 00 	call	0xb0	; 0xb0 <SPI_SlaveReceive>
+ 110:	8b bb       	out	0x1b, r24	; 27
+ 112:	f9 cf       	rjmp	.-14     	; 0x106 <main+0x1c>
 
-00000102 <USART_Recieve>:
+00000114 <USART_Recieve>:
 }
 
 unsigned char USART_Recieve(void)
 {
 	//Wait for data to be recieved
 	while(!(UCSRA & (1<<RXC)));
- 102:	5f 9b       	sbis	0x0b, 7	; 11
- 104:	fe cf       	rjmp	.-4      	; 0x102 <USART_Recieve>
+ 114:	5f 9b       	sbis	0x0b, 7	; 11
+ 116:	fe cf       	rjmp	.-4      	; 0x114 <USART_Recieve>
 	
 	//Get and return recieved data from buffer
 	return UDR;
- 106:	8c b1       	in	r24, 0x0c	; 12
+ 118:	8c b1       	in	r24, 0x0c	; 12
 }
- 108:	08 95       	ret
+ 11a:	08 95       	ret
 
-0000010a <SPI_STC_vect>:
+0000011c <SPI_STC_vect>:
 
 ISR(SPI_STC_vect)
 {
- 10a:	1f 92       	push	r1
- 10c:	0f 92       	push	r0
- 10e:	0f b6       	in	r0, 0x3f	; 63
- 110:	0f 92       	push	r0
- 112:	11 24       	eor	r1, r1
-	//PORTA=SPI_SlaveReceive();
+ 11c:	1f 92       	push	r1
+ 11e:	0f 92       	push	r0
+ 120:	0f b6       	in	r0, 0x3f	; 63
+ 122:	0f 92       	push	r0
+ 124:	11 24       	eor	r1, r1
+ 126:	2f 93       	push	r18
+ 128:	3f 93       	push	r19
+ 12a:	4f 93       	push	r20
+ 12c:	5f 93       	push	r21
+ 12e:	6f 93       	push	r22
+ 130:	7f 93       	push	r23
+ 132:	8f 93       	push	r24
+ 134:	9f 93       	push	r25
+ 136:	af 93       	push	r26
+ 138:	bf 93       	push	r27
+ 13a:	ef 93       	push	r30
+ 13c:	ff 93       	push	r31
+	SPI_read_byte();
+ 13e:	0e 94 5e 00 	call	0xbc	; 0xbc <SPI_read_byte>
+	SPI_write_byte(spi_data_to_master);  //Ska ta något argument!
+ 142:	80 91 60 00 	lds	r24, 0x0060
+ 146:	0e 94 64 00 	call	0xc8	; 0xc8 <SPI_write_byte>
 }	
- 114:	0f 90       	pop	r0
- 116:	0f be       	out	0x3f, r0	; 63
- 118:	0f 90       	pop	r0
- 11a:	1f 90       	pop	r1
- 11c:	18 95       	reti
+ 14a:	ff 91       	pop	r31
+ 14c:	ef 91       	pop	r30
+ 14e:	bf 91       	pop	r27
+ 150:	af 91       	pop	r26
+ 152:	9f 91       	pop	r25
+ 154:	8f 91       	pop	r24
+ 156:	7f 91       	pop	r23
+ 158:	6f 91       	pop	r22
+ 15a:	5f 91       	pop	r21
+ 15c:	4f 91       	pop	r20
+ 15e:	3f 91       	pop	r19
+ 160:	2f 91       	pop	r18
+ 162:	0f 90       	pop	r0
+ 164:	0f be       	out	0x3f, r0	; 63
+ 166:	0f 90       	pop	r0
+ 168:	1f 90       	pop	r1
+ 16a:	18 95       	reti
 
-0000011e <_exit>:
- 11e:	f8 94       	cli
+0000016c <create_master_interrupt>:
 
-00000120 <__stop_program>:
- 120:	ff cf       	rjmp	.-2      	; 0x120 <__stop_program>
+void create_master_interrupt() 
+{
+	PORTA |= ~(1 << PINA7);
+ 16c:	8b b3       	in	r24, 0x1b	; 27
+ 16e:	8f 67       	ori	r24, 0x7F	; 127
+ 170:	8b bb       	out	0x1b, r24	; 27
+}
+ 172:	08 95       	ret
+
+00000174 <send_to_master>:
+	send_to_master(commando);
+}
+
+void send_to_master(uint8_t byte)
+{
+	SPDR = byte;
+ 174:	8f b9       	out	0x0f, r24	; 15
+	create_master_interrupt();
+ 176:	0e 94 b6 00 	call	0x16c	; 0x16c <create_master_interrupt>
+}
+ 17a:	08 95       	ret
+
+0000017c <decode_remote>:
+
+void decode_remote()
+{
+	uint8_t commando;
+	// Programmeras senare då vi vet hur vi får info från fjärr!!!
+	send_to_master(commando);
+ 17c:	80 e0       	ldi	r24, 0x00	; 0
+ 17e:	90 e0       	ldi	r25, 0x00	; 0
+ 180:	0e 94 ba 00 	call	0x174	; 0x174 <send_to_master>
+}
+ 184:	08 95       	ret
+
+00000186 <_exit>:
+ 186:	f8 94       	cli
+
+00000188 <__stop_program>:
+ 188:	ff cf       	rjmp	.-2      	; 0x188 <__stop_program>
