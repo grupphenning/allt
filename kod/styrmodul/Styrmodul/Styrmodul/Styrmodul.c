@@ -118,7 +118,7 @@ int main(void)
 	
 	while(1)
 	{
-		_delay_ms(1);
+		_delay_ms(100);
 		send_character(ch++);	//Ä
 		update();
 		
@@ -135,7 +135,7 @@ int main(void)
 		_delay_ms(1000);
 		*/
 		
-		tank_turn_left(200,200);
+		//tank_turn_left(200,200);
 	}
 }
 
