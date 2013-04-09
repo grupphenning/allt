@@ -3,27 +3,29 @@ Kommunikationsmodul.elf:     file format elf32-avr
 
 Sections:
 Idx Name          Size      VMA       LMA       File off  Algn
-  0 .text         0000018a  00000000  00000000  00000074  2**1
+  0 .text         000001ae  00000000  00000000  00000094  2**1
                   CONTENTS, ALLOC, LOAD, READONLY, CODE
-  1 .bss          00000002  00800060  00800060  000001fe  2**0
+  1 .data         00000004  00800060  000001ae  00000242  2**0
+                  CONTENTS, ALLOC, LOAD, DATA
+  2 .bss          00000004  00800064  00800064  00000246  2**0
                   ALLOC
-  2 .stab         000006cc  00000000  00000000  00000200  2**2
+  3 .stab         000006cc  00000000  00000000  00000248  2**2
                   CONTENTS, READONLY, DEBUGGING
-  3 .stabstr      00000085  00000000  00000000  000008cc  2**0
+  4 .stabstr      00000085  00000000  00000000  00000914  2**0
                   CONTENTS, READONLY, DEBUGGING
-  4 .debug_aranges 00000080  00000000  00000000  00000958  2**3
+  5 .debug_aranges 00000080  00000000  00000000  000009a0  2**3
                   CONTENTS, READONLY, DEBUGGING
-  5 .debug_info   0000050e  00000000  00000000  000009d8  2**0
+  6 .debug_info   000005bb  00000000  00000000  00000a20  2**0
                   CONTENTS, READONLY, DEBUGGING
-  6 .debug_abbrev 00000191  00000000  00000000  00000ee6  2**0
+  7 .debug_abbrev 00000195  00000000  00000000  00000fdb  2**0
                   CONTENTS, READONLY, DEBUGGING
-  7 .debug_line   000002f2  00000000  00000000  00001077  2**0
+  8 .debug_line   000002fc  00000000  00000000  00001170  2**0
                   CONTENTS, READONLY, DEBUGGING
-  8 .debug_frame  0000013c  00000000  00000000  0000136c  2**2
+  9 .debug_frame  0000014c  00000000  00000000  0000146c  2**2
                   CONTENTS, READONLY, DEBUGGING
-  9 .debug_str    000001b0  00000000  00000000  000014a8  2**0
+ 10 .debug_str    00000227  00000000  00000000  000015b8  2**0
                   CONTENTS, READONLY, DEBUGGING
- 10 .debug_loc    000000f6  00000000  00000000  00001658  2**0
+ 11 .debug_loc    0000010d  00000000  00000000  000017df  2**0
                   CONTENTS, READONLY, DEBUGGING
 
 Disassembly of section .text:
@@ -63,18 +65,18 @@ Disassembly of section .text:
   60:	10 e0       	ldi	r17, 0x00	; 0
   62:	a0 e6       	ldi	r26, 0x60	; 96
   64:	b0 e0       	ldi	r27, 0x00	; 0
-  66:	ea e8       	ldi	r30, 0x8A	; 138
+  66:	ee ea       	ldi	r30, 0xAE	; 174
   68:	f1 e0       	ldi	r31, 0x01	; 1
   6a:	02 c0       	rjmp	.+4      	; 0x70 <__do_copy_data+0x10>
   6c:	05 90       	lpm	r0, Z+
   6e:	0d 92       	st	X+, r0
-  70:	a0 36       	cpi	r26, 0x60	; 96
+  70:	a4 36       	cpi	r26, 0x64	; 100
   72:	b1 07       	cpc	r27, r17
   74:	d9 f7       	brne	.-10     	; 0x6c <__do_copy_data+0xc>
 
 00000076 <__do_clear_bss>:
   76:	10 e0       	ldi	r17, 0x00	; 0
-  78:	a0 e6       	ldi	r26, 0x60	; 96
+  78:	a4 e6       	ldi	r26, 0x64	; 100
   7a:	b0 e0       	ldi	r27, 0x00	; 0
   7c:	01 c0       	rjmp	.+2      	; 0x80 <.do_clear_bss_start>
 
@@ -82,11 +84,11 @@ Disassembly of section .text:
   7e:	1d 92       	st	X+, r1
 
 00000080 <.do_clear_bss_start>:
-  80:	a2 36       	cpi	r26, 0x62	; 98
+  80:	a8 36       	cpi	r26, 0x68	; 104
   82:	b1 07       	cpc	r27, r17
   84:	e1 f7       	brne	.-8      	; 0x7e <.do_clear_bss_loop>
   86:	0e 94 75 00 	call	0xea	; 0xea <main>
-  8a:	0c 94 c3 00 	jmp	0x186	; 0x186 <_exit>
+  8a:	0c 94 d5 00 	jmp	0x1aa	; 0x1aa <_exit>
 
 0000008e <__bad_interrupt>:
   8e:	0c 94 00 00 	jmp	0	; 0x0 <__vectors>
@@ -168,11 +170,12 @@ void SPI_read_byte()
   be:	8b bb       	out	0x1b, r24	; 27
 	spi_data_from_master = SPDR;
   c0:	8f b1       	in	r24, 0x0f	; 15
-  c2:	80 93 61 00 	sts	0x0061, r24
+  c2:	80 93 66 00 	sts	0x0066, r24
 }
   c6:	08 95       	ret
 
 000000c8 <SPI_write_byte>:
+
 
 void SPI_write_byte(uint8_t byte)
 {
@@ -318,69 +321,105 @@ ISR(SPI_STC_vect)
  138:	bf 93       	push	r27
  13a:	ef 93       	push	r30
  13c:	ff 93       	push	r31
-	SPI_read_byte();
+	SPI_read_byte(); //Sparar ner SPDR till PORTA och spi_data_from_master
  13e:	0e 94 5e 00 	call	0xbc	; 0xbc <SPI_read_byte>
-	SPI_write_byte(spi_data_to_master);  //Ska ta något argument!
- 142:	80 91 60 00 	lds	r24, 0x0060
- 146:	0e 94 64 00 	call	0xc8	; 0xc8 <SPI_write_byte>
+	decode_spi_from_master();
+ 142:	0e 94 bc 00 	call	0x178	; 0x178 <decode_spi_from_master>
+	//SPI_write_byte(spi_data_to_master);  //Ska ta något argument!
 }	
- 14a:	ff 91       	pop	r31
- 14c:	ef 91       	pop	r30
- 14e:	bf 91       	pop	r27
- 150:	af 91       	pop	r26
- 152:	9f 91       	pop	r25
- 154:	8f 91       	pop	r24
- 156:	7f 91       	pop	r23
- 158:	6f 91       	pop	r22
- 15a:	5f 91       	pop	r21
- 15c:	4f 91       	pop	r20
- 15e:	3f 91       	pop	r19
- 160:	2f 91       	pop	r18
+ 146:	ff 91       	pop	r31
+ 148:	ef 91       	pop	r30
+ 14a:	bf 91       	pop	r27
+ 14c:	af 91       	pop	r26
+ 14e:	9f 91       	pop	r25
+ 150:	8f 91       	pop	r24
+ 152:	7f 91       	pop	r23
+ 154:	6f 91       	pop	r22
+ 156:	5f 91       	pop	r21
+ 158:	4f 91       	pop	r20
+ 15a:	3f 91       	pop	r19
+ 15c:	2f 91       	pop	r18
+ 15e:	0f 90       	pop	r0
+ 160:	0f be       	out	0x3f, r0	; 63
  162:	0f 90       	pop	r0
- 164:	0f be       	out	0x3f, r0	; 63
- 166:	0f 90       	pop	r0
- 168:	1f 90       	pop	r1
- 16a:	18 95       	reti
+ 164:	1f 90       	pop	r1
+ 166:	18 95       	reti
 
-0000016c <create_master_interrupt>:
+00000168 <create_master_interrupt>:
 
 void create_master_interrupt() 
 {
 	PORTA |= ~(1 << PINA7);
- 16c:	8b b3       	in	r24, 0x1b	; 27
- 16e:	8f 67       	ori	r24, 0x7F	; 127
- 170:	8b bb       	out	0x1b, r24	; 27
+ 168:	8b b3       	in	r24, 0x1b	; 27
+ 16a:	8f 67       	ori	r24, 0x7F	; 127
+ 16c:	8b bb       	out	0x1b, r24	; 27
 }
- 172:	08 95       	ret
+ 16e:	08 95       	ret
 
-00000174 <send_to_master>:
-	send_to_master(commando);
+00000170 <send_to_master>:
+	create_master_interrupt();
 }
 
 void send_to_master(uint8_t byte)
 {
 	SPDR = byte;
- 174:	8f b9       	out	0x0f, r24	; 15
+ 170:	8f b9       	out	0x0f, r24	; 15
 	create_master_interrupt();
- 176:	0e 94 b6 00 	call	0x16c	; 0x16c <create_master_interrupt>
+ 172:	0e 94 b4 00 	call	0x168	; 0x168 <create_master_interrupt>
 }
- 17a:	08 95       	ret
+ 176:	08 95       	ret
 
-0000017c <decode_remote>:
+00000178 <decode_spi_from_master>:
+	send_to_master(commando);
+}
+
+void decode_spi_from_master()
+{
+	if (spi_data_from_master = drive_turn_left_request)
+ 178:	80 91 61 00 	lds	r24, 0x0061
+ 17c:	80 93 66 00 	sts	0x0066, r24
+ 180:	88 23       	and	r24, r24
+ 182:	19 f0       	breq	.+6      	; 0x18a <decode_spi_from_master+0x12>
+	{
+		SPDR = drive_turn_left_value;
+ 184:	80 91 67 00 	lds	r24, 0x0067
+ 188:	8f b9       	out	0x0f, r24	; 15
+	}
+	else if (spi_data_from_master = drive_turn_left_request)
+	{
+		SPDR = drive_turn_right_value;
+	}
+	create_master_interrupt();
+ 18a:	0e 94 b4 00 	call	0x168	; 0x168 <create_master_interrupt>
+}
+ 18e:	08 95       	ret
+
+00000190 <decode_remote>:
 
 void decode_remote()
 {
 	uint8_t commando;
 	// Programmeras senare då vi vet hur vi får info från fjärr!!!
+	if (commando = drive_turn_prot)
+ 190:	80 91 62 00 	lds	r24, 0x0062
+ 194:	88 23       	and	r24, r24
+ 196:	29 f0       	breq	.+10     	; 0x1a2 <decode_remote+0x12>
+	{
+		// Sparar undan värdet för vänster resp. höger hjulpar!!!
+		drive_turn_left_value = 0x00; // OBS!!!! Blajvärde!!!!
+ 198:	10 92 67 00 	sts	0x0067, r1
+		drive_turn_right_value = 0xFF; // OBS!!!! Blajvärde!!!!
+ 19c:	9f ef       	ldi	r25, 0xFF	; 255
+ 19e:	90 93 64 00 	sts	0x0064, r25
+	}
 	send_to_master(commando);
- 17c:	80 e0       	ldi	r24, 0x00	; 0
- 17e:	90 e0       	ldi	r25, 0x00	; 0
- 180:	0e 94 ba 00 	call	0x174	; 0x174 <send_to_master>
+ 1a2:	90 e0       	ldi	r25, 0x00	; 0
+ 1a4:	0e 94 b8 00 	call	0x170	; 0x170 <send_to_master>
 }
- 184:	08 95       	ret
+ 1a8:	08 95       	ret
 
-00000186 <_exit>:
- 186:	f8 94       	cli
+000001aa <_exit>:
+ 1aa:	f8 94       	cli
 
-00000188 <__stop_program>:
- 188:	ff cf       	rjmp	.-2      	; 0x188 <__stop_program>
+000001ac <__stop_program>:
+ 1ac:	ff cf       	rjmp	.-2      	; 0x1ac <__stop_program>

@@ -367,15 +367,15 @@ void decode_comm(uint8_t byte)
 {
 	if (byte = break_prot)
 	{
-		
+		// Någon som vet vilken "Avbryt"-funktion som avses i designspecen!?!?!?
 	}
 	else if (byte = drive_prot)
 	{
-		drive_forwards();
+		drive_forwards(120); //Random värde!!!!
 	}
 	else if (byte = back_prot)
 	{
-		drive_backwards();
+		drive_backwards(120); //Random värde!!!!
 	}
 	else if (byte = stop_prot)
 	{
@@ -383,11 +383,11 @@ void decode_comm(uint8_t byte)
 	}
 	else if (byte = tank_turn_left_prot)
 	{
-		tank_turn_left();
+		tank_turn_left(120, 120); //Random värde!!!!
 	}
 	else if (byte = tank_turn_right_prot)
 	{
-		tank_turn_right();
+		tank_turn_right(120); //Random värde!!!!
 	}
 	else if (byte = drive_turn_prot)
 	{

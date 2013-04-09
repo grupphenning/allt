@@ -150,9 +150,9 @@ unsigned char USART_Recieve(void)
 
 ISR(SPI_STC_vect)
 {
-	SPI_read_byte();
+	SPI_read_byte(); //Sparar ner SPDR till PORTA och spi_data_from_master
 	decode_spi_from_master();
-	SPI_write_byte(spi_data_to_master);  //Ska ta något argument!
+	//SPI_write_byte(spi_data_to_master);  //Ska ta något argument!
 }	
 
 void create_master_interrupt() 
@@ -173,8 +173,8 @@ uint8_t tank_turn_left_prot = 0b00101100;
 uint8_t tank_turn_right_prot = 0b00110000;
 */
 uint8_t drive_turn_prot = 0b00110100;
-uint8_t drive_turn_left_request;
-uint8_t drive_turn_right_request;  // Ska sättas till ngt fint!!!!
+uint8_t drive_turn_left_request = 0b00111000;
+uint8_t drive_turn_right_request = 0b00111100;  // Ska sättas till ngt fint!!!!
 uint8_t drive_turn_left_value;
 uint8_t drive_turn_right_value;
 
@@ -195,12 +195,13 @@ void decode_spi_from_master()
 {
 	if (spi_data_from_master = drive_turn_left_request)
 	{
-		
+		SPDR = drive_turn_left_value;
 	}
 	else if (spi_data_from_master = drive_turn_left_request)
 	{
-		
+		SPDR = drive_turn_right_value;
 	}
+	create_master_interrupt();
 }
 
 void send_to_master(uint8_t byte)
