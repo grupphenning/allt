@@ -6,10 +6,11 @@
  */ 
 
 #define F_CPU 8000000UL
- #include <avr/io.h>
+#include <avr/io.h>
 #include "bitmacros.h"
 #include <avr/delay.h>
 #include "display.h"
+#include <avr/interrupt.h>
 
 #define LEFT_DIR PB1
 #define RIGHT_DIR PB0
@@ -34,10 +35,20 @@
 
 
 uint8_t test;
+uint8_t spi_data_from_comm;
 
 int main(void)
 {
 	spi_init();
+	//aktivera interrupt på INT0 och INT1
+	setbit(EIMSK, INT0);
+	setbit(EIMSK, INT1);
+
+	//aktivera interrupt-request på "any change"
+	setbit(EICRA, ISC00);
+	//aktivera global interrupts
+	sei();
+
 	
 	spi_send_byte(0xAA);
 	
@@ -137,6 +148,7 @@ int main(void)
 		
 		tank_turn_left(200,200);
 	}
+	
 }
 
 void spi_init()
@@ -152,8 +164,8 @@ void spi_init()
 	clearbit(DDRB, PINB6);	//MISO input!
 	setbit(DDRB, PINB7);	//SCK output!
 	
-	setbit(PORTB, PORTB3);	// Ingen slav är vald 
-	setbit(PORTB, PORTB2);	
+	setbit(PORTB, PORTB3);	// Välj ej komm!  
+	setbit(PORTB, PORTB2);	// Välj ej sensor!
 	
 	clearbit(DDRB, PINB4);	//SS master input och hög
 	setbit(PORTB, PINB4);
@@ -171,18 +183,27 @@ void spi_init()
 	setbit(SPCR, SPR0);
 }
 
+void spi_get_data_from_comm()
+{
+	clearbit(PORTB, PORTB3);	//Väljer komm
+	SPDR = 0xFF;				//Lägger in junk i SPDR, startar överföringen
+	while(!(SPSR & (1 << SPIF)));
+	setbit(PORTB, PORTB3);		//Sätter komm till sleepmode
+	spi_data_from_comm = SPDR;
+}
+
 void spi_send_byte(uint8_t byte)
 {
-	clearbit(PORTB, PORTB3); //Välj Komm-enheten 
+	clearbit(PORTB, PORTB3); //Välj Komm-enheten måste ändras till allmän slav!
 	SPDR = byte;
 	
 	//SPDR = 0xaa;
 	/* Wait for transmission complete */
 	while(!(SPSR & (1 << SPIF)));
 	setbit(PORTB, PORTB3); //Sätt slave till sleepmode
-	test = SPDR;
+	//test = SPDR;
 	
-	PORTD = test;
+	//PORTD = test;
 }
 
 void drive_forwards(uint8_t amount)
@@ -324,5 +345,57 @@ void display_write()
 {
 	setbit(PORTC, DISPLAY_RS);
 	DISPLAY = 0b01001000;
+	
+}
+
+uint8_t break_prot = 0b00000000;
+uint8_t drive_prot = 0b00100000;
+uint8_t back_prot = 0b00100100;
+uint8_t stop_prot = 0b00101000;
+uint8_t tank_turn_left_prot = 0b00101100;
+uint8_t tank_turn_right_prot = 0b00110000;
+uint8_t drive_turn_prot = 0b00110100;
+
+
+ISR(INT1_vect)
+{
+	spi_get_data_from_comm();	//Sparar undan data från comm
+	decode_comm(spi_data_from_comm); 
+}
+
+void decode_comm(uint8_t byte)
+{
+	if (byte = break_prot)
+	{
+		
+	}
+	else if (byte = drive_prot)
+	{
+		drive_forwards();
+	}
+	else if (byte = back_prot)
+	{
+		drive_backwards();
+	}
+	else if (byte = stop_prot)
+	{
+		stop_motors();
+	}
+	else if (byte = tank_turn_left_prot)
+	{
+		tank_turn_left();
+	}
+	else if (byte = tank_turn_right_prot)
+	{
+		tank_turn_right();
+	}
+	else if (byte = drive_turn_prot)
+	{
+		spi_get_data_from_comm();
+		turn_left(spi_data_from_comm);
+		spi_get_data_from_comm();
+		turn_right(spi_data_from_comm);
+		
+	}
 	
 }
