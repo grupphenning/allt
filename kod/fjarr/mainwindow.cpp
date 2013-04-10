@@ -65,7 +65,7 @@ void MainWindow::setDirection(unsigned dir)
     arrow_keys[dir]->setChecked(true);
     current_direction = dir;
 
-    port->write(QByteArray(1, "ldrlsrb"[dir]));
+    port->write(QByteArray(1, "vdhlsrb"[dir]));
     port->flush();
 }
 

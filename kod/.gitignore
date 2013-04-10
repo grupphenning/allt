@@ -7,4 +7,5 @@ fjarr/fjarr.pro.user
 *.lss
 *.map
 *.orig
+*.autosave
 Debug

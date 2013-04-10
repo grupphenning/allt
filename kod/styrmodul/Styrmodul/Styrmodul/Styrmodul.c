@@ -374,6 +374,9 @@ uint8_t claw_out_prot = 0b01110000;
 
 ISR(INT1_vect)
 {
+	send_string("Avbrott");
+	update();
+	_delay_ms(50);
 	spi_get_data_from_comm(0xFF);	//Sparar undan data från comm
 	decode_comm(spi_data_from_comm); 
 }
@@ -392,22 +395,32 @@ void decode_comm(uint8_t command)
 		if (command == drive_prot)
 		{
 			drive_forwards(120); //Random värde!!!!
+			send_string("Fram");	
+			update();
 		}
 		else if (command == back_prot)
 		{
 			drive_backwards(120);
+			send_string("Bak");
+			update();
 		}
 		else if (command == stop_prot)
 		{
 			stop_motors();
+			send_string("Stopp");
+			update();
 		}
 		else if (command == tank_turn_left_prot)
 		{
 			tank_turn_left(120); //Random värde!!!!
+			send_string("Sväng vänster");
+			update();
 		}
 		else if (command == tank_turn_right_prot)
 		{
 			tank_turn_right(120); //Random värde!!!!
+			send_string("Sväng höger");
+			update();
 		}
 		/*else if (command == drive_turn_prot)
 		{
