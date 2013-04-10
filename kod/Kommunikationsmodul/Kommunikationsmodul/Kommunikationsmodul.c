@@ -97,7 +97,8 @@ UCSRB = (1<<TXEN)|(1<<RXEN);
 		unsigned b;
 		b = USART_Recieve();
 		USART_Transmit(b);
-		send_to_master(b);
+		decode_remote(b);
+		//send_to_master(b);
 		//clearbit(PORTB, PB0);
 		//PORTA = 2;
 		//_delay_ms(100);
@@ -210,13 +211,11 @@ uint8_t drive_turn_right_request = 0b00111100;  // Ska sättas till ngt fint!!!!
 uint8_t drive_turn_left_value;
 uint8_t drive_turn_right_value;
 
-void decode_remote()
+void decode_remote(uint8_t ch)
 {
-	uint8_t ch, commando;
+	uint8_t commando;
 	
 	// Konverterar från Blåtand till styr-komm-protokollet!
-	ch = USART_Recieve();
-	
 	switch(ch) {
 		case 'l': commando = 0b00101100; break;
 		case 'd': commando = 0b00100000; break;
