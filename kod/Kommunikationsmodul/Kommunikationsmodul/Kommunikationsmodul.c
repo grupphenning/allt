@@ -155,7 +155,7 @@ void USART_Init(unsigned int baud)
 
 void USART_Transmit(unsigned char data)
 {
-	// Wait until firefly is redy to receive
+	// Wait until firefly is ready to receive
 	while(PORTC & (1<<PINC1));
 	
 	//Put data into buffer, sends the data
@@ -183,7 +183,7 @@ unsigned char USART_Recieve(void)
 ISR(SPI_STC_vect)
 {
 	SPI_read_byte(); //Sparar ner SPDR till PORTA och spi_data_from_master
-	decode_spi_from_master();
+	//decode_spi_from_master();
 	//SPI_write_byte(spi_data_to_master);  //Ska ta något argument!
 }	
 
@@ -212,15 +212,39 @@ uint8_t drive_turn_right_value;
 
 void decode_remote()
 {
-	uint8_t commando;
-	// Programmeras senare då vi vet hur vi får info från fjärr!!!
-	if (commando = drive_turn_prot)
+	uint8_t ch, commando;
+	
+	// Konverterar från Blåtand till styr-komm-protokollet!
+	ch = USART_Recieve();
+	
+	switch(ch) {
+		case 'l': commando = 0b00101100; break;
+		case 'd': commando = 0b00100000; break;
+		case 'r': commando = 0b00110000; break;
+		case 's': commando = 0b00101000; break;
+		case 'b': commando = 0b00100100; break;
+	}
+	// Ej löst då vi skickar flera byte!
+	/*if (ch == 'v') // fram vänster
 	{
+		commando = 0b00110100;
 		// Sparar undan värdet för vänster resp. höger hjulpar!!!
 		drive_turn_left_value = 0x00; // OBS!!!! Blajvärde!!!!
-		drive_turn_right_value = 0xFF; // OBS!!!! Blajvärde!!!!
+		drive_turn_right_value = 0xff; // OBS!!!! Blajvärde!!!!
 	}
+	if (ch == 'h') // fram  höger
+	{
+		commando = 0b00110100;
+		// Sparar undan värdet för vänster resp. höger hjulpar!!!
+		drive_turn_left_value = 0xff; // OBS!!!! Blajvärde!!!!
+		drive_turn_right_value = 0x00; // OBS!!!! Blajvärde!!!!
+	}*/
 	send_to_master(commando);
+	
+	/*if(ch == 'v' || ch == 'h') {
+		send_to_master(drive_turn_right_value);
+		send_to_master(drive_turn_right_value);
+	}*/
 }
 
 void decode_spi_from_master()
@@ -228,12 +252,14 @@ void decode_spi_from_master()
 	if (spi_data_from_master = drive_turn_left_request)
 	{
 		SPDR = drive_turn_left_value;
+		create_master_interrupt();
 	}
 	else if (spi_data_from_master = drive_turn_left_request)
 	{
 		SPDR = drive_turn_right_value;
+		create_master_interrupt();
 	}
-	create_master_interrupt();
+	
 }
 
 void send_to_master(uint8_t byte)

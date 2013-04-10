@@ -39,6 +39,9 @@ uint8_t spi_data_from_comm;
 
 int main(void)
 {
+	OSCCAL = 0x70;
+
+	
 	spi_init();
 	//aktivera interrupt på INT0 och INT1
 	setbit(EIMSK, INT0);
@@ -123,7 +126,7 @@ int main(void)
 	update();
 	send_string("Data: ");
 	update();
-	//tank_turn_left(180,180);
+	//tank_turn_left(180);
 	//init_spi();
 	uint8_t ch = 'a';
 	
@@ -146,7 +149,7 @@ int main(void)
 		_delay_ms(1000);
 		*/
 		
-		//tank_turn_left(200,200);
+		//tank_turn_left(200);
 	}
 	
 }
@@ -252,10 +255,10 @@ void stop_motors()
 }
 
 //sväng vänster som en stridsvagn!
-void tank_turn_left(uint8_t amount_l, uint8_t amount_h)
+void tank_turn_left(uint8_t amount)
 {
-	LEFT_AMOUNT = amount_l;
-	RIGHT_AMOUNT = amount_h;
+	LEFT_AMOUNT = amount;
+	RIGHT_AMOUNT = amount;
 	
 	clearbit(PORT_DIR, LEFT_DIR);
 	setbit(PORT_DIR, RIGHT_DIR);
@@ -348,12 +351,15 @@ void display_write()
 	
 }
 //-----------------AVBRYT-------------------
-uint8_t break_prot = 0;
-uint8_t drive_prot = 'd';
-uint8_t back_prot = 'b';
-uint8_t stop_prot = 's';
-uint8_t tank_turn_left_prot = 'l';
-uint8_t tank_turn_right_prot = 'r';
+
+//-----------------STYRKOMMANDON------------
+uint8_t break_prot = 0b00000000;
+uint8_t control_command_prot = 0b00100000;
+uint8_t drive_prot = 0b00100000;
+uint8_t back_prot = 0b00100100;
+uint8_t stop_prot = 0b00101000;
+uint8_t tank_turn_left_prot = 0b00101100;
+uint8_t tank_turn_right_prot = 0b00110000;
 uint8_t drive_turn_prot = 0b00110100;
 
 uint8_t drive_turn_left_request = 0b00111000;
@@ -372,46 +378,53 @@ ISR(INT1_vect)
 	decode_comm(spi_data_from_comm); 
 }
 
-void decode_comm(uint8_t byte)
+void decode_comm(uint8_t command)
 {
-	if (byte == break_prot)
+	uint8_t byte = command & 0b11100000;
+	
+	if (command == break_prot)
 	{
 		// Någon som vet vilken "Avbryt"-funktion som avses i designspecen!?!?!?
 		// Kör iaf den avbrytfunktion som avses i designspecen!!!!!!
 	}
-	else if (byte == drive_prot)
+	else if (byte == control_command_prot)
 	{
-		drive_forwards(120); //Random värde!!!!
-	}
-	else if (byte == back_prot)
-	{
-		
-	}
-	else if (byte == stop_prot)
-	{
-		if (byte = claw_in_prot)
+		if (command == drive_prot)
 		{
-			claw_in();
+			drive_forwards(120); //Random värde!!!!
 		}
-		else if (byte = claw_out_prot)
+		else if (command == back_prot)
 		{
-			claw_out();
+			drive_backwards(120);
 		}
-	}
-	else if (byte == tank_turn_left_prot)
+		else if (command == stop_prot)
+		{
+			stop_motors();
+		}
+		else if (command == tank_turn_left_prot)
+		{
+			tank_turn_left(120); //Random värde!!!!
+		}
+		else if (command == tank_turn_right_prot)
+		{
+			tank_turn_right(120); //Random värde!!!!
+		}
+		/*else if (command == drive_turn_prot)
+		{
+			spi_get_data_from_comm(drive_turn_left_request);
+			spi_get_data_from_comm(drive_turn_left_request);
+			turn_left(spi_data_from_comm);
+			spi_get_data_from_comm(drive_turn_right_request);
+			spi_get_data_from_comm(drive_turn_right_request);
+			turn_right(spi_data_from_comm);
+		}*/
+	}	
+	else if (command == claw_in_prot)
 	{
-		tank_turn_left(120, 120); //Random värde!!!!
+		claw_in();
 	}
-	else if (byte == tank_turn_right_prot)
+	else if (command == claw_out_prot)
 	{
-		tank_turn_right(120); //Random värde!!!!
-	}
-	else if (byte == drive_turn_prot)
-	{
-		spi_get_data_from_comm();
-		turn_left(spi_data_from_comm);
-		spi_get_data_from_comm();
-		turn_right(spi_data_from_comm);
-		
+		claw_out();
 	}
 }

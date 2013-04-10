@@ -31,6 +31,7 @@ int main(void)
 
 void init_spi()
 {
+	sei();
 	setbit(SPCR, SPE);		//Enables spi
 	clearbit(DDRB, PINB4);	// SS är input
 	clearbit(DDRB, PINB5);	// MOSI är input
