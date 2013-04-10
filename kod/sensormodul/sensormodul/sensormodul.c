@@ -13,18 +13,31 @@
 #include "bitmacros.h"
 
 
+#define GYRO PINA2
+#define INTERUPT_REQUEST PINA7
+#define TAPE_SENSOR PINA1
+#define IR_SENSOR PINA0
+
+uint8_t read_adc();
+uint8_t read_ir(uint8_t sensor_no);
+uint8_t read_gyro();
+void init_adc();
 int main(void)
 {
-	DDRA = 0xff;
+	DDRA = 0b10000000;
+	DDRD = 0xFF;
 	init_spi();
+	init_adc();
 	
     while(1)
     {
-		//TEST
-		_delay_ms(1000);
-		PORTA = 0xff;
-		_delay_ms(1000);
-		PORTA = 0x00;
+		/*PSEUDO
+			send_to_styr(read_gyro());
+			for(i=0 to 5)
+				send_to_styr(read_ir(i));
+			*/
+			
+			
     }
 }
 
@@ -40,3 +53,33 @@ void init_spi()
 	setbit(DDRA, PINA7);	// Avbrottsförfrågan är output
 	setbit(PORTA, PINA7);	// 1 = normal, 0 = avbrottsförfrågan
 }
+
+void init_adc()
+{
+	setbit(ADCSRA,ADEN);
+}
+
+
+uint8_t read_gyro()
+{
+	ADMUX = 0b00000010;
+	return read_adc();
+}	
+uint8_t read_ir(uint8_t sensor_no)
+{
+	ADMUX = 0x00;
+	sensor_no = sensor_no << 4;
+	PORTD = 0b01110000 & sensor_no; //Tell mux where to read from
+	return read_adc();
+}
+
+uint8_t read_adc()
+{
+	setbit(ADCSRA,ADSC); //start_reading
+	while(ADSC); //Vänta tills färdigläst, fixa avbrott senare !
+	return ADCL;
+}
+
+	
+	
+
