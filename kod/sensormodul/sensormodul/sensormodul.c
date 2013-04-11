@@ -183,19 +183,19 @@ void send_to_master(uint8_t byte)
 
 void make_crossing_decision(uint8_t tape_one, uint8_t tape_two)
 {
-	if (tape_one == 'l' & tape_two == 'k')	 // Om höger (första tejpen lång, andra kort) i korsning!
+	if (tape_one == 'l' && tape_two == 'k')	 // Om höger (första tejpen lång, andra kort) i korsning!
 	{
 		send_crossing_decision('h');
 	}
-	else if (tape_one == 'k' & tape_two == 'l')	 // Om vänster (första tejpen kort, andra lång) i korsning!
+	else if (tape_one == 'k' && tape_two == 'l')	 // Om vänster (första tejpen kort, andra lång) i korsning!
 	{
 		send_crossing_decision('l');
 	}
-	else if (tape_one == 'k' & tape_two == 'k')	 // Om framåt (första tejpen kort, andra kort) i korsning!
+	else if (tape_one == 'k' && tape_two == 'k')	 // Om framåt (första tejpen kort, andra kort) i korsning!
 	{
 		send_crossing_decision('f');
 	}
-	else if (tape_one == 'k' & tape_two == 's')	 // Om mål (första tejpen kort, andra "smal" (???))
+	else if (tape_one == 'k' && tape_two == 's')	 // Om mål (första tejpen kort, andra "smal" (???))
 	{
 		send_crossing_decision('g');
 	}

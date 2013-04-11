@@ -184,7 +184,7 @@ void spi_init()
 	//Sätt SPCR-registret, inställningar om master/slave, spi enable, data order, klockdelning
 	SPCR = 0;
 	//setbit(SPCR, SPIE);
-	setbit(SPCR, SPE);
+	setbit(SPCR, SPE);,
 	setbit(SPCR, MSTR);
 	setbit(SPCR, SPR0);
 }
@@ -422,6 +422,7 @@ ISR(INT0_vect)
 	sprintf(tmp, "Sensor: %d", spi_data_from_sensor);
 	send_string(tmp);
 	update();
+	decode_sensor(spi_data_from_sensor);
 	
 }
 
@@ -495,6 +496,28 @@ void decode_comm(uint8_t command)
 	}
 	
 }
+
+void decode_sensor(uint8_t command)
+{
+	uint8_t sensor_type = command & TYPE_OF_SENSOR;
+	if( sensor_type == REFLEX )
+	{
+		if(command == CROSSING_RIGHT_PROT)	
+		{
+			tank_turn_right(SPEED);
+		}
+		else if (command == CROSSING_LEFT_PROT)
+		{
+			tank_turn_left(SPEED);	
+		}
+		else if (command == CROSSING_FORWARD_PROT)
+		{
+			drive_forwards(SPEED);
+		}
+
+	}	
+	
+}	
 
 
 
