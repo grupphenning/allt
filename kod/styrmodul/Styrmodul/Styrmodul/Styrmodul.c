@@ -56,11 +56,11 @@ int main(void)
 	spi_init();
 	
 	//aktivera interrupt på INT0 och INT1
-	setbit(EIMSK, INT0);
+	//setbit(EIMSK, INT0);
 	setbit(EIMSK, INT1);
 
 	//aktivera interrupt-request på "any change"
-	setbit(EICRA, ISC00);
+	//setbit(EICRA, ISC00);
 	setbit(EICRA, ISC10);
 	
 	//_delay_ms(1000);
@@ -112,9 +112,9 @@ int main(void)
 	//ICR1 = 313;
 	ICR1 = 625*4;
 	//sätt OCR1A också!
-	CLAW_AMOUNT = 10*4;
-	_delay_ms(1000);
-	CLAW_AMOUNT = 78*4;
+	//CLAW_AMOUNT = 10*4;
+	//_delay_ms(1000);
+	//CLAW_AMOUNT = 78*4;
 	
 	//pwm-styrning för motorerna, pinne OC2A, register OCR2A för vänster, pinne OC2B, register OCR2B för höger.
 	//PB1 DIR höger, PB0 vänster
@@ -198,14 +198,14 @@ void spi_get_data_from_comm(uint8_t message_byte)
 	spi_data_from_comm = SPDR;
 }
 
-void spi_get_data_from_sensor()
+/*void spi_get_data_from_sensor()
 {
 	clearbit(PORTB, PORTB2);	//Väljer sensor
 	//SPDR = message_byte;		//Lägger in meddelande i SPDR, startar överföringen
 	while(!(SPSR & (1 << SPIF)));
 	setbit(PORTB, PORTB2);		//Sätter sensor till sleepmode
 	spi_data_from_sensor = SPDR;
-}
+}*/
 
 void spi_send_byte(uint8_t byte)
 {
@@ -406,16 +406,16 @@ uint8_t claw_out_prot = 0b01100100;
 
 ISR(INT1_vect)
 {
-	send_string("A ");
-	update();
+//	send_string("A ");
+	//update();
 	spi_get_data_from_comm(0xFF);	//Sparar undan data från comm
 	decode_comm(spi_data_from_comm); 
-	send_string("C");
-	update();
+//	send_string("C");
+//	update();
 	
 }
 
-ISR(INT0_vect)
+/*ISR(INT0_vect)
 {
 	spi_get_data_from_sensor();
 	char tmp[15];
@@ -424,16 +424,22 @@ ISR(INT0_vect)
 	update();
 	decode_sensor(spi_data_from_sensor);
 	
-}
+}*/
 
 void decode_comm(uint8_t command)
 {
+	char tmp[10];
+	sprintf(tmp, "decode: 0x%02X", command);
+	send_string(tmp);
+	update();
 	uint8_t byte = command & 0b11100000;
 	
 	if (command == BREAK_PROT)
 	{
 		// Någon som vet vilken "Avbryt"-funktion som avses i designspecen!?!?!?
 		// Kör iaf den avbrytfunktion som avses i designspecen!!!!!!
+	send_string("break");
+	update();
 	}
 	else if (byte == CONTROL_COMMAND_PROT)
 	{
