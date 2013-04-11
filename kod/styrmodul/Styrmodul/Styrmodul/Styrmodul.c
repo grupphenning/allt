@@ -36,33 +36,44 @@
 #define DISPLAY_RS PC7
 #define DISPLAY_ENABLE PC6
 
-
 uint8_t test;
-uint8_t spi_data_from_comm;
-uint8_t spi_data_from_sensor;
+volatile uint8_t spi_data_from_comm;
+volatile uint8_t spi_data_from_sensor;
+volatile uint8_t comm_interrupt_occoured = 0;
+volatile uint8_t sensor_interrupt_occoured = 0;
 //uint8_t amount = 255;
 #define SPEED 255
 
 int main(void)
 {
-	//aktivera global interrupts
-	sei();
+
 	//OSCCAL = 0x70;
 	init_display();
-	clear_screen();
-	update();
-	send_string("Data: ");
-	update();
-	spi_init();
-	
-	//aktivera interrupt på INT0 och INT1
-	//setbit(EIMSK, INT0);
-	setbit(EIMSK, INT1);
+ 	clear_screen();
+ 	send_string("Boot!");
+ 	update();
 
-	//aktivera interrupt-request på "any change"
-	//setbit(EICRA, ISC00);
-	setbit(EICRA, ISC10);
+	spi_init();
+	pwm_init();
 	
+	sei();		//aktivera global interrupts
+	while(1)
+	{
+		if(comm_interrupt_occoured)
+		{
+			decode_comm();
+			comm_interrupt_occoured = 0;
+		} 
+		if(sensor_interrupt_occoured)
+		{
+			decode_sensor();
+			sensor_interrupt_occoured = 0;
+		}
+	}
+}
+
+void pwm_init()
+{	
 	//_delay_ms(1000);
 	
 	///////////////////////////////////spi_send_byte(0xAA);
@@ -134,30 +145,6 @@ int main(void)
 	//TCCR2B = (1 << CS20);
 	////////////////////////////////////////////TIMSK2 = (1 << OCIE2A);
 	//fullt ös på OCR=0xff, inget på 0x00
-	
-	
-	//tank_turn_left(180);
-	//init_spi();
-	uint8_t ch = 'a';
-	
-	while(1)
-	{
-		//_delay_ms(100);
-// 		send_character(ch++);	//Ä
-// 		update();
-		
-		//spi_send_byte(0xD2);
-		
-		/*
-		claw_out();
-		_delay_ms(1000);
-		claw_in();
-		_delay_ms(1000);
-		*/
-		
-		//tank_turn_left(200);
-	}
-	
 }
 
 void spi_init()
@@ -184,9 +171,17 @@ void spi_init()
 	//Sätt SPCR-registret, inställningar om master/slave, spi enable, data order, klockdelning
 	SPCR = 0;
 	//setbit(SPCR, SPIE);
-	setbit(SPCR, SPE);,
+	setbit(SPCR, SPE);
 	setbit(SPCR, MSTR);
 	setbit(SPCR, SPR0);
+
+	//aktivera interrupt på INT0 och INT1
+	setbit(EIMSK, INT0);	// Akvitera avbrottsförfrågan från sensorenheten
+	setbit(EIMSK, INT1);	// Akvitera avbrottsförfrågan från kommunikationsenheten
+
+	//aktivera interrupt-request på "any change"
+	setbit(EICRA, ISC00);
+	setbit(EICRA, ISC10);
 }
 
 void spi_get_data_from_comm(uint8_t message_byte)
@@ -198,14 +193,14 @@ void spi_get_data_from_comm(uint8_t message_byte)
 	spi_data_from_comm = SPDR;
 }
 
-/*void spi_get_data_from_sensor()
+void spi_get_data_from_sensor(uint8_t message_byte)
 {
 	clearbit(PORTB, PORTB2);	//Väljer sensor
-	//SPDR = message_byte;		//Lägger in meddelande i SPDR, startar överföringen
+	SPDR = message_byte;		//Lägger in meddelande i SPDR, startar överföringen
 	while(!(SPSR & (1 << SPIF)));
 	setbit(PORTB, PORTB2);		//Sätter sensor till sleepmode
 	spi_data_from_sensor = SPDR;
-}*/
+}
 
 void spi_send_byte(uint8_t byte)
 {
@@ -328,9 +323,6 @@ void display_set_two_lines()
 	setbit(DISPLAY,PA5);
 	setbit(DISPLAY,PA4);
 	setbit(DISPLAY,PA3);
-	
-	
-	
 }
 
 
@@ -404,74 +396,63 @@ uint8_t claw_out_prot = 0b01100100;
 //----------SÄTT PD-KONSTANTER---------------
 */
 
+// Kommunikationsenheten skickar en avbrottsförfrågan
 ISR(INT1_vect)
 {
-//	send_string("A ");
-	//update();
+	comm_interrupt_occoured = 1;
 	spi_get_data_from_comm(0xFF);	//Sparar undan data från comm
-	decode_comm(spi_data_from_comm); 
-//	send_string("C");
-//	update();
-	
 }
 
-/*ISR(INT0_vect)
+// Sensorenheten skickar en avbrottsförfrågan
+ISR(INT0_vect)
 {
-	spi_get_data_from_sensor();
-	char tmp[15];
-	sprintf(tmp, "Sensor: %d", spi_data_from_sensor);
-	send_string(tmp);
-	update();
-	decode_sensor(spi_data_from_sensor);
-	
-}*/
+	sensor_interrupt_occoured = 1;
+	spi_get_data_from_sensor(0xFF);
+}
 
-void decode_comm(uint8_t command)
+void decode_comm()
 {
-	char tmp[10];
-	sprintf(tmp, "decode: 0x%02X", command);
-	send_string(tmp);
-	update();
+	uint8_t command = spi_data_from_comm;
 	uint8_t byte = command & 0b11100000;
 	
 	if (command == BREAK_PROT)
 	{
 		// Någon som vet vilken "Avbryt"-funktion som avses i designspecen!?!?!?
 		// Kör iaf den avbrytfunktion som avses i designspecen!!!!!!
-	send_string("break");
-	update();
+		//send_string("break");
+		//update();
 	}
 	else if (byte == CONTROL_COMMAND_PROT)
 	{
 		if (command == DRIVE_PROT)
 		{
 			drive_forwards(SPEED);
-			send_string("Fram");	// Lägger ut "Fram" på displayen.
-			update();
+//			send_string("Fram");	// Lägger ut "Fram" på displayen.
+//			update();
 		}
 		else if (command == BACK_PROT)
 		{
 			drive_backwards(SPEED);
-			send_string("Bak");
-			update();
+//			send_string("Bak");
+//			update();
 		}
 		else if (command == STOP_PROT)
 		{
 			stop_motors();
-			send_string("Stopp");
-			update();
+//			send_string("Stopp");
+//			update();
 		}
 		else if (command == TANK_TURN_LEFT_PROT)
 		{
 			tank_turn_left(SPEED);
-			send_string("Rotera vänster");
-			update();
+//			send_string("Rotera vänster");
+//			update();
 		}
 		else if (command == TANK_TURN_RIGHT_PROT)
 		{
 			tank_turn_right(SPEED);
-			send_string("Rotera höger");
-			update();
+//			send_string("Rotera höger");
+//			update();
 		}
 		/*else if (command == drive_turn_prot)
 		{
@@ -486,25 +467,31 @@ void decode_comm(uint8_t command)
 	else if (command == CLAW_IN_PROT)
 	{
 		claw_in();
-		send_string("Klo in");
-		update();
+//		send_string("Klo in");
+//		update();
 	}
 	else if (command == CLAW_OUT_PROT)
 	{
 		claw_out();
-		send_string("Klo ut");
-		update();
+//		send_string("Klo ut");
+//		update();
 	}
 	else 
 	{
-		send_string("B");	
+		send_string("SYNTAX ERROR!");
 		update();
 	}
-	
 }
 
-void decode_sensor(uint8_t command)
+void decode_sensor()
 {
+	uint8_t command = spi_data_from_sensor;
+	char tmp[10];
+	sprintf(tmp, "S: 0x%02X", command);
+	send_string(tmp);
+	update();
+	return;
+	
 	uint8_t sensor_type = command & TYPE_OF_SENSOR;
 	if( sensor_type == REFLEX )
 	{
