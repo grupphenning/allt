@@ -51,6 +51,8 @@ int main(void)
 			//send_to_master(test_data);
 			//////////////////adc_interrupt = 0;
 		}			
+		send_to_master('a');
+		_delay_ms(50);
 		//_delay_ms(1);
 
 			
@@ -178,7 +180,7 @@ void send_crossing_decision(uint8_t ch)
 void send_to_master(uint8_t byte)
 {
 	SPDR = byte;
-	//create_master_interrupt();
+	create_master_interrupt();
 }
 
 void make_crossing_decision(uint8_t tape_one, uint8_t tape_two)

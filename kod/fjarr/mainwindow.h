@@ -4,6 +4,7 @@
 #include <QMainWindow>
 #include <QtWidgets/QPushButton>
 #include "qextserialport.h"
+#include "qextserialenumerator.h"
 
 namespace Ui {
 class MainWindow;
