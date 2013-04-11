@@ -252,7 +252,7 @@ void decode_remote(uint8_t ch)
 		//claw in
 		case 'c': commando = 0b01100000; break;
 		//claw out
-		case 'o': commando = 0b01110000; break;
+		case 'o': commando = 0b01100100; break;
 		default: commando = 0xff; break;
 	}
 	// Ej löst då vi skickar flera byte!
@@ -301,54 +301,3 @@ void send_to_master(uint8_t byte)
 	SPDR = byte;
 	create_master_interrupt();
 }
-
-/*
-void send_break()
-{
-	SPDR = break_prot;
-	create_master_interrupt();
-}
-
-void send_control_command_drive()
-{
-	SPDR = drive_prot;
-	create_master_interrupt();
-}
-
-void send_control_command_back()
-{
-	SPDR = back_prot;
-	create_master_interrupt();
-}
-
-void send_control_command_stop()
-{
-	SPDR = stop_prot;
-	create_master_interrupt();
-}
-
-void send_control_command_tank_turn_left()
-{
-	SPDR = tank_turn_left_prot;
-	create_master_interrupt();
-}
-
-void send_control_command_tank_turn_right()
-{
-	SPDR = tank_turn_right_prot;
-	create_master_interrupt();
-}
-
-void send_control_command_drive_left()
-{
-	SPDR = drive_left_prot;
-	create_master_interrupt();
-}
-
-void send_control_command_drive_right()
-{
-	SPDR = drive_right_prot;
-	create_master_interrupt();
-}
-*/
-

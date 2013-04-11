@@ -371,7 +371,7 @@ uint8_t drive_turn_right_request = 0b00111100;
 
 //-------------GRIPKLOKOMMANDON--------------
 uint8_t claw_in_prot = 0b01100000;
-uint8_t claw_out_prot = 0b01110000;
+uint8_t claw_out_prot = 0b01100100;
 //----------SÄTT PD-KONSTANTER---------------
 
 
@@ -399,8 +399,8 @@ void decode_comm(uint8_t command)
 	{
 		if (command == drive_prot)
 		{
-			drive_forwards(SPEED); //Random värde!!!!
-			send_string("Fram");	
+			drive_forwards(SPEED);
+			send_string("Fram");	// Lägger ut "Fram" på displayen.
 			update();
 		}
 		else if (command == back_prot)
@@ -417,14 +417,14 @@ void decode_comm(uint8_t command)
 		}
 		else if (command == tank_turn_left_prot)
 		{
-			tank_turn_left(SPEED); //Random värde!!!!
-			send_string("Sväng vänster");
+			tank_turn_left(SPEED);
+			send_string("Rotera vänster");
 			update();
 		}
 		else if (command == tank_turn_right_prot)
 		{
-			tank_turn_right(SPEED); //Random värde!!!!
-			send_string("Sväng höger");
+			tank_turn_right(SPEED);
+			send_string("Rotera höger");
 			update();
 		}
 		/*else if (command == drive_turn_prot)
@@ -440,10 +440,14 @@ void decode_comm(uint8_t command)
 	else if (command == claw_in_prot)
 	{
 		claw_in();
+		send_string("Klo in");
+		update();
 	}
 	else if (command == claw_out_prot)
 	{
 		claw_out();
+		send_string("Klo ut");
+		update();
 	}
 	else 
 	{
