@@ -37,7 +37,8 @@ public:
     void setDirection(unsigned);
 
 private:
-    QPushButton *arrow_keys[7];
+    //QPushButton *arrow_keys[7];
+    QPushButton *arrow_keys[9];
     unsigned current_direction;
     Ui::MainWindow *ui;
     KeyPressEater *eat;

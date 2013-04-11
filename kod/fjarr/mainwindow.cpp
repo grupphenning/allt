@@ -29,6 +29,10 @@ MainWindow::MainWindow(QWidget *parent) :
     arrow_keys[5] = ui->pushButton_7;
     arrow_keys[6] = ui->pushButton_10;
 
+    arrow_keys[7] = ui->pushButton_7;
+    arrow_keys[8] = ui->pushButton_10;
+
+
     for(unsigned i = 0; i < sizeof arrow_keys / sizeof arrow_keys[0]; ++i) {
         arrow_keys[i]->setCheckable(true);
     }
@@ -65,7 +69,8 @@ void MainWindow::setDirection(unsigned dir)
     arrow_keys[dir]->setChecked(true);
     current_direction = dir;
 
-    port->write(QByteArray(1, "vdhlsrb"[dir]));
+    //port->write(QByteArray(1, "vdhlsrb"[dir]));
+    port->write(QByteArray(1, "vdhlsrbco"[dir]));
     port->flush();
 }
 
@@ -99,6 +104,8 @@ bool KeyPressEater::eventFilter(QObject *recipient, QEvent *event)
             case Qt::Key_Down: { w->is_pressed[1] = event->type() == QEvent::KeyPress; break; }
             case Qt::Key_Left: { w->is_pressed[2] = event->type() == QEvent::KeyPress; break; }
             case Qt::Key_Right: { w->is_pressed[3] = event->type() == QEvent::KeyPress; break; }
+            case Qt::Key_C: { w->is_pressed[7] = event->type() == QEvent::KeyPress; break; }
+
             }
 
             switch(key_event->key()) {
@@ -119,8 +126,14 @@ void MainWindow::on_pushButton_3_clicked() { setDirection(0); }
 void MainWindow::on_pushButton_4_clicked() { setDirection(1); }
 void MainWindow::on_pushButton_5_clicked() { setDirection(4); }
 void MainWindow::on_pushButton_6_clicked() { setDirection(2); }
-void MainWindow::on_pushButton_7_clicked() { setDirection(5); }
-void MainWindow::on_pushButton_10_clicked() { setDirection(6); }
+//void MainWindow::on_pushButton_7_clicked() { setDirection(5); }
+//void MainWindow::on_pushButton_10_clicked() { setDirection(6); }
+//c - claw in
+void MainWindow::on_pushButton_7_clicked() { setDirection(7); }
+//o - claw out
+void MainWindow::on_pushButton_10_clicked() { setDirection(8); }
+
+
 
 void MainWindow::on_pushButton_2_released() { ui->pushButton_2->setChecked(true); }
 void MainWindow::on_pushButton_3_released() { ui->pushButton_3->setChecked(true); }
