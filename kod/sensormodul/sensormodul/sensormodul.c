@@ -94,16 +94,26 @@ void init_adc()
 
 void read_gyro()
 {
+	clearbit(ADMUX,MUX0);
 	setbit(ADMUX,MUX1);
-	
+	clearbit(ADMUX,MUX2);
 	read_adc();
 }	
 void read_ir(uint8_t sensor_no)
 {
-	setbit(ADMUX,MUX1);
+	clearbit(ADMUX,MUX0);
+	clearbit(ADMUX,MUX1);
+	clearbit(ADMUX,MUX2);
 	sensor_no = sensor_no << 4;
 	PORTD = 0b01110000 & sensor_no; //Tell mux where to read from
 	read_adc();
+}
+
+void read_tape(uint8_t sensor_no)
+{
+	setbit(ADMUX,MUX0);
+	clearbit(ADMUX,MUX1);
+	clearbit(ADMUX,MUX2);
 }
 
 void read_adc()
