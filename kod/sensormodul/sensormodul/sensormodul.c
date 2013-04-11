@@ -30,12 +30,12 @@ uint8_t	adc_interrupt = 0;
 
 int main(void)
 {
-	sei();
+	//sei();
 	DDRA = 0b10000000;
 	DDRD = 0xFF;
-	DDRB = 0xFF; //OBS!! TEST TAS BORT SÅ FORT BUSS SKALL UPP
+	//DDRB = 0xFF; //OBS!! TEST TAS BORT SÅ FORT BUSS SKALL UPP
 	//init_spi();
-	init_adc();
+	//init_adc();
 	
     while(1)
     {
@@ -45,11 +45,11 @@ int main(void)
 				send_to_styr(read_ir(i));
 			*/
 		//if(bit_is_clear(ADCSRA,ADSC))
-		if(adc_interrupt)
+		///////////////if(adc_interrupt)
 		{
-			read_gyro();
-			send_to_master(test_data);
-			adc_interrupt = 0;
+			///////////////////read_gyro();
+			//send_to_master(test_data);
+			//////////////////adc_interrupt = 0;
 		}			
 		//_delay_ms(1);
 

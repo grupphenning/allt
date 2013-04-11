@@ -106,11 +106,11 @@ int main(void)
 		////setbit(PORTA, PORTA6);
 		data_from_bt = USART_Receive();
 		USART_Transmit(data_from_bt);
-		if ( data_from_bt != data_from_bt_old)
-		{
+// 		if ( data_from_bt != data_from_bt_old)
+// 		{
 			data_from_bt_old = data_from_bt;
 			decode_remote(data_from_bt);
-		}
+		//}
 		////clearbit(PORTA, PORTA6);
 		//send_to_master(b);
 		//clearbit(PORTB, PB0);
@@ -273,7 +273,9 @@ void decode_remote(uint8_t ch)
 	
 	//om det var något av l,d,r,s,b
 	if(commando != 0xff)
+	{
 		send_to_master(commando);
+	}		
 	
 	/*if(ch == 'v' || ch == 'h') {
 		send_to_master(drive_turn_right_value);
@@ -299,5 +301,11 @@ void decode_remote(uint8_t ch)
 void send_to_master(uint8_t byte)
 {
 	SPDR = byte;
+	char temp[5];
+	sprintf(temp,"0x%02X", byte);
+	for (int i = 0; i<4; i++)
+	{
+		USART_Transmit(temp[i]);
+	}
 	create_master_interrupt();
 }

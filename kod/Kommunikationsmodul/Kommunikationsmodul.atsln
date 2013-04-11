@@ -3,10 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 11.00
 # Atmel Studio Solution File, Format Version 11.00
 Project("{54F91283-7BC4-4236-8FF9-10F437C3AD48}") = "Kommunikationsmodul", "Kommunikationsmodul\Kommunikationsmodul.cproj", "{A62AD6E5-9586-4FAE-B8FD-D613AA601257}"
 EndProject
-Project("{54F91283-7BC4-4236-8FF9-10F437C3AD48}") = "Styrmodul", "..\styrmodul\Styrmodul\Styrmodul\Styrmodul.cproj", "{5D9B07D1-2459-4D40-826D-1BD2F6AF41D4}"
-EndProject
-Project("{54F91283-7BC4-4236-8FF9-10F437C3AD48}") = "sensormodul", "..\sensormodul\sensormodul\sensormodul.cproj", "{48BC3173-23BF-4541-8A54-CAE9F54ADFF9}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|AVR = Debug|AVR
@@ -17,14 +13,6 @@ Global
 		{A62AD6E5-9586-4FAE-B8FD-D613AA601257}.Debug|AVR.Build.0 = Debug|AVR
 		{A62AD6E5-9586-4FAE-B8FD-D613AA601257}.Release|AVR.ActiveCfg = Release|AVR
 		{A62AD6E5-9586-4FAE-B8FD-D613AA601257}.Release|AVR.Build.0 = Release|AVR
-		{5D9B07D1-2459-4D40-826D-1BD2F6AF41D4}.Debug|AVR.ActiveCfg = Debug|AVR
-		{5D9B07D1-2459-4D40-826D-1BD2F6AF41D4}.Debug|AVR.Build.0 = Debug|AVR
-		{5D9B07D1-2459-4D40-826D-1BD2F6AF41D4}.Release|AVR.ActiveCfg = Release|AVR
-		{5D9B07D1-2459-4D40-826D-1BD2F6AF41D4}.Release|AVR.Build.0 = Release|AVR
-		{48BC3173-23BF-4541-8A54-CAE9F54ADFF9}.Debug|AVR.ActiveCfg = Debug|AVR
-		{48BC3173-23BF-4541-8A54-CAE9F54ADFF9}.Debug|AVR.Build.0 = Debug|AVR
-		{48BC3173-23BF-4541-8A54-CAE9F54ADFF9}.Release|AVR.ActiveCfg = Release|AVR
-		{48BC3173-23BF-4541-8A54-CAE9F54ADFF9}.Release|AVR.Build.0 = Release|AVR
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
