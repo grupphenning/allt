@@ -25,6 +25,8 @@ void init_adc();
 
 uint8_t spi_data_from_master;
 uint8_t spi_data_to_master;
+uint8_t test_data;
+uint8_t	adc_interrupt = 0;
 
 int main(void)
 {
@@ -42,9 +44,12 @@ int main(void)
 			for(i=0 to 5)
 				send_to_styr(read_ir(i));
 			*/
-		if(bit_is_clear(ADCSRA,ADSC))
+		//if(bit_is_clear(ADCSRA,ADSC))
+		if(adc_interrupt)
 		{
 			read_gyro();
+			send_to_master(test_data);
+			adc_interrupt = 0;
 		}			
 		//_delay_ms(1);
 
@@ -121,10 +126,11 @@ void read_adc()
 	setbit(ADCSRA,ADSC); //start_reading
 }
 
+
 ISR(ADC_vect)
 {
-	PORTB = ADCH;
-	_delay_ms(5);
+	test_data = ADCH;
+	adc_interrupt = 1;
 }
 
 
@@ -185,7 +191,7 @@ void send_crossing_decision(uint8_t ch)
 void send_to_master(uint8_t byte)
 {
 	SPDR = byte;
-	create_master_interrupt();
+	//create_master_interrupt();
 }
 
 void make_crossing_decision(uint8_t tape_one, uint8_t tape_two)

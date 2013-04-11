@@ -37,6 +37,7 @@
 
 uint8_t test;
 uint8_t spi_data_from_comm;
+uint8_t spi_data_from_sensor;
 //uint8_t amount = 255;
 #define SPEED 255
 
@@ -178,9 +179,6 @@ void spi_init()
 	
 	test = SPSR;
 	
-	//setbit(PORTB, PORTB3);	// 1 är neutral för komm.
-	//setbit(PORTB, PORTB2);	// Samma för sensor
-	
 	//Sätt SPCR-registret, inställningar om master/slave, spi enable, data order, klockdelning
 	SPCR = 0;
 	//setbit(SPCR, SPIE);
@@ -196,6 +194,15 @@ void spi_get_data_from_comm(uint8_t message_byte)
 	while(!(SPSR & (1 << SPIF)));
 	setbit(PORTB, PORTB3);		//Sätter komm till sleepmode
 	spi_data_from_comm = SPDR;
+}
+
+void spi_get_data_from_sensor()
+{
+	clearbit(PORTB, PORTB2);	//Väljer sensor
+	//SPDR = message_byte;		//Lägger in meddelande i SPDR, startar överföringen
+	while(!(SPSR & (1 << SPIF)));
+	setbit(PORTB, PORTB2);		//Sätter sensor till sleepmode
+	spi_data_from_sensor = SPDR;
 }
 
 void spi_send_byte(uint8_t byte)
@@ -382,6 +389,16 @@ ISR(INT1_vect)
 	spi_get_data_from_comm(0xFF);	//Sparar undan data från comm
 	decode_comm(spi_data_from_comm); 
 	send_string("C");
+	update();
+	
+}
+
+ISR(INT0_vect)
+{
+	spi_get_data_from_sensor();
+	char tmp[15];
+	sprintf(tmp, "Sensor: %d", spi_data_from_sensor);
+	send_string(tmp);
 	update();
 	
 }
