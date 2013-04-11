@@ -99,8 +99,14 @@ bool KeyPressEater::eventFilter(QObject *recipient, QEvent *event)
             case Qt::Key_Down: { w->is_pressed[1] = event->type() == QEvent::KeyPress; break; }
             case Qt::Key_Left: { w->is_pressed[2] = event->type() == QEvent::KeyPress; break; }
             case Qt::Key_Right: { w->is_pressed[3] = event->type() == QEvent::KeyPress; break; }
-            case Qt::Key_C: { w->is_pressed[7] = event->type() == QEvent::KeyPress; break; }
-
+            case Qt::Key_C:
+                if(event->type() == QEvent::KeyPress) {
+                    w->open_claw();
+                }
+                else if(event->type() == QEvent::KeyRelease) {
+                    w->close_claw();
+                }
+                break;
             }
 
             switch(key_event->key()) {
@@ -125,18 +131,20 @@ void MainWindow::on_pushButton_7_clicked() { setDirection(5); }
 void MainWindow::on_pushButton_10_clicked() { setDirection(6); }
 //c - claw in
 //o - claw out
-void MainWindow::on_pushButton_11_clicked()
+void MainWindow::on_pushButton_11_clicked() { open_claw(); }
+void MainWindow::on_pushButton_12_clicked() { close_claw(); }
+
+void MainWindow::open_claw()
 {
     port->write(QByteArray(1, 'o'));
     port->flush();
 }
-void MainWindow::on_pushButton_12_clicked()
+
+void MainWindow::close_claw()
 {
     port->write(QByteArray(1, 'c'));
     port->flush();
 }
-
-
 
 void MainWindow::on_pushButton_2_released() { ui->pushButton_2->setChecked(true); }
 void MainWindow::on_pushButton_3_released() { ui->pushButton_3->setChecked(true); }

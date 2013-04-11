@@ -34,6 +34,9 @@ public:
     void updateKeyState();
     void setDirection(unsigned);
 
+    void open_claw();
+    void close_claw();
+
 private:
     QPushButton *arrow_keys[7];
     unsigned current_direction;
