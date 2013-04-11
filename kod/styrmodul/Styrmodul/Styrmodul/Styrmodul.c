@@ -42,12 +42,17 @@ volatile uint8_t spi_data_from_sensor;
 volatile uint8_t comm_interrupt_occoured = 0;
 volatile uint8_t sensor_interrupt_occoured = 0;
 //uint8_t amount = 255;
-#define SPEED 255
+#define SPEED 60
+uint8_t ninety_timer, turn;
 
 int main(void)
 {
-
+	//don't turn!
+	turn = 0;
 	//OSCCAL = 0x70;
+	//display ska ut
+//	DDRA = 0xFF;
+
 	init_display();
  	clear_screen();
  	send_string("Boot!");
@@ -59,6 +64,12 @@ int main(void)
 	sei();		//aktivera global interrupts
 	while(1)
 	{
+		if(turn)
+			tank_turn_left(207);
+		else
+			stop_motors();
+		
+		
 		if(comm_interrupt_occoured)
 		{
 			decode_comm();
@@ -78,8 +89,6 @@ void pwm_init()
 	
 	///////////////////////////////////spi_send_byte(0xAA);
 	
-	//display ska ut
-	DDRA = 0xFF;
 	//DDRB = 0xFF;
 	//DDRC = 0xFF;
 	//DDRD = 0xFF;
@@ -108,8 +117,7 @@ void pwm_init()
 	setbit(TCCR1B, WGM13);
 	
 	
-	//sätt klockan, f = fclk/1024
-	//NEJ! Sätt f = fclk/256
+	//sätt klockan på fclk/64!
 	setbit(TCCR1B, CS10);
 	setbit(TCCR1B, CS11);
 	//setbit(TCCR1B, CS12);
@@ -117,7 +125,7 @@ void pwm_init()
 	
 	//TCCR1A = (1 << COM1A1) | (1 << WGM11);
 	//TCCR1B = (1 << WGM11) | (1 << WGM13) | (1 << WGM12) | (1 << CS12) | (1 << CS10);
-	////////////////////////////////////////////TIMSK1 = (1 << OCIE1A);  // Enable Interrupt TimerCounter1 Compare Match A (TIMER1_COMPA_vect)
+	TIMSK1 = (1 << OCIE1A);  // Enable Interrupt TimerCounter1 Compare Match A (TIMER1_COMPA_vect)
 	//ICR1 = 390;
 	//ICR1 = 625;
 	//ICR1 = 313;
@@ -141,7 +149,12 @@ void pwm_init()
 	
 	//sätter på pwm!
 	TCCR2B=0;
+	//fclk/64, ger 488 Hz ut på PWM
 	setbit(TCCR2B, CS20);
+	setbit(TCCR2B, CS21);
+	
+	
+	
 	//TCCR2B = (1 << CS20);
 	////////////////////////////////////////////TIMSK2 = (1 << OCIE2A);
 	//fullt ös på OCR=0xff, inget på 0x00
@@ -407,7 +420,22 @@ ISR(INT1_vect)
 ISR(INT0_vect)
 {
 	sensor_interrupt_occoured = 1;
-	spi_get_data_from_sensor(0xFF);
+	spi_get_data_from_sensor(0xAA);
+}
+
+ISR(TIMER1_COMPA_vect)
+{
+	ninety_timer++;
+	
+	//en sekund har gått
+	if(ninety_timer == 20)
+	{
+		turn ^= 0xff;
+		//tank_turn_left(60);
+		ninety_timer=0;
+	}
+	
+	
 }
 
 void decode_comm()
@@ -486,11 +514,11 @@ void decode_comm()
 void decode_sensor()
 {
 	uint8_t command = spi_data_from_sensor;
-	char tmp[10];
-	sprintf(tmp, "S: 0x%02X", command);
-	send_string(tmp);
-	update();
-	return;
+// 	char tmp[10];
+// 	sprintf(tmp, "S: 0x%02X", command);
+// 	send_string(tmp);
+// 	update();
+//	return;
 	
 	uint8_t sensor_type = command & TYPE_OF_SENSOR;
 	if( sensor_type == REFLEX )
@@ -498,10 +526,14 @@ void decode_sensor()
 		if(command == CROSSING_RIGHT_PROT)	
 		{
 			tank_turn_right(SPEED);
+			send_string( "h ");
+			update();
 		}
 		else if (command == CROSSING_LEFT_PROT)
 		{
 			tank_turn_left(SPEED);	
+			send_string("v ");
+			update();
 		}
 		else if (command == CROSSING_FORWARD_PROT)
 		{
@@ -510,7 +542,7 @@ void decode_sensor()
 
 	}	
 	
-}	
+	}
 
 
 

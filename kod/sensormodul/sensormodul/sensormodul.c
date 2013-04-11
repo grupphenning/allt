@@ -12,7 +12,6 @@
 #include <avr/interrupt.h>
 #include "bitmacros.h"
 
-
 #define GYRO PINA2
 #define INTERUPT_REQUEST PINA7
 #define TAPE_SENSOR PINA1
@@ -31,10 +30,10 @@ uint8_t	adc_interrupt = 0;
 int main(void)
 {
 	//sei();
-	DDRA = 0b10000000;
+	setbit(DDRA, PINA7); //Sätter avbrottpinne mot styr som output
 	DDRD = 0xFF;
 	//DDRB = 0xFF; //OBS!! TEST TAS BORT SÅ FORT BUSS SKALL UPP
-	//init_spi();
+	init_spi();
 	//init_adc();
 	
     while(1)
@@ -50,20 +49,19 @@ int main(void)
 			///////////////////read_gyro();
 			//send_to_master(test_data);
 			//////////////////adc_interrupt = 0;
-		}			
-		send_to_master('a');
-		_delay_ms(50);
+		}
+		make_crossing_decision ('l', 'k');
+		
+		_delay_ms(5000);
+		make_crossing_decision( 'k', 'l');
+		_delay_ms(5000);
 		//_delay_ms(1);
-
-			
-			
     }
 }
 
 
 void init_spi()
 {
-	sei();
 	setbit(SPCR, SPE);		//Enables spi
 	clearbit(DDRB, PINB4);	// SS är input
 	clearbit(DDRB, PINB5);	// MOSI är input
@@ -71,6 +69,7 @@ void init_spi()
 	clearbit(DDRB, PINB7);	//CLK är input
 	setbit(DDRA, PINA7);	// Avbrottsförfrågan är output
 	setbit(PORTA, PINA7);	// 1 = normal, 0 = avbrottsförfrågan
+	sei();
 }
 
 void init_adc()
@@ -141,10 +140,12 @@ void SPI_read_byte()
 {
 	spi_data_from_master = SPDR;
 }
+
 ISR(SPI_STC_vect)
 {
 	SPI_read_byte();
 }
+
 void create_master_interrupt()
 {
 	PORTA ^= (1 << PORTA7);
