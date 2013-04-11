@@ -104,6 +104,12 @@
     <Compile Include="display.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="komm_styr_protokoll.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="sensor_styr_protokoll.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="Styrmodul.c">
       <SubType>compile</SubType>
     </Compile>

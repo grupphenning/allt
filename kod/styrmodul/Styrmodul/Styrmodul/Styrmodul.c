@@ -11,6 +11,8 @@
 #include <avr/delay.h>
 #include "display.h"
 #include <avr/interrupt.h>
+#include "komm_styr_protokoll.h"
+#include "sensor_styr_protokoll.h"
 
 
 #define LEFT_DIR PB1
@@ -360,7 +362,27 @@ void display_write()
 	DISPLAY = 0b01001000;
 	
 }
-//-----------------AVBRYT-------------------
+
+/*
+..................................................|         /  _________________     __              __    __              __.........................
+..................................................|        /  |  ______________  |  |  \            /  |  |  \            /  |........................
+..................................................|       /   | |              | |  |   \          /   |  |   \          /   |........................
+..................................................|      /    | |              | |  |    \        /    |  |    \        /    |.......................
+..................................................|     /     | |              | |  |     \      /     |  |     \      /     |........................
+..................................................|    /      | |   O     =    | |  |      \    /      |  |      \    /      |.......................
+..................................................|   /       | |              | |  |       \  /       |  |       \  /       |.......................
+..................................................|  /        | |     /        | |  |        \/        |  |        \/        |........................ 
+..................................................|  \        | |    /_        | |  |                  |  |                  |........................
+..................................................|   \       | |              | |  |                  |  |                  |........................
+..................................................|    \      | |              | |  |                  |  |                  |........................
+..................................................|     \     | |              | |  |                  |  |                  |........................
+..................................................|      \    | |   \_____/    | |  |                  |  |                  |........................
+..................................................|       \   | |              | |  |                  |  |                  |........................
+..................................................|        \  | |______________| |  |                  |  |                  |........................
+..................................................|         \ |__________________|  |                  |  |                  |........................
+*/
+
+/*//-----------------AVBRYT-------------------
 
 //-----------------STYRKOMMANDON------------
 uint8_t break_prot = 0b00000000;
@@ -380,7 +402,7 @@ uint8_t drive_turn_right_request = 0b00111100;
 uint8_t claw_in_prot = 0b01100000;
 uint8_t claw_out_prot = 0b01100100;
 //----------SÄTT PD-KONSTANTER---------------
-
+*/
 
 ISR(INT1_vect)
 {
@@ -407,38 +429,38 @@ void decode_comm(uint8_t command)
 {
 	uint8_t byte = command & 0b11100000;
 	
-	if (command == break_prot)
+	if (command == BREAK_PROT)
 	{
 		// Någon som vet vilken "Avbryt"-funktion som avses i designspecen!?!?!?
 		// Kör iaf den avbrytfunktion som avses i designspecen!!!!!!
 	}
-	else if (byte == control_command_prot)
+	else if (byte == CONTROL_COMMAND_PROT)
 	{
-		if (command == drive_prot)
+		if (command == DRIVE_PROT)
 		{
 			drive_forwards(SPEED);
 			send_string("Fram");	// Lägger ut "Fram" på displayen.
 			update();
 		}
-		else if (command == back_prot)
+		else if (command == BACK_PROT)
 		{
 			drive_backwards(SPEED);
 			send_string("Bak");
 			update();
 		}
-		else if (command == stop_prot)
+		else if (command == STOP_PROT)
 		{
 			stop_motors();
 			send_string("Stopp");
 			update();
 		}
-		else if (command == tank_turn_left_prot)
+		else if (command == TANK_TURN_LEFT_PROT)
 		{
 			tank_turn_left(SPEED);
 			send_string("Rotera vänster");
 			update();
 		}
-		else if (command == tank_turn_right_prot)
+		else if (command == TANK_TURN_RIGHT_PROT)
 		{
 			tank_turn_right(SPEED);
 			send_string("Rotera höger");
@@ -454,13 +476,13 @@ void decode_comm(uint8_t command)
 			turn_right(spi_data_from_comm);
 		}*/
 	}	
-	else if (command == claw_in_prot)
+	else if (command == CLAW_IN_PROT)
 	{
 		claw_in();
 		send_string("Klo in");
 		update();
 	}
-	else if (command == claw_out_prot)
+	else if (command == CLAW_OUT_PROT)
 	{
 		claw_out();
 		send_string("Klo ut");
@@ -473,3 +495,7 @@ void decode_comm(uint8_t command)
 	}
 	
 }
+
+
+
+

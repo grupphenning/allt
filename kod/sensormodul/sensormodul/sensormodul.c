@@ -145,20 +145,7 @@ ISR(SPI_STC_vect)
 }
 void create_master_interrupt()
 {
-	//PORTA &= ~(1 << PINA7);
 	PORTA ^= (1 << PORTA7);
-	/*
-	if(out)
-	{
-		setbit(PORTA, PORTA7);
-		out = 0;
-	}
-	else
-	{
-		clearbit(PORTA, PORTA7);
-		out = 1;
-	}
-	*/
 }
 
 /*

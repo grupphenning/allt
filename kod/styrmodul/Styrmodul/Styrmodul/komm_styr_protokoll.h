@@ -1,0 +1,20 @@
+//-----------------AVBRYT-------------------
+
+//-----------------STYRKOMMANDON------------
+#define BREAK_PROT 0b00000000
+#define CONTROL_COMMAND_PROT 0b00100000
+#define DRIVE_PROT 0b00100000
+#define BACK_PROT 0b00100100
+#define STOP_PROT 0b00101000
+#define TANK_TURN_LEFT_PROT 0b00101100
+#define TANK_TURN_RIGHT_PROT 0b00110000
+#define DRIVE_TURN_PROT 0b00110100
+
+#define DRIVE_TURN_LEFT_REQUEST 0b00111000
+#define DRIVE_TURN_RIGHT_REQUEST 0b00111100
+//-----------KALIBRERING AV SENSORER---------
+
+//-------------GRIPKLOKOMMANDON--------------
+#define CLAW_IN_PROT 0b01100000
+#define CLAW_OUT_PROT 0b01100100
+//----------SÄTT PD-KONSTANTER---------------
