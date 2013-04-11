@@ -18,15 +18,21 @@
 #define TAPE_SENSOR PINA1
 #define IR_SENSOR PINA0
 
-uint8_t read_adc();
-uint8_t read_ir(uint8_t sensor_no);
-uint8_t read_gyro();
+void read_adc();
+void read_ir(uint8_t sensor_no);
+void read_gyro();
 void init_adc();
+
+uint8_t spi_data_from_master;
+uint8_t spi_data_to_master;
+
 int main(void)
 {
+	sei();
 	DDRA = 0b10000000;
 	DDRD = 0xFF;
-	init_spi();
+	DDRB = 0xFF; //OBS!! TEST TAS BORT SÅ FORT BUSS SKALL UPP
+	//init_spi();
 	init_adc();
 	
     while(1)
@@ -36,6 +42,12 @@ int main(void)
 			for(i=0 to 5)
 				send_to_styr(read_ir(i));
 			*/
+		if(bit_is_clear(ADCSRA,ADSC))
+		{
+			read_gyro();
+		}			
+		//_delay_ms(1);
+
 			
 			
     }
@@ -56,30 +68,135 @@ void init_spi()
 
 void init_adc()
 {
+	//reference voltage
+	setbit(ADCSRA,REFS0);
+	
+	//ADC enable
 	setbit(ADCSRA,ADEN);
+	
+	//Left adjust measurment
+	setbit(ADMUX,ADLAR);
+	
+	//Set ADC in free running- mode
+	//setbit(ADCSRA,ADATE);
+	
+	//Enable interupt
+	setbit(ADCSRA,ADIE);
+	
+	//SKalning av klockfrekvens
+	setbit(ADCSRA,ADPS2);
+	setbit(ADCSRA,ADPS1);
+	clearbit(ADCSRA,ADPS0);
+	
+	
 }
 
 
-uint8_t read_gyro()
+void read_gyro()
 {
-	ADMUX = 0b00000010;
-	return read_adc();
+	setbit(ADMUX,MUX1);
+	
+	read_adc();
 }	
-uint8_t read_ir(uint8_t sensor_no)
+void read_ir(uint8_t sensor_no)
 {
-	ADMUX = 0x00;
+	setbit(ADMUX,MUX1);
 	sensor_no = sensor_no << 4;
 	PORTD = 0b01110000 & sensor_no; //Tell mux where to read from
-	return read_adc();
+	read_adc();
 }
 
-uint8_t read_adc()
+void read_adc()
 {
 	setbit(ADCSRA,ADSC); //start_reading
-	while(ADSC); //Vänta tills färdigläst, fixa avbrott senare !
-	return ADCL;
 }
 
+ISR(ADC_vect)
+{
+	PORTB = ADCH;
+	_delay_ms(5);
+}
+
+
+
+void SPI_read_byte()
+{
+	spi_data_from_master = SPDR;
+}
+ISR(SPI_STC_vect)
+{
+	SPI_read_byte();
+}
+void create_master_interrupt()
+{
+	//PORTA &= ~(1 << PINA7);
+	PORTA ^= (1 << PORTA7);
+	/*
+	if(out)
+	{
+		setbit(PORTA, PORTA7);
+		out = 0;
+	}
+	else
+	{
+		clearbit(PORTA, PORTA7);
+		out = 1;
+	}
+	*/
+}
+
+/*
+-----------------Reflex------------------------
+uint8_t crossing_right_prot = 0b01000000;
+uint8_t crossing_left_prot = 0b01001000;
+uint8_t crossing_forward_prot = 0b01010000;
+uint8_t goal_prot = 0b01100000;
+------------------IR---------------------------
+------------------Gyro------------------------
+*/
+
+void send_crossing_decision(uint8_t ch)
+{
+	uint8_t commando;
+	
+	// Konverterar från sensordata till meddelande som mottas av styrenheten!!!
+	switch(ch) {
+		case 'h': commando = 0b01000000; break; // Sväng höger i korsning
+		case 'l': commando = 0b01001000; break; // Sväng vänster i korsning
+		case 'f': commando = 0b01010000; break; // Rakt fram i korsning
+		case 'g': commando = 0b01100000; break; // Målet
+
+		default: commando = 0xff; break;
+	}
+	if(commando != 0xff)
+	send_to_master(commando);
+}
+
+void send_to_master(uint8_t byte)
+{
+	SPDR = byte;
+	create_master_interrupt();
+}
+
+void make_crossing_decision(uint8_t tape_one, uint8_t tape_two)
+{
+	if (tape_one == 'l' & tape_two == 'k')	 // Om höger (första tejpen lång, andra kort) i korsning!
+	{
+		send_crossing_decision('h');
+	}
+	else if (tape_one == 'k' & tape_two == 'l')	 // Om vänster (första tejpen kort, andra lång) i korsning!
+	{
+		send_crossing_decision('l');
+	}
+	else if (tape_one == 'k' & tape_two == 'k')	 // Om framåt (första tejpen kort, andra kort) i korsning!
+	{
+		send_crossing_decision('f');
+	}
+	else if (tape_one == 'k' & tape_two == 's')	 // Om mål (första tejpen kort, andra "smal" (???))
+	{
+		send_crossing_decision('g');
+	}
+}	
 	
 	
 
