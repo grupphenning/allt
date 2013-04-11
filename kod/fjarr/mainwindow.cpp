@@ -16,12 +16,11 @@ MainWindow::MainWindow(QWidget *parent) :
     is_pressed[0] = is_pressed[1] = is_pressed[2] = is_pressed[3] = false;
 
     eat = new KeyPressEater(this);
-    /*
+
     QList<QPushButton *> list = findChildren<QPushButton *>();
     for(int i = 0; i < list.size(); ++i) {
         list.at(i)->installEventFilter(eat);
     }
-    */
     arrow_keys[0] = ui->pushButton_3;
     arrow_keys[1] = ui->pushButton_4;
     arrow_keys[2] = ui->pushButton_6;
