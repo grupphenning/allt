@@ -2,15 +2,16 @@
  * Styrmodul.c
  *
  * Created: 4/2/2013 2:20:45 PM
- *  Author: klawi021 et al
+ *  Author: klawi021 ET AL!
  */ 
-
 #define F_CPU 8000000UL
+
 #include <avr/io.h>
 #include "bitmacros.h"
 #include <avr/delay.h>
 #include "display.h"
 #include <avr/interrupt.h>
+
 
 #define LEFT_DIR PB1
 #define RIGHT_DIR PB0
@@ -36,24 +37,32 @@
 
 uint8_t test;
 uint8_t spi_data_from_comm;
+//uint8_t amount = 255;
+#define SPEED 255
 
 int main(void)
 {
-	OSCCAL = 0x70;
-
-	
+	//aktivera global interrupts
+	sei();
+	//OSCCAL = 0x70;
+	init_display();
+	clear_screen();
+	update();
+	send_string("Data: ");
+	update();
 	spi_init();
+	
 	//aktivera interrupt på INT0 och INT1
 	setbit(EIMSK, INT0);
 	setbit(EIMSK, INT1);
 
 	//aktivera interrupt-request på "any change"
 	setbit(EICRA, ISC00);
-	//aktivera global interrupts
-	sei();
-
+	setbit(EICRA, ISC10);
 	
-	spi_send_byte(0xAA);
+	//_delay_ms(1000);
+	
+	///////////////////////////////////spi_send_byte(0xAA);
 	
 	//display ska ut
 	DDRA = 0xFF;
@@ -94,13 +103,15 @@ int main(void)
 	
 	//TCCR1A = (1 << COM1A1) | (1 << WGM11);
 	//TCCR1B = (1 << WGM11) | (1 << WGM13) | (1 << WGM12) | (1 << CS12) | (1 << CS10);
-	TIMSK1 = (1 << OCIE1A);  // Enable Interrupt TimerCounter1 Compare Match A (TIMER1_COMPA_vect)
+	////////////////////////////////////////////TIMSK1 = (1 << OCIE1A);  // Enable Interrupt TimerCounter1 Compare Match A (TIMER1_COMPA_vect)
 	//ICR1 = 390;
 	//ICR1 = 625;
 	//ICR1 = 313;
-	ICR1 = 2500;
+	ICR1 = 625*4;
 	//sätt OCR1A också!
-	OCR1A = 300;
+	CLAW_AMOUNT = 10*4;
+	_delay_ms(1000);
+	CLAW_AMOUNT = 78*4;
 	
 	//pwm-styrning för motorerna, pinne OC2A, register OCR2A för vänster, pinne OC2B, register OCR2B för höger.
 	//PB1 DIR höger, PB0 vänster
@@ -118,34 +129,26 @@ int main(void)
 	TCCR2B=0;
 	setbit(TCCR2B, CS20);
 	//TCCR2B = (1 << CS20);
-	TIMSK2 = (1 << OCIE2A);
+	////////////////////////////////////////////TIMSK2 = (1 << OCIE2A);
 	//fullt ös på OCR=0xff, inget på 0x00
 	
-	init_display();
-	clear_screen();
-	update();
-	send_string("Data: ");
-	update();
+	
 	//tank_turn_left(180);
 	//init_spi();
 	uint8_t ch = 'a';
 	
 	while(1)
 	{
-		_delay_ms(100);
-		send_character(ch++);	//Ä
-		update();
+		//_delay_ms(100);
+// 		send_character(ch++);	//Ä
+// 		update();
 		
 		//spi_send_byte(0xD2);
 		
 		/*
-		//claw_in();
-		//_delay_ms(5000);
 		claw_out();
-		setbit(PORTD, PD0);
 		_delay_ms(1000);
 		claw_in();
-		clearbit(PORTD, PD0);
 		_delay_ms(1000);
 		*/
 		
@@ -277,12 +280,12 @@ void tank_turn_right(uint8_t amount)
 
 void claw_out()
 {
-	CLAW_AMOUNT = 64;
+	CLAW_AMOUNT = 78*4;
 }
 
 void claw_in()
 {
-	CLAW_AMOUNT = 314;
+	CLAW_AMOUNT = 15*4;
 }
 
 void display_on()
@@ -374,11 +377,13 @@ uint8_t claw_out_prot = 0b01110000;
 
 ISR(INT1_vect)
 {
-	send_string("Avbrott");
+	send_string("A ");
 	update();
-	_delay_ms(50);
 	spi_get_data_from_comm(0xFF);	//Sparar undan data från comm
 	decode_comm(spi_data_from_comm); 
+	send_string("C");
+	update();
+	
 }
 
 void decode_comm(uint8_t command)
@@ -394,13 +399,13 @@ void decode_comm(uint8_t command)
 	{
 		if (command == drive_prot)
 		{
-			drive_forwards(120); //Random värde!!!!
+			drive_forwards(SPEED); //Random värde!!!!
 			send_string("Fram");	
 			update();
 		}
 		else if (command == back_prot)
 		{
-			drive_backwards(120);
+			drive_backwards(SPEED);
 			send_string("Bak");
 			update();
 		}
@@ -412,13 +417,13 @@ void decode_comm(uint8_t command)
 		}
 		else if (command == tank_turn_left_prot)
 		{
-			tank_turn_left(120); //Random värde!!!!
+			tank_turn_left(SPEED); //Random värde!!!!
 			send_string("Sväng vänster");
 			update();
 		}
 		else if (command == tank_turn_right_prot)
 		{
-			tank_turn_right(120); //Random värde!!!!
+			tank_turn_right(SPEED); //Random värde!!!!
 			send_string("Sväng höger");
 			update();
 		}
@@ -440,4 +445,10 @@ void decode_comm(uint8_t command)
 	{
 		claw_out();
 	}
+	else 
+	{
+		send_string("B");	
+		update();
+	}
+	
 }
