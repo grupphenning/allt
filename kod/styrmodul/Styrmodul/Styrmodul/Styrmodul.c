@@ -2,7 +2,7 @@
  * Styrmodul.c
  *
  * Created: 4/2/2013 2:20:45 PM
- *  Author: klawi021 et al
+ *  Author: klawi021 ET AL!
  */ 
 #define F_CPU 8000000UL
 
@@ -37,6 +37,8 @@
 
 uint8_t test;
 uint8_t spi_data_from_comm;
+//uint8_t amount = 255;
+#define SPEED 255
 
 int main(void)
 {
@@ -56,8 +58,9 @@ int main(void)
 
 	//aktivera interrupt-request på "any change"
 	setbit(EICRA, ISC00);
+	setbit(EICRA, ISC10);
 	
-	_delay_ms(1000);
+	//_delay_ms(1000);
 	
 	///////////////////////////////////spi_send_byte(0xAA);
 	
@@ -142,12 +145,12 @@ int main(void)
 		
 		//spi_send_byte(0xD2);
 		
-		
+		/*
 		claw_out();
 		_delay_ms(1000);
 		claw_in();
 		_delay_ms(1000);
-		
+		*/
 		
 		//tank_turn_left(200);
 	}
@@ -374,11 +377,13 @@ uint8_t claw_out_prot = 0b01110000;
 
 ISR(INT1_vect)
 {
-	send_string("Avbrott");
+	send_string("A ");
 	update();
-	_delay_ms(50);
 	spi_get_data_from_comm(0xFF);	//Sparar undan data från comm
 	decode_comm(spi_data_from_comm); 
+	send_string("C");
+	update();
+	
 }
 
 void decode_comm(uint8_t command)
@@ -394,13 +399,13 @@ void decode_comm(uint8_t command)
 	{
 		if (command == drive_prot)
 		{
-			drive_forwards(120); //Random värde!!!!
+			drive_forwards(SPEED); //Random värde!!!!
 			send_string("Fram");	
 			update();
 		}
 		else if (command == back_prot)
 		{
-			drive_backwards(120);
+			drive_backwards(SPEED);
 			send_string("Bak");
 			update();
 		}
@@ -412,13 +417,13 @@ void decode_comm(uint8_t command)
 		}
 		else if (command == tank_turn_left_prot)
 		{
-			tank_turn_left(120); //Random värde!!!!
+			tank_turn_left(SPEED); //Random värde!!!!
 			send_string("Sväng vänster");
 			update();
 		}
 		else if (command == tank_turn_right_prot)
 		{
-			tank_turn_right(120); //Random värde!!!!
+			tank_turn_right(SPEED); //Random värde!!!!
 			send_string("Sväng höger");
 			update();
 		}
@@ -440,4 +445,10 @@ void decode_comm(uint8_t command)
 	{
 		claw_out();
 	}
+	else 
+	{
+		send_string("B");	
+		update();
+	}
+	
 }

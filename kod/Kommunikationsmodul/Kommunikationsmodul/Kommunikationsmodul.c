@@ -35,7 +35,7 @@ uint8_t spi_data_to_master;
 
 void SPI_read_byte()
 {
-	PORTA = SPDR;	// Bra för felsökning!
+	//PORTA = SPDR;	// Bra för felsökning!
 	spi_data_from_master = SPDR;
 }
 
@@ -46,20 +46,26 @@ void SPI_write_byte(uint8_t byte)
 }
 
 
-unsigned char USART_Recieve(void);
+//unsigned char USART_Recieve(void);
+unsigned char USART_Receive(void);
 void USART_Init(unsigned int baud);
 void USART_Transmit(unsigned char data);
 
+uint8_t out;
+
+
 int main(void)
 {
-	PORTA = 0;
-	setbit(DDRB, PB1);
-	setbit(DDRA, PA7);
-	
+	out = 1;
+	//PORTA = 0;
+	setbit(DDRB, PORTB1);
+	setbit(DDRA, PORTA7);
+	setbit(DDRA, PORTA6);
 	sei(); //Enable global interrupts
 
 	init_spi();
 	SPDR = 0x32;
+	
 
 	/*DDRA = 0xff;
 	DDRB = 0xff;
@@ -69,35 +75,43 @@ int main(void)
 	PORTB = 0xff;*/
 	//PORTC = 0xff;
 	//PORTD = 0xff;
-//	USART_Init(9600);
+	//	USART_Init(9600);
 
-// kom (ff) cts=(is) clear to send (?), rts=request to send
-// d0 cts <- (rts)
-// d1 tx  -> (rx)
-// d2 rx  <- (tx)
-// d3 rts -> (cts)
+	// kom (ff) cts=(is) clear to send (?), rts=request to send
+	// d0 cts <- (rts)
+	// d1 tx  -> (rx)
+	// d2 rx  <- (tx)
+	// d3 rts -> (cts)
 
-// 1 byte ska ta runt 80 us
-// Ok nu kör vi 2400 baud i stället
-//UCSRB = (1<<RXEN)|(1<<TXEN);
+	// 1 byte ska ta runt 80 us
+	// Ok nu kör vi 2400 baud i stället
+	//UCSRB = (1<<RXEN)|(1<<TXEN);
 
-//ggr 20 us det tar att överföra 'a' då UBRR=3:
-//c0:4.3 b0:4.3 a0:4.3 90:5 80:5 70:5.4 60:5.7 50:6 40:6.4 30:6.7 20:7
-OSCCAL = 0x70;
-unsigned ubrr = F_CPU / (16 * 9600) - 1;
-//UBRRH = (unsigned char)(ubrr>>8);
-//UBRRL = (unsigned char)ubrr;
-UBRRH = 0x00;
-UBRRL = 0x02;
+	//ggr 20 us det tar att överföra 'a' då UBRR=3:
+	//c0:4.3 b0:4.3 a0:4.3 90:5 80:5 70:5.4 60:5.7 50:6 40:6.4 30:6.7 20:7
+	OSCCAL = 0x70;
+	unsigned ubrr = F_CPU / (16 * 9600) - 1;
+	//UBRRH = (unsigned char)(ubrr>>8);
+	//UBRRL = (unsigned char)ubrr;
+	UBRRH = 0x00;
+	UBRRL = 0x02;
 	UCSRC = (1<<URSEL)|(1<<USBS)|(3<<UCSZ0);
-UCSRB = (1<<TXEN)|(1<<RXEN);
+	UCSRB = (1<<TXEN)|(1<<RXEN);
 
+	uint8_t data_from_bt, data_from_bt_old;
+	//unsigned data_from_bt, data_from_bt_old;
+	
     while(1)
     {
-		unsigned b;
-		b = USART_Recieve();
-		USART_Transmit(b);
-		decode_remote(b);
+		////setbit(PORTA, PORTA6);
+		data_from_bt = USART_Receive();
+		USART_Transmit(data_from_bt);
+		if ( data_from_bt != data_from_bt_old)
+		{
+			data_from_bt_old = data_from_bt;
+			decode_remote(data_from_bt);
+		}
+		////clearbit(PORTA, PORTA6);
 		//send_to_master(b);
 		//clearbit(PORTB, PB0);
 		//PORTA = 2;
@@ -166,18 +180,18 @@ void USART_Transmit(unsigned char data)
 	while(!(UCSRA & (1<<UDRE)));
 }
 
-unsigned char USART_Recieve(void)
+unsigned char USART_Receive(void)
 {
 	// Ready to receive
 	clearbit(PORTC, PINC0);
 	
-	//Wait for data to be recieved
+	//Wait for data to be received
 	while(!(UCSRA & (1<<RXC)));
 	
 	// Not ready to receive anymore
 	setbit(PORTC, PINC0);
 
-	//Get and return recieved data from buffer
+	//Get and return received data from buffer
 	return UDR;
 }
 
@@ -188,9 +202,22 @@ ISR(SPI_STC_vect)
 	//SPI_write_byte(spi_data_to_master);  //Ska ta något argument!
 }	
 
-void create_master_interrupt() 
+void create_master_interrupt()
 {
-	PORTA &= ~(1 << PINA7);
+	//PORTA &= ~(1 << PINA7);
+	PORTA ^= (1 << PORTA7);
+	/*
+	if(out)
+	{
+		setbit(PORTA, PORTA7);
+		out = 0;
+	}
+	else
+	{
+		clearbit(PORTA, PORTA7);
+		out = 1;
+	}
+	*/
 }
 
 // ------------------------------------------------------------------------
@@ -222,6 +249,11 @@ void decode_remote(uint8_t ch)
 		case 'r': commando = 0b00110000; break;
 		case 's': commando = 0b00101000; break;
 		case 'b': commando = 0b00100100; break;
+		//claw in
+		case 'c': commando = 0b01100000; break;
+		//claw out
+		case 'o': commando = 0b01110000; break;
+		default: commando = 0xff; break;
 	}
 	// Ej löst då vi skickar flera byte!
 	/*if (ch == 'v') // fram vänster
@@ -238,7 +270,10 @@ void decode_remote(uint8_t ch)
 		drive_turn_left_value = 0xff; // OBS!!!! Blajvärde!!!!
 		drive_turn_right_value = 0x00; // OBS!!!! Blajvärde!!!!
 	}*/
-	send_to_master(commando);
+	
+	//om det var något av l,d,r,s,b
+	if(commando != 0xff)
+		send_to_master(commando);
 	
 	/*if(ch == 'v' || ch == 'h') {
 		send_to_master(drive_turn_right_value);
@@ -246,7 +281,7 @@ void decode_remote(uint8_t ch)
 	}*/
 }
 
-void decode_spi_from_master()
+/*void decode_spi_from_master()
 {
 	if (spi_data_from_master = drive_turn_left_request)
 	{
@@ -259,7 +294,7 @@ void decode_spi_from_master()
 		create_master_interrupt();
 	}
 	
-}
+}*/
 
 void send_to_master(uint8_t byte)
 {
