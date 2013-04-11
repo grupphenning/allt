@@ -14,13 +14,14 @@ MainWindow::MainWindow(QWidget *parent) :
     setFixedSize(width(), height());
 
     is_pressed[0] = is_pressed[1] = is_pressed[2] = is_pressed[3] = false;
-    eat = new KeyPressEater(this);
 
+    eat = new KeyPressEater(this);
+    /*
     QList<QPushButton *> list = findChildren<QPushButton *>();
     for(int i = 0; i < list.size(); ++i) {
         list.at(i)->installEventFilter(eat);
     }
-
+    */
     arrow_keys[0] = ui->pushButton_3;
     arrow_keys[1] = ui->pushButton_4;
     arrow_keys[2] = ui->pushButton_6;
@@ -28,10 +29,6 @@ MainWindow::MainWindow(QWidget *parent) :
     arrow_keys[4] = ui->pushButton_5;
     arrow_keys[5] = ui->pushButton_7;
     arrow_keys[6] = ui->pushButton_10;
-
-    arrow_keys[7] = ui->pushButton_7;
-    arrow_keys[8] = ui->pushButton_10;
-
 
     for(unsigned i = 0; i < sizeof arrow_keys / sizeof arrow_keys[0]; ++i) {
         arrow_keys[i]->setCheckable(true);
@@ -69,8 +66,7 @@ void MainWindow::setDirection(unsigned dir)
     arrow_keys[dir]->setChecked(true);
     current_direction = dir;
 
-    //port->write(QByteArray(1, "vdhlsrb"[dir]));
-    port->write(QByteArray(1, "vdhlsrbco"[dir]));
+    port->write(QByteArray(1, "vdhlsrb"[dir]));
     port->flush();
 }
 
@@ -126,12 +122,20 @@ void MainWindow::on_pushButton_3_clicked() { setDirection(0); }
 void MainWindow::on_pushButton_4_clicked() { setDirection(1); }
 void MainWindow::on_pushButton_5_clicked() { setDirection(4); }
 void MainWindow::on_pushButton_6_clicked() { setDirection(2); }
-//void MainWindow::on_pushButton_7_clicked() { setDirection(5); }
-//void MainWindow::on_pushButton_10_clicked() { setDirection(6); }
+void MainWindow::on_pushButton_7_clicked() { setDirection(5); }
+void MainWindow::on_pushButton_10_clicked() { setDirection(6); }
 //c - claw in
-void MainWindow::on_pushButton_7_clicked() { setDirection(7); }
 //o - claw out
-void MainWindow::on_pushButton_10_clicked() { setDirection(8); }
+void MainWindow::on_pushButton_11_clicked()
+{
+    port->write(QByteArray(1, 'o'));
+    port->flush();
+}
+void MainWindow::on_pushButton_12_clicked()
+{
+    port->write(QByteArray(1, 'c'));
+    port->flush();
+}
 
 
 
@@ -143,4 +147,3 @@ void MainWindow::on_pushButton_6_released() { ui->pushButton_6->setChecked(true)
 void MainWindow::on_pushButton_7_released() { ui->pushButton_7->setChecked(true); }
 void MainWindow::on_pushButton_10_released() { ui->pushButton_10->setChecked(true); }
 
-void KeyPressEater::on_pushButton_3_released(){}
