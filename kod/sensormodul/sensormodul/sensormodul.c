@@ -29,33 +29,30 @@ uint8_t	adc_interrupt = 0;
 
 int main(void)
 {
-	//sei();
 	setbit(DDRA, PINA7); //Sätter avbrottpinne mot styr som output
+	clearbit(DDRA,PINA0);
 	DDRD = 0xFF;
 	//DDRB = 0xFF; //OBS!! TEST TAS BORT SÅ FORT BUSS SKALL UPP
 	init_spi();
-	//init_adc();
+	init_adc();
 	
     while(1)
     {
-		/*PSEUDO
-			send_to_styr(read_gyro());
-			for(i=0 to 5)
-				send_to_styr(read_ir(i));
-			*/
-		//if(bit_is_clear(ADCSRA,ADSC))
-		///////////////if(adc_interrupt)
-		{
-			///////////////////read_gyro();
-			//send_to_master(test_data);
-			//////////////////adc_interrupt = 0;
-		}
-		make_crossing_decision ('l', 'k');
 		
-		_delay_ms(5000);
-		make_crossing_decision( 'k', 'l');
-		_delay_ms(5000);
-		//_delay_ms(1);
+		read_ir(1);
+		_delay_ms(100);
+		if(adc_interrupt)
+		{
+			
+			send_to_master(test_data);
+			adc_interrupt = 0;
+		}
+// 		make_crossing_decision ('l', 'k');
+// 		
+// 		_delay_ms(5000);
+// 		make_crossing_decision( 'k', 'l');
+// 		_delay_ms(5000);
+// 		//_delay_ms(1);
     }
 }
 
@@ -111,7 +108,7 @@ void read_ir(uint8_t sensor_no)
 	clearbit(ADMUX,MUX1);
 	clearbit(ADMUX,MUX2);
 	sensor_no = sensor_no << 4;
-	PORTD = 0b01110000 & sensor_no; //Tell mux where to read from
+	PORTD = 0x70 & sensor_no; //Tell mux where to read from
 	read_adc();
 }
 
@@ -202,7 +199,8 @@ void make_crossing_decision(uint8_t tape_one, uint8_t tape_two)
 	{
 		send_crossing_decision('g');
 	}
-}	
+}
+	
 	
 	
 

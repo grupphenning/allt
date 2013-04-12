@@ -42,8 +42,9 @@ volatile uint8_t spi_data_from_sensor;
 volatile uint8_t comm_interrupt_occoured = 0;
 volatile uint8_t sensor_interrupt_occoured = 0;
 //uint8_t amount = 255;
-#define SPEED 60
+#define SPEED 255
 uint8_t ninety_timer, turn;
+uint8_t left = 1;
 
 int main(void)
 {
@@ -54,9 +55,9 @@ int main(void)
 //	DDRA = 0xFF;
 
 	init_display();
- 	clear_screen();
+ 	/*clear_screen();
  	send_string("Boot!");
- 	update();
+ 	update();*/
 
 	spi_init();
 	pwm_init();
@@ -64,10 +65,10 @@ int main(void)
 	sei();		//aktivera global interrupts
 	while(1)
 	{
-		if(turn)
-			tank_turn_left(207);
-		else
-			stop_motors();
+// 		if(turn)
+// 			tank_turn_left(207);
+// 		else
+// 			stop_motors();
 		
 		
 		if(comm_interrupt_occoured)
@@ -305,68 +306,6 @@ void claw_in()
 	CLAW_AMOUNT = 15*4;
 }
 
-void display_on()
-{
-	DISPLAY = 0;
-	clearbit(PORTC, DISPLAY_RS);
-	setbit(DISPLAY, DISPLAY_BLINK);
-	setbit(DISPLAY, DISPLAY_CURSOR);
-	setbit(DISPLAY,DISPLAY_POWER);
-	setbit(DISPLAY,PA3);
-	display_enable();
-	display_set_two_lines();
-	display_enable();
-	display_home();
-	display_enable();
-	display_clear();
-	display_enable();
-	
-	display_write();
-	display_enable();
-}
-
-void display_off()
-{
-	clearbit(DISPLAY,DISPLAY_POWER);
-}
-
-void display_set_two_lines()
-{
-	DISPLAY = 0;
-	setbit(DISPLAY,PA5);
-	setbit(DISPLAY,PA4);
-	setbit(DISPLAY,PA3);
-}
-
-
-void display_clear()
-{
-	DISPLAY = 0;
-	setbit(DISPLAY, PA0);
-}
-
-void display_enable()
-{
-	setbit(PORTC,DISPLAY_ENABLE);
-	_delay_ms(500);
-	clearbit(PORTC,DISPLAY_ENABLE);
-	_delay_ms(500);
-	setbit(PORTC,DISPLAY_ENABLE);
-	_delay_ms(500);
-}
-
-void display_home()
-{
-	DISPLAY = 0;
-	setbit(DISPLAY,PA1);
-}
-
-void display_write()
-{
-	setbit(PORTC, DISPLAY_RS);
-	DISPLAY = 0b01001000;
-	
-}
 
 /*
 ..................................................|         /  _________________     __              __    __              __.........................
@@ -420,7 +359,7 @@ ISR(INT1_vect)
 ISR(INT0_vect)
 {
 	sensor_interrupt_occoured = 1;
-	spi_get_data_from_sensor(0xAA);
+	spi_get_data_from_sensor(0xFF);
 }
 
 ISR(TIMER1_COMPA_vect)
@@ -455,20 +394,14 @@ void decode_comm()
 		if (command == DRIVE_PROT)
 		{
 			drive_forwards(SPEED);
-//			send_string("Fram");	// Lägger ut "Fram" på displayen.
-//			update();
 		}
 		else if (command == BACK_PROT)
 		{
 			drive_backwards(SPEED);
-//			send_string("Bak");
-//			update();
 		}
 		else if (command == STOP_PROT)
 		{
 			stop_motors();
-//			send_string("Stopp");
-//			update();
 		}
 		else if (command == TANK_TURN_LEFT_PROT)
 		{
@@ -495,14 +428,10 @@ void decode_comm()
 	else if (command == CLAW_IN_PROT)
 	{
 		claw_in();
-//		send_string("Klo in");
-//		update();
 	}
 	else if (command == CLAW_OUT_PROT)
 	{
 		claw_out();
-//		send_string("Klo ut");
-//		update();
 	}
 	else 
 	{
@@ -514,32 +443,38 @@ void decode_comm()
 void decode_sensor()
 {
 	uint8_t command = spi_data_from_sensor;
-// 	char tmp[10];
-// 	sprintf(tmp, "S: 0x%02X", command);
-// 	send_string(tmp);
-// 	update();
-//	return;
-	
+	char tmp[10];
 	uint8_t sensor_type = command & TYPE_OF_SENSOR;
-	if( sensor_type == REFLEX )
+	
+// 	if( sensor_type == REFLEX )
+// 	{
+// 		if(command == CROSSING_RIGHT_PROT)	
+// 		{
+// 			tank_turn_right(SPEED);
+// 			send_string( "h ");
+// 			update();
+// 		}
+// 		else if (command == CROSSING_LEFT_PROT)
+// 		{
+// 			tank_turn_left(SPEED);	
+// 			send_string("v ");
+// 			update();
+// 		}
+// 		else if (command == CROSSING_FORWARD_PROT)
+// 		{
+// 			drive_forwards(SPEED);
+// 		}
+// 		
+// 
+// 	}
+/*	else //SKRIV UT DATA*/
 	{
-		if(command == CROSSING_RIGHT_PROT)	
-		{
-			tank_turn_right(SPEED);
-			send_string( "h ");
-			update();
-		}
-		else if (command == CROSSING_LEFT_PROT)
-		{
-			tank_turn_left(SPEED);	
-			send_string("v ");
-			update();
-		}
-		else if (command == CROSSING_FORWARD_PROT)
-		{
-			drive_forwards(SPEED);
-		}
-
+		
+		clear_screen();
+		sprintf(tmp, "GYRO: 0x%02X", command);
+		send_string(tmp);
+		update();
+		
 	}	
 	
 	}

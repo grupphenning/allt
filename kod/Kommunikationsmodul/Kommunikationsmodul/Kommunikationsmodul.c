@@ -301,11 +301,5 @@ void decode_remote(uint8_t ch)
 void send_to_master(uint8_t byte)
 {
 	SPDR = byte;
-	char temp[5];
-	sprintf(temp,"0x%02X", byte);
-	for (int i = 0; i<4; i++)
-	{
-		USART_Transmit(temp[i]);
-	}
 	create_master_interrupt();
 }
