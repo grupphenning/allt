@@ -37,7 +37,8 @@ int main(void)
 		_delay_ms(1);
 
 		// Test av nya protokollet:
-		uint8_t data[] = {SENSOR_DEBUG, 'a', 'b', 'c', 0};
+		//uint8_t data[] = {SENSOR_DEBUG, 'a', 'b', 'c', 0};
+		uint8_t data[] = {SENSOR_HEX, 'a', 'b', 'c', 0};	// TESTA DENNA OCKSÅ!
 		send_to_master(5, data);				// Notera att strängen är fyra byte lång (inklusive NULL)!
 		_delay_ms(3000);
 		continue;
@@ -187,21 +188,17 @@ void send_to_master_real(uint8_t byte)
 /*
  * Denna funktion tar argument enligt följande:
  * len		antalet byte att skicka
- * data		en pekare till en uint8_t-array av den data som ska skickas.
+ * *data	en pekare till en uint8_t-array av den data som ska skickas.
  *			Första byten är ett kommando, resten är argument.
+ *			Kommandon finns definierade i sensormodul.h
  *			Se exempel i main()
  *
- * Kommandon enligt följande:
- * 0x01		Debug-meddelande. Text som skrivs ut på displayen
- * 0x02		Sväng höger
- * 0x03		Sväng åt nåt annat håll
- *
- *
- * Protokollet som faktiskt skickas till styrenheten är enligt följande:
+ * Protokollet som faktiskt används för att skicka data till styrenheten 
+ * över bussen är enligt följande:
  * Byte:
  *	1				längd av datapaket (max 255)
  *  2				Kommando
- *  3 -	(len-3)		eventuella argument
+ *  3 -	(len-2)		eventuella argument
  */
 void send_to_master(uint8_t len, uint8_t *data)
 {
@@ -213,7 +210,8 @@ void send_to_master(uint8_t len, uint8_t *data)
 		/* FIXME!!!
 		   Jag gillar verkligen inte den här! Kan man inte kolla
 		   att en byte har skickats innan man skickar nästa istället
-		   för att ha en ful delay?
+		   för att ha en ful delay? Eller vad är det som gör att det inte
+		   funkar utan delay?
 		 */
 		_delay_us(500);
 		send_to_master_real(data[i++]);

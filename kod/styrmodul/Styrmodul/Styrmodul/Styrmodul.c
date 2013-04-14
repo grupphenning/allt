@@ -440,7 +440,11 @@ void decode_sensor()
 	/* Om det är fler byte kvar att ta emot, vänta på dem! */
 	if(sensor_buffer_pointer != sensor_packet_length)
 		return;
+	/* Aha, vi har tagit emot hela meddelandet! Tolka detta! */
 
+/**********************************************************************
+ * Här hanteras kommandon från sensorenheten
+ **********************************************************************/
 	switch(sensor_buffer[0]) {
 		case SENSOR_DEBUG:
 			sensor_debug_message();
@@ -454,17 +458,7 @@ void decode_sensor()
 			// Unimplemented command
 		break;
 	}
-	/* Aha, vi har tagit emot hela meddelandet! Tolka detta! */
-	/* FIXME!!! Just nu dumpas bara mottagen data! */
-// 	sprintf(tmpstr, "l:%d, d:", sensor_packet_length);
-// 	send_string(tmpstr);
-// 	int i = 0;
-// 	while(sensor_packet_length--)
-// 	{
-// 		sprintf(tmpstr, "%02X,", sensor_buffer[i++]);
-// 		send_string(tmpstr);
-// 	}
-// 	update();
+
 	
 	/* Återställ pekare, för att visa att nästa byte är början av meddelande */
 	sensor_buffer_pointer = 0x00;
