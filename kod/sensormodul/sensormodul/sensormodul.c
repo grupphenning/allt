@@ -6,26 +6,19 @@
  */
 //definiera klockhastighet
 #define F_CPU 8000000UL
+#include "sensormodul.h"
+#include "bitmacros.h"
 
 #include <avr/io.h>
 #include <avr/delay.h>
 #include <avr/interrupt.h>
-#include "bitmacros.h"
 
-#define GYRO PINA2
-#define INTERUPT_REQUEST PINA7
-#define TAPE_SENSOR PINA1
-#define IR_SENSOR PINA0
-
-void read_adc();
-void read_ir(uint8_t sensor_no);
-void read_gyro();
-void init_adc();
 
 uint8_t spi_data_from_master;
 uint8_t spi_data_to_master;
 uint8_t test_data;
 uint8_t	adc_interrupt = 0;
+
 
 int main(void)
 {
@@ -35,16 +28,25 @@ int main(void)
 	//DDRB = 0xFF; //OBS!! TEST TAS BORT SÅ FORT BUSS SKALL UPP
 	init_spi();
 	init_adc();
-	
+	_delay_ms(100);	// Ja, vänta! Annars hamnar SPI-protokollet i osynk!
+
     while(1)
     {
 		
-		read_ir(1);
-		_delay_ms(100);
+		//read_ir(1);
+		_delay_ms(1);
+
+		// Test av nya protokollet:
+		uint8_t data[] = {SENSOR_DEBUG, 'a', 'b', 'c', 0};
+		send_to_master(5, data);				// Notera att strängen är fyra byte lång (inklusive NULL)!
+		_delay_ms(3000);
+		continue;
+		// Slut av test av nya protokollet
+
 		if(adc_interrupt)
 		{
-			
-			send_to_master(test_data);
+
+		//	send_to_master(test_data);			//Fixa denna så den hanterar nya protokollet!
 			adc_interrupt = 0;
 		}
 // 		make_crossing_decision ('l', 'k');
@@ -55,6 +57,7 @@ int main(void)
 // 		//_delay_ms(1);
     }
 }
+
 
 
 void init_spi()
@@ -175,10 +178,46 @@ void send_crossing_decision(uint8_t ch)
 	send_to_master(commando);
 }
 
-void send_to_master(uint8_t byte)
+void send_to_master_real(uint8_t byte)
 {
 	SPDR = byte;
 	create_master_interrupt();
+}
+
+/*
+ * Denna funktion tar argument enligt följande:
+ * len		antalet byte att skicka
+ * data		en pekare till en uint8_t-array av den data som ska skickas.
+ *			Första byten är ett kommando, resten är argument.
+ *			Se exempel i main()
+ *
+ * Kommandon enligt följande:
+ * 0x01		Debug-meddelande. Text som skrivs ut på displayen
+ * 0x02		Sväng höger
+ * 0x03		Sväng åt nåt annat håll
+ *
+ *
+ * Protokollet som faktiskt skickas till styrenheten är enligt följande:
+ * Byte:
+ *	1				längd av datapaket (max 255)
+ *  2				Kommando
+ *  3 -	(len-3)		eventuella argument
+ */
+void send_to_master(uint8_t len, uint8_t *data)
+{
+	
+	send_to_master_real(len);
+	int i = 0;
+	while(i != len)
+	{
+		/* FIXME!!!
+		   Jag gillar verkligen inte den här! Kan man inte kolla
+		   att en byte har skickats innan man skickar nästa istället
+		   för att ha en ful delay?
+		 */
+		_delay_us(500);
+		send_to_master_real(data[i++]);
+	}
 }
 
 void make_crossing_decision(uint8_t tape_one, uint8_t tape_two)

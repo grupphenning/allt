@@ -5,37 +5,9 @@
  *  Author: klawi021 ET AL!
  */ 
 #define F_CPU 8000000UL
-
-#include <avr/io.h>
-#include "bitmacros.h"
-#include <avr/delay.h>
-#include "display.h"
-#include <avr/interrupt.h>
-#include "komm_styr_protokoll.h"
-#include "sensor_styr_protokoll.h"
-
-
-#define LEFT_DIR PB1
-#define RIGHT_DIR PB0
-#define PORT_DIR PORTB
-
-#define LEFT_AMOUNT OCR2A
-#define RIGHT_AMOUNT OCR2B
-
-#define CLAW_AMOUNT OCR1A
-
-#define LEFT_PWM PD7
-#define RIGHT_PWM PD6
-#define CLAW PD5
-#define PORT_PWM PORTD
-
-#define DISPLAY PORTA
-#define DISPLAY_POWER PA2
-#define DISPLAY_BLINK PA0
-#define DISPLAY_CURSOR PA1
-#define DISPLAY_RS PC7
-#define DISPLAY_ENABLE PC6
-
+#include "Styrmodul.h"
+#include "../../../sensormodul/sensormodul/sensormodul.h"
+#define SENSOR_BUFFER_SIZE 256
 uint8_t test;
 volatile uint8_t spi_data_from_comm;
 volatile uint8_t spi_data_from_sensor;
@@ -46,6 +18,11 @@ volatile uint8_t sensor_interrupt_occoured = 0;
 uint8_t ninety_timer, turn;
 uint8_t left = 1;
 
+uint8_t sensor_buffer[SENSOR_BUFFER_SIZE];		// Buffer som håller data från sensorenheten
+uint8_t sensor_buffer_pointer;			// Pekare till aktuell position i bufferten
+uint8_t sensor_start;					// Flagga som avgör huruvida vi är i början av meddelande
+uint8_t sensor_packet_length;					// Anger aktuell längd av meddelandet
+
 int main(void)
 {
 	//don't turn!
@@ -55,13 +32,11 @@ int main(void)
 //	DDRA = 0xFF;
 
 	init_display();
- 	/*clear_screen();
- 	send_string("Boot!");
- 	update();*/
-
+	clear_screen();
+	update();
 	spi_init();
 	pwm_init();
-	
+		
 	sei();		//aktivera global interrupts
 	while(1)
 	{
@@ -73,13 +48,13 @@ int main(void)
 		
 		if(comm_interrupt_occoured)
 		{
-			decode_comm();
 			comm_interrupt_occoured = 0;
+			decode_comm();
 		} 
 		if(sensor_interrupt_occoured)
 		{
-			decode_sensor();
 			sensor_interrupt_occoured = 0;
+			decode_sensor();
 		}
 	}
 }
@@ -196,6 +171,11 @@ void spi_init()
 	//aktivera interrupt-request på "any change"
 	setbit(EICRA, ISC00);
 	setbit(EICRA, ISC10);
+	
+	sensor_buffer_pointer = 0x00;	// Pekare till aktuell position i bufferten
+	sensor_start = 1;				// Flagga som avgör huruvida vi är i början av meddelande
+	sensor_packet_length = 0x00;			// Anger aktuell längd av meddelandet
+
 }
 
 void spi_get_data_from_comm(uint8_t message_byte)
@@ -440,12 +420,58 @@ void decode_comm()
 	}
 }
 
+
 void decode_sensor()
 {
-	uint8_t command = spi_data_from_sensor;
-	char tmp[10];
-	uint8_t sensor_type = command & TYPE_OF_SENSOR;
+	uint8_t data = spi_data_from_sensor;
+ 	char tmpstr[50];
+
+	/* Första byten i ett meddelande är storleken */
+	if(sensor_start)
+	{
+		sensor_packet_length = spi_data_from_sensor;
+		sensor_start = 0;
+		return;
+	}
+
+	/* Annars, lägg in inkommande byten i bufferten */
+	sensor_buffer[sensor_buffer_pointer++] = spi_data_from_sensor;
+
+	/* Om det är fler byte kvar att ta emot, vänta på dem! */
+	if(sensor_buffer_pointer != sensor_packet_length)
+		return;
+
+	switch(sensor_buffer[0]) {
+		case SENSOR_DEBUG:
+			sensor_debug_message();
+			break;
+		case SENSOR_HEX:
+			sensor_debug_hex();
+			break;
+		case SENSOR_RIGHT:
+			sensor_turn_right();
+		default:
+			// Unimplemented command
+		break;
+	}
+	/* Aha, vi har tagit emot hela meddelandet! Tolka detta! */
+	/* FIXME!!! Just nu dumpas bara mottagen data! */
+// 	sprintf(tmpstr, "l:%d, d:", sensor_packet_length);
+// 	send_string(tmpstr);
+// 	int i = 0;
+// 	while(sensor_packet_length--)
+// 	{
+// 		sprintf(tmpstr, "%02X,", sensor_buffer[i++]);
+// 		send_string(tmpstr);
+// 	}
+// 	update();
 	
+	/* Återställ pekare, för att visa att nästa byte är början av meddelande */
+	sensor_buffer_pointer = 0x00;
+	sensor_packet_length = 0;
+	sensor_start = 1;
+
+//	uint8_t sensor_type = command & TYPE_OF_SENSOR;
 // 	if( sensor_type == REFLEX )
 // 	{
 // 		if(command == CROSSING_RIGHT_PROT)	
@@ -468,17 +494,32 @@ void decode_sensor()
 // 
 // 	}
 /*	else //SKRIV UT DATA*/
+
+
+}
+
+
+
+
+void sensor_debug_message()
+{
+	send_string(sensor_buffer+1);
+	update();
+}
+
+void sensor_debug_hex()
+{
+	uint8_t pos = 1;	// Gå förbi DEBUG_HEX-kommandot
+	char tmpstr[10];
+	while(pos != sensor_packet_length)
 	{
-		
-		clear_screen();
-		sprintf(tmp, "GYRO: 0x%02X", command);
-		send_string(tmp);
-		update();
-		
-	}	
-	
+		sprintf(tmpstr, "%02X", sensor_buffer[pos++]);
+		send_string(tmpstr);
 	}
+	update();
+}
 
-
-
-
+void sensor_turn_right()
+{
+	// TODO!
+}
