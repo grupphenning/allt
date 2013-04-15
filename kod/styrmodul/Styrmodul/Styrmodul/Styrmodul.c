@@ -430,7 +430,11 @@ void decode_sensor()
 {
 	uint8_t data = spi_data_from_sensor;
  	char tmpstr[50];
-
+	clear_screen();
+	sprintf(tmpstr, "%02X", data);
+	send_string(tmpstr);
+	update();
+	
 	/* Första byten i ett meddelande är storleken */
 	if(sensor_start)
 	{
@@ -525,14 +529,14 @@ void sensor_turn_right()
 
 
 
-uint8_t interpret_ir(uint8_t value)
-{
-	uint8_t i = 0;
-	
-	// Om värdet är närmast interpolationspunkt nr. i av alla punkter, returnera denna punkts centimetervärde.
-	for ( !((value >= ( (ir_voltage_array[i] - ir_voltage_array[i+1]) >> 1 ) ) & (value <= ( (ir_voltage_array[i-1] - ir_voltage_array[i]) >> 1) )) )
-	{
-		i++;
-	}
-	return uint8_t ir_centimeter_array[i];
-}
+// uint8_t interpret_ir(uint8_t value)
+// {
+// 	uint8_t i = 0;
+// 	
+// 	// Om värdet är närmast interpolationspunkt nr. i av alla punkter, returnera denna punkts centimetervärde.
+// 	for ( !((value >= ( (ir_voltage_array[i] - ir_voltage_array[i+1]) >> 1 ) ) & (value <= ( (ir_voltage_array[i-1] - ir_voltage_array[i]) >> 1) )) )
+// 	{
+// 		i++;
+// 	}
+// 	return uint8_t ir_centimeter_array[i];
+// }

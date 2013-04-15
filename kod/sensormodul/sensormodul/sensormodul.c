@@ -23,7 +23,10 @@ uint8_t	adc_interrupt = 0;
 int main(void)
 {
 	setbit(DDRA, PINA7); //Sätter avbrottpinne mot styr som output
-	clearbit(DDRA,PINA0);
+	clearbit(DDRA,PINA0); //Sätter IR/Reflexdata som input
+	setbit(DDRA,PINA1); //Sätter reflex-enable som output
+	clearbit(DDRA,PINA2); // Gyro som input
+	
 	DDRD = 0xFF;
 	//DDRB = 0xFF; //OBS!! TEST TAS BORT SÅ FORT BUSS SKALL UPP
 	init_spi();
@@ -33,21 +36,21 @@ int main(void)
     while(1)
     {
 		
-		//read_ir(1);
-		_delay_ms(1);
+		read_tape(5);
+		_delay_ms(300);
 
-		// Test av nya protokollet:
-		//uint8_t data[] = {SENSOR_DEBUG, 'a', 'b', 'c', 0};
-		uint8_t data[] = {SENSOR_HEX, 'a', 'b', 'c', 0};	// TESTA DENNA OCKSÅ!
-		send_to_master(5, data);				// Notera att strängen är fyra byte lång (inklusive NULL)!
-		_delay_ms(3000);
-		continue;
-		// Slut av test av nya protokollet
+// 		// Test av nya protokollet:
+// 		//uint8_t data[] = {SENSOR_DEBUG, 'a', 'b', 'c', 0};
+// 		uint8_t data[] = {SENSOR_HEX, 'a', 'b', 'c', 0};	// TESTA DENNA OCKSÅ!
+// 		send_to_master(5, data);				// Notera att strängen är fyra byte lång (inklusive NULL)!
+// 		_delay_ms(3000);
+// 		continue;
+// 		// Slut av test av nya protokollet
 
 		if(adc_interrupt)
 		{
 
-		//	send_to_master(test_data);			//Fixa denna så den hanterar nya protokollet!
+			send_to_master_real(test_data);			//Fixa denna så den hanterar nya protokollet!
 			adc_interrupt = 0;
 		}
 // 		make_crossing_decision ('l', 'k');
@@ -111,16 +114,23 @@ void read_ir(uint8_t sensor_no)
 	clearbit(ADMUX,MUX0);
 	clearbit(ADMUX,MUX1);
 	clearbit(ADMUX,MUX2);
-	sensor_no = sensor_no << 4;
-	PORTD = 0x70 & sensor_no; //Tell mux where to read from
+	clearbit(ADMUX,MUX3);
+	clearbit(ADMUX,MUX4);	
+	PORTD = ((11+sensor_no)<<4); //Tell mux where to read from
 	read_adc();
 }
 
 void read_tape(uint8_t sensor_no)
 {
-	setbit(ADMUX,MUX0);
+	clearbit(ADMUX,MUX0);
 	clearbit(ADMUX,MUX1);
 	clearbit(ADMUX,MUX2);
+	clearbit(ADMUX,MUX3);
+	clearbit(ADMUX,MUX4);
+	setbit(PORTA, PINA1);
+	PORTD = (sensor_no<<4)+sensor_no;
+
+	read_adc();
 }
 
 void read_adc()
