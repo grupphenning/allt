@@ -8,6 +8,7 @@
 #include "Styrmodul.h"
 #include "../../../sensormodul/sensormodul/sensormodul.h"
 #define SENSOR_BUFFER_SIZE 256
+#define INTERPOLATION_POINTS 12
 uint8_t test;
 volatile uint8_t spi_data_from_comm;
 volatile uint8_t spi_data_from_sensor;
@@ -18,10 +19,14 @@ volatile uint8_t sensor_interrupt_occoured = 0;
 uint8_t ninety_timer, turn;
 uint8_t left = 1;
 
+
 uint8_t sensor_buffer[SENSOR_BUFFER_SIZE];		// Buffer som håller data från sensorenheten
 uint8_t sensor_buffer_pointer;			// Pekare till aktuell position i bufferten
 uint8_t sensor_start;					// Flagga som avgör huruvida vi är i början av meddelande
 uint8_t sensor_packet_length;					// Anger aktuell längd av meddelandet
+
+uint8_t ir_voltage_array[INTERPOLATION_POINTS] = {2.74, 2.32, 1.64, 1.31, 1.08, 0.93, 0.74, 0.61, 0.52, 0.45, 0.41, 0.38};		// Innehåller de spänningsvärden som ses i grafen på https://docs.isy.liu.se/twiki/pub/VanHeden/DataSheets/gp2y0a21.pdf, sid. 4.
+uint8_t ir_centimeter_array[INTERPOLATION_POINTS] = {8, 10, 15, 20, 25, 30, 40, 50, 60, 70, 80, 90};			// Innehåller de centimetervärden som ses i grafen på https://docs.isy.liu.se/twiki/pub/VanHeden/DataSheets/gp2y0a21.pdf, sid. 4.
 
 int main(void)
 {
@@ -516,4 +521,18 @@ void sensor_debug_hex()
 void sensor_turn_right()
 {
 	// TODO!
+}
+
+
+
+uint8_t interpret_ir(uint8_t value)
+{
+	uint8_t i = 0;
+	
+	// Om värdet är närmast interpolationspunkt nr. i av alla punkter, returnera denna punkts centimetervärde.
+	for ( !((value >= ( (ir_voltage_array[i] - ir_voltage_array[i+1]) >> 1 ) ) & (value <= ( (ir_voltage_array[i-1] - ir_voltage_array[i]) >> 1) )) )
+	{
+		i++;
+	}
+	return uint8_t ir_centimeter_array[i];
 }
