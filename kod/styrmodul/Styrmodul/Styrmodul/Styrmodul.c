@@ -6,6 +6,7 @@
  */ 
 #define F_CPU 8000000UL
 #include "Styrmodul.h"
+#include "pid.h"
 #include "../../../sensormodul/sensormodul/sensormodul.h"
 #define SENSOR_BUFFER_SIZE 256
 #define INTERPOLATION_POINTS 12
