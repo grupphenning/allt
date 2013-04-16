@@ -1,14 +1,54 @@
 /*
- * pid.c
+ pid.c
  */ 
-#include "display.h"
+#include "pid.h"
 
-void update_k_values(uint8_t k_prop, uint8_t k_int, uint8_t k_der)
+void init_pid(uint16_t time, uint8_t max, uint8_t min)
 {
+	if (time > 0)
+	{
+		uint16_t	temp = time/cykle_time;
+		k_int *= temp;
+		k_der /= temp;
+		cykle_time = time;
+	}
 	
+	if (max > min)
+	{
+		max_out = max;
+		min_out = min;
+	}
+	
+	if (output > max_out) output = max_out;
+	else if (output < min_out) output = min_out;
+	
+	if (I_term > max_out) I_term = max_out;
+	else if (I_term < min_out) I_term = min_out;
 }
 
-void regulator()
+void update_k_values(uint8_t kp, uint8_t ki, uint8_t kd)
 {
+	k_prop = 128*kp;
+	k_int = 128*ki*cykle_time;
+	k_der = 128*kd/cykle_time;	
+}
+
+void clear_pid()
+{
+	I_term = 0;
+}
+
+void regulator(uint16_t input)
+{
+	I_term += k_int*input;
+	if (I_term > max_out) I_term = max_out;
+	else if (I_term < min_out) I_term = min_out;
 	
+	uint16_t dinput = input - last_input;
+	
+	output = k_prop*input + I_term - k_der*dinput;
+	if (output > max_out) output = max_out;
+	else if (output < min_out) output = min_out;
+	
+	output = output/128;
 }
