@@ -9,7 +9,7 @@
  ****************************************************/
 #define SENSOR_DEBUG	0x01
 #define SENSOR_HEX		0x02
-#define SENSOR_RIGHT	0x03
+#define SENSOR_FRONT    0x03
 //FIXME: Lägg till fler!
 
 

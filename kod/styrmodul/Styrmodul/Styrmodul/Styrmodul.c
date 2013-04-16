@@ -41,8 +41,10 @@ int main(void)
 	update();
 	spi_init();
 	pwm_init();
-		
+	drive_forwards(70);	
 	sei();		//aktivera global interrupts
+	
+	_delay_ms(400);
 	while(1)
 	{
 // 		if(turn)
@@ -161,6 +163,7 @@ void spi_init()
 	setbit(PORTB, PINB4);
 	
 	test = SPSR;
+	
 	
 	//Sätt SPCR-registret, inställningar om master/slave, spi enable, data order, klockdelning
 	SPCR = 0;
@@ -337,14 +340,14 @@ uint8_t claw_out_prot = 0b01100100;
 ISR(INT1_vect)
 {
 	comm_interrupt_occoured = 1;
-	spi_get_data_from_comm(0xFF);	//Sparar undan data från comm
+	spi_get_data_from_comm(0x00);	//Sparar undan data från comm
 }
 
 // Sensorenheten skickar en avbrottsförfrågan
 ISR(INT0_vect)
 {
 	sensor_interrupt_occoured = 1;
-	spi_get_data_from_sensor(0xFF);
+	spi_get_data_from_sensor(0x00);
 }
 
 ISR(TIMER1_COMPA_vect)
@@ -429,11 +432,6 @@ void decode_comm()
 void decode_sensor()
 {
 	uint8_t data = spi_data_from_sensor;
- 	char tmpstr[50];
-	clear_screen();
-	sprintf(tmpstr, "%02X", data);
-	send_string(tmpstr);
-	update();
 	
 	/* Första byten i ett meddelande är storleken */
 	if(sensor_start)
@@ -450,6 +448,19 @@ void decode_sensor()
 	if(sensor_buffer_pointer != sensor_packet_length)
 		return;
 	/* Aha, vi har tagit emot hela meddelandet! Tolka detta! */
+	
+	
+	char tmpstr[50];
+	clear_screen();
+	sprintf(tmpstr, "%02X", sensor_packet_length);
+	send_string(tmpstr);
+	send_string(" ");
+	sprintf(tmpstr, "%02X", sensor_buffer[0]);
+	send_string(tmpstr);
+	send_string(" ");
+	sprintf(tmpstr, "%02X", sensor_buffer[1]);
+	send_string(tmpstr);
+	update();
 
 /**********************************************************************
  * Här hanteras kommandon från sensorenheten
@@ -461,8 +472,8 @@ void decode_sensor()
 		case SENSOR_HEX:
 			sensor_debug_hex();
 			break;
-		case SENSOR_RIGHT:
-			sensor_turn_right();
+		case SENSOR_FRONT:
+			obstacle_check();
 		default:
 			// Unimplemented command
 		break;
@@ -473,6 +484,7 @@ void decode_sensor()
 	sensor_buffer_pointer = 0x00;
 	sensor_packet_length = 0;
 	sensor_start = 1;
+	
 
 //	uint8_t sensor_type = command & TYPE_OF_SENSOR;
 // 	if( sensor_type == REFLEX )
@@ -522,10 +534,14 @@ void sensor_debug_hex()
 	update();
 }
 
-void sensor_turn_right()
+void obstacle_check()
 {
-	// TODO!
+	if (sensor_buffer[1] >= 0xA0)
+	{
+		stop_motors();
+	}
 }
+
 
 
 

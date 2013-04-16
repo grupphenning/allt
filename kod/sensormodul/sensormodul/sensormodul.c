@@ -16,8 +16,9 @@
 
 uint8_t spi_data_from_master;
 uint8_t spi_data_to_master;
-uint8_t test_data;
-uint8_t	adc_interrupt = 0;
+volatile uint8_t test_data[1] = {0, 0};
+volatile uint8_t data_index=0;
+volatile uint8_t adc_interrupt = 0;
 
 
 int main(void)
@@ -28,17 +29,16 @@ int main(void)
 	clearbit(DDRA,PINA2); // Gyro som input
 	
 	DDRD = 0xFF;
-	//DDRB = 0xFF; //OBS!! TEST TAS BORT SÅ FORT BUSS SKALL UPP
 	init_spi();
 	init_adc();
 	_delay_ms(100);	// Ja, vänta! Annars hamnar SPI-protokollet i osynk!
-
+	
     while(1)
     {
+		_delay_ms(10);
+		read_ir(0);
+		_delay_ms(100);
 		
-		read_tape(5);
-		_delay_ms(300);
-
 // 		// Test av nya protokollet:
 // 		//uint8_t data[] = {SENSOR_DEBUG, 'a', 'b', 'c', 0};
 // 		uint8_t data[] = {SENSOR_HEX, 'a', 'b', 'c', 0};	// TESTA DENNA OCKSÅ!
@@ -50,9 +50,13 @@ int main(void)
 		if(adc_interrupt)
 		{
 
-			send_to_master_real(test_data);			//Fixa denna så den hanterar nya protokollet!
+			send_to_master(2,&test_data);			//Fixa denna så den hanterar nya protokollet!
+			data_index = 0;
 			adc_interrupt = 0;
 		}
+		
+
+
 // 		make_crossing_decision ('l', 'k');
 // 		
 // 		_delay_ms(5000);
@@ -116,6 +120,13 @@ void read_ir(uint8_t sensor_no)
 	clearbit(ADMUX,MUX2);
 	clearbit(ADMUX,MUX3);
 	clearbit(ADMUX,MUX4);	
+	
+	switch (sensor_no)
+	{
+		case 0:											//TEST
+			test_data[data_index++] = SENSOR_FRONT;
+			break;
+	}	
 	PORTD = ((11+sensor_no)<<4); //Tell mux where to read from
 	read_adc();
 }
@@ -141,7 +152,7 @@ void read_adc()
 
 ISR(ADC_vect)
 {
-	test_data = ADCH;
+	test_data[data_index] = ADCH;
 	adc_interrupt = 1;
 }
 
@@ -215,7 +226,7 @@ void send_to_master(uint8_t len, uint8_t *data)
 	
 	send_to_master_real(len);
 	int i = 0;
-	while(i != len)
+	while(i < len)
 	{
 		/* FIXME!!!
 		   Jag gillar verkligen inte den här! Kan man inte kolla
