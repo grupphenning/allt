@@ -42,10 +42,10 @@ int main(void)
 	update();
 	spi_init();
 	pwm_init();
-	drive_forwards(70);	
+	drive_forwards(85);	
 	sei();		//aktivera global interrupts
 	
-	_delay_ms(400);
+	_delay_ms(200);
 	while(1)
 	{
 // 		if(turn)
@@ -537,7 +537,7 @@ void sensor_debug_hex()
 
 void obstacle_check()
 {
-	if (sensor_buffer[1] >= 0xA0)
+	if (sensor_buffer[1] >= 0x60)
 	{
 		stop_motors();
 	}
