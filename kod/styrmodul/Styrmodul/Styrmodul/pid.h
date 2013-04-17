@@ -7,11 +7,9 @@
 #include <inttypes.h>
 #include "bitmacros.h"
 
-#define F_CPU 8000000UL // 8 MHz Internal oscillator
-
 uint16_t input, output;
 uint16_t k_prop, k_int, k_der; //Regulatorkonstanter
-int8_t I_term, last_input; 
+int8_t I_term = 0, last_input = 0; 
 uint16_t cykle_time; //Vilken intervall reglering körs.
 uint8_t max_out, min_out; //Maxvärde för utsignalen, undvika fel med mättad styrsignal.
 
