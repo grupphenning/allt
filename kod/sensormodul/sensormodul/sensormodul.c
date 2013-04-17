@@ -16,8 +16,8 @@
 
 uint8_t spi_data_from_master;
 uint8_t spi_data_to_master;
-volatile uint8_t test_data[2] = {0, 0};
-volatile uint8_t data_index=0;
+volatile uint8_t test_data[18];
+volatile uint8_t data_index=1;
 volatile uint8_t adc_interrupt = 0;
 
 
@@ -31,42 +31,37 @@ int main(void)
 	DDRD = 0xFF;
 	init_spi();
 	init_adc();
-	_delay_ms(100);	// Ja, vänta! Annars hamnar SPI-protokollet i osynk!
+	_delay_ms(500);	// Ja, vänta! Annars hamnar SPI-protokollet i osynk!
 	
     while(1)
     {
+		 
+		data_index = 1;
+ 		test_data[0] = SENSOR; 
+ 		read_ir(0);
+		read_ir(1);
+_delay_ms(10); 
+		read_ir(2);
+		read_ir(3);
+		read_ir(4);
+		read_gyro();
+		read_tape(0);
+		read_tape(1);
+		read_tape(2);
+		read_tape(3);
+		read_tape(4);
+		read_tape(5);
+		read_tape(6);
+		read_tape(7);
+		read_tape(8);
+		read_tape(9);
+		read_tape(10);
+		
 		_delay_ms(10);
-		read_ir(0);
-		_delay_ms(100);
+		send_to_master(18, test_data);
 		
-// 		// Test av nya protokollet:
-// 		//uint8_t data[] = {SENSOR_DEBUG, 'a', 'b', 'c', 0};
-// 		uint8_t data[] = {SENSOR_HEX, 'a', 'b', 'c', 0};	// TESTA DENNA OCKSÅ!
-// 		send_to_master(5, data);				// Notera att strängen är fyra byte lång (inklusive NULL)!
-// 		_delay_ms(3000);
-// 		continue;
-// 		// Slut av test av nya protokollet
-
-		if(adc_interrupt)
-		{
-
-			send_to_master(2,&test_data);			//Fixa denna så den hanterar nya protokollet!
-			data_index = 0;
-			adc_interrupt = 0;
-		}
-		
-
-
-// 		make_crossing_decision ('l', 'k');
-// 		
-// 		_delay_ms(5000);
-// 		make_crossing_decision( 'k', 'l');
-// 		_delay_ms(5000);
-// 		//_delay_ms(1);
     }
 }
-
-
 
 void init_spi()
 {
@@ -115,20 +110,21 @@ void read_gyro()
 }	
 void read_ir(uint8_t sensor_no)
 {
+	unsigned index = data_index;
+	static uint8_t last[20], second_to_last[20];
+
 	clearbit(ADMUX,MUX0);
 	clearbit(ADMUX,MUX1);
 	clearbit(ADMUX,MUX2);
 	clearbit(ADMUX,MUX3);
 	clearbit(ADMUX,MUX4);	
-	
-	switch (sensor_no)
-	{
-		case 0:											//TEST
-			test_data[data_index++] = SENSOR_FRONT;
-			break;
-	}	
 	PORTD = ((11+sensor_no)<<4); //Tell mux where to read from
 	read_adc();
+	
+	second_to_last[sensor_no] = last[sensor_no];
+	last[sensor_no] = test_data[index];
+	
+	test_data[index] = second_to_last[sensor_no] < last[sensor_no] ? second_to_last[sensor_no] : last[sensor_no];
 }
 
 void read_tape(uint8_t sensor_no)
@@ -147,12 +143,14 @@ void read_tape(uint8_t sensor_no)
 void read_adc()
 {
 	setbit(ADCSRA,ADSC); //start_reading
+	while(!adc_interrupt); //Wait for interupt to occur
+	adc_interrupt = 0;
 }
 
 
 ISR(ADC_vect)
 {
-	test_data[data_index] = ADCH;
+	test_data[data_index++] = ADCH;
 	adc_interrupt = 1;
 }
 
@@ -166,11 +164,6 @@ void SPI_read_byte()
 ISR(SPI_STC_vect)
 {
 	SPI_read_byte();
-}
-
-void create_master_interrupt()
-{
-	PORTA ^= (1 << PORTA7);
 }
 
 /*
@@ -203,7 +196,22 @@ void send_crossing_decision(uint8_t ch)
 void send_to_master_real(uint8_t byte)
 {
 	SPDR = byte;
-	create_master_interrupt();
+	// Skapa master-interrupt
+	PORTA ^= (1 << PORTA7);
+	while(!(SPSR & (1 << SPIF)));
+}
+
+/*
+ * Skickar en sträng till kontrollern som dumpar denna på displayen.
+ */
+void send_string_to_master(char *str)
+{
+	uint8_t len = strlen(str) + 1;	/* Längden av strängen + kommandot */
+	char msg[34];
+	strncpy(msg + 1, str, 33);
+	msg[0] = SENSOR_DEBUG;
+	msg[33] = 0;
+	send_to_master(34, msg);
 }
 
 /*
@@ -234,7 +242,7 @@ void send_to_master(uint8_t len, uint8_t *data)
 		   för att ha en ful delay? Eller vad är det som gör att det inte
 		   funkar utan delay?
 		 */
-		_delay_us(500);
+		//_delay_ms(1);
 		send_to_master_real(data[i++]);
 	}
 }

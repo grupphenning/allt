@@ -12,9 +12,11 @@
 #define INTERPOLATION_POINTS 12
 uint8_t test;
 volatile uint8_t spi_data_from_comm;
-volatile uint8_t spi_data_from_sensor;
+#define BUF_SZ 1024
+volatile uint8_t spi_data_from_sensor[BUF_SZ];
+uint16_t spi_sensor_read;
+volatile uint16_t spi_sensor_write;
 volatile uint8_t comm_interrupt_occoured = 0;
-volatile uint8_t sensor_interrupt_occoured = 0;
 //uint8_t amount = 255;
 #define SPEED 255
 uint8_t ninety_timer, turn;
@@ -45,27 +47,35 @@ int main(void)
 	drive_forwards(85);	
 	sei();		//aktivera global interrupts
 	
-	_delay_ms(200);
+	_delay_ms(50);
+
 	while(1)
 	{
 // 		if(turn)
 // 			tank_turn_left(207);
 // 		else
 // 			stop_motors();
-		
-		
+	/*
 		if(comm_interrupt_occoured)
 		{
 			comm_interrupt_occoured = 0;
 			decode_comm();
-		} 
-		if(sensor_interrupt_occoured)
+		}
+	*/
+		/*if(sensor_interrupt_occoured)
 		{
 			sensor_interrupt_occoured = 0;
 			decode_sensor();
+		}*/
+		if(spi_sensor_write != spi_sensor_read)
+		{
+			decode_sensor(spi_data_from_sensor[spi_sensor_read]);
+			++spi_sensor_read;
+			spi_sensor_read %= BUF_SZ;
 		}
 	}
 }
+
 
 void pwm_init()
 {	
@@ -126,7 +136,7 @@ void pwm_init()
 	setbit(TCCR2A, COM2B1);
 	setbit(TCCR2A, WGM20);
 	setbit(TCCR2A, WGM21);
-	OCR2A = 0;
+	OCR2A = 0; 
 	OCR2B = 0;
 	
 	//TCCR2A = (1 << COM2A1) | (1 << COM2B1) | (1 << WGM21) | (1 << WGM20);
@@ -171,7 +181,8 @@ void spi_init()
 	//setbit(SPCR, SPIE);
 	setbit(SPCR, SPE);
 	setbit(SPCR, MSTR);
-	setbit(SPCR, SPR0);
+	//setbit(SPCR, SPR0);
+	setbit(SPCR, SPI2X);
 
 	//aktivera interrupt på INT0 och INT1
 	setbit(EIMSK, INT0);	// Akvitera avbrottsförfrågan från sensorenheten
@@ -192,8 +203,8 @@ void spi_get_data_from_comm(uint8_t message_byte)
 	clearbit(PORTB, PORTB3);	//Väljer komm
 	SPDR = message_byte;		//Lägger in meddelande i SPDR, startar överföringen
 	while(!(SPSR & (1 << SPIF)));
-	setbit(PORTB, PORTB3);		//Sätter komm till sleepmode
 	spi_data_from_comm = SPDR;
+	setbit(PORTB, PORTB3);		//Sätter komm till sleepmode
 }
 
 void spi_get_data_from_sensor(uint8_t message_byte)
@@ -201,8 +212,9 @@ void spi_get_data_from_sensor(uint8_t message_byte)
 	clearbit(PORTB, PORTB2);	//Väljer sensor
 	SPDR = message_byte;		//Lägger in meddelande i SPDR, startar överföringen
 	while(!(SPSR & (1 << SPIF)));
+	spi_data_from_sensor[spi_sensor_write] = SPDR;
+	spi_sensor_write = (spi_sensor_write + 1) % BUF_SZ;
 	setbit(PORTB, PORTB2);		//Sätter sensor till sleepmode
-	spi_data_from_sensor = SPDR;
 }
 
 void spi_send_byte(uint8_t byte)
@@ -347,7 +359,6 @@ ISR(INT1_vect)
 // Sensorenheten skickar en avbrottsförfrågan
 ISR(INT0_vect)
 {
-	sensor_interrupt_occoured = 1;
 	spi_get_data_from_sensor(0x00);
 }
 
@@ -430,20 +441,18 @@ void decode_comm()
 }
 
 
-void decode_sensor()
+void decode_sensor(uint8_t data)
 {
-	uint8_t data = spi_data_from_sensor;
-	
 	/* Första byten i ett meddelande är storleken */
 	if(sensor_start)
 	{
-		sensor_packet_length = spi_data_from_sensor;
+		sensor_packet_length = data;
 		sensor_start = 0;
 		return;
 	}
 
 	/* Annars, lägg in inkommande byten i bufferten */
-	sensor_buffer[sensor_buffer_pointer++] = spi_data_from_sensor;
+	sensor_buffer[sensor_buffer_pointer++] = data;
 
 	/* Om det är fler byte kvar att ta emot, vänta på dem! */
 	if(sensor_buffer_pointer != sensor_packet_length)
@@ -451,17 +460,17 @@ void decode_sensor()
 	/* Aha, vi har tagit emot hela meddelandet! Tolka detta! */
 	
 	
-	char tmpstr[50];
-	clear_screen();
-	sprintf(tmpstr, "%02X", sensor_packet_length);
-	send_string(tmpstr);
-	send_string(" ");
-	sprintf(tmpstr, "%02X", sensor_buffer[0]);
-	send_string(tmpstr);
-	send_string(" ");
-	sprintf(tmpstr, "%02X", sensor_buffer[1]);
-	send_string(tmpstr);
-	update();
+// 	char tmpstr[50];
+// 	//clear_screen();
+// 	sprintf(tmpstr, "%02X", sensor_packet_length);
+// 	send_string(tmpstr);
+// 	send_string(" ");
+// 	sprintf(tmpstr, "%02X", sensor_buffer[0]);
+// 	send_string(tmpstr);
+// 	send_string(" ");
+// 	sprintf(tmpstr, "%02X", sensor_buffer[1]);
+// 	send_string(tmpstr);
+// 	update();
 
 /**********************************************************************
  * Här hanteras kommandon från sensorenheten
@@ -473,9 +482,30 @@ void decode_sensor()
 		case SENSOR_HEX:
 			sensor_debug_hex();
 			break;
-		case SENSOR_FRONT:
-			obstacle_check();
-		default:
+		case SENSOR: {
+			enum { IR_LEFT = 1, IR_RIGHT = 2, IR_FRONT = 3 };
+			char tmp[100];
+			sprintf(tmp,
+			 "%02X "
+			 "%02X "
+			 "%02X "
+			 "%02X "
+			 "%02X ",
+			  sensor_buffer[1],
+			  sensor_buffer[2],
+			  sensor_buffer[3],
+			  sensor_buffer[4],
+			  sensor_buffer[5]);
+			clear_screen();
+			send_string(tmp);
+			update();
+			if(sensor_buffer[IR_FRONT] > 0x30) 
+			{
+					stop_motors();
+			}				
+			else drive_forwards(85);
+			break;
+		} default:
 			// Unimplemented command
 		break;
 	}
@@ -486,7 +516,6 @@ void decode_sensor()
 	sensor_packet_length = 0;
 	sensor_start = 1;
 	
-
 //	uint8_t sensor_type = command & TYPE_OF_SENSOR;
 // 	if( sensor_type == REFLEX )
 // 	{
@@ -519,6 +548,7 @@ void decode_sensor()
 
 void sensor_debug_message()
 {
+	clear_screen();
 	send_string(sensor_buffer+1);
 	update();
 }
