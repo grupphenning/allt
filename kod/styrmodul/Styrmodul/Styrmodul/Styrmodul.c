@@ -17,7 +17,6 @@ volatile uint8_t spi_data_from_sensor[BUF_SZ];
 uint16_t spi_sensor_read;
 volatile uint16_t spi_sensor_write;
 volatile uint8_t comm_interrupt_occoured = 0;
-//uint8_t amount = 255;
 #define SPEED 255
 uint8_t ninety_timer, turn;
 uint8_t left = 1;
@@ -44,29 +43,20 @@ int main(void)
 	update();
 	spi_init();
 	pwm_init();
-	drive_forwards(85);	
+	//drive_forwards(SPEED);	
 	sei();		//aktivera global interrupts
 	
-	_delay_ms(50);
+	//_delay_ms(50);
 
 	while(1)
 	{
-// 		if(turn)
-// 			tank_turn_left(207);
-// 		else
-// 			stop_motors();
-	/*
+	
 		if(comm_interrupt_occoured)
 		{
 			comm_interrupt_occoured = 0;
 			decode_comm();
 		}
-	*/
-		/*if(sensor_interrupt_occoured)
-		{
-			sensor_interrupt_occoured = 0;
-			decode_sensor();
-		}*/
+	
 		if(spi_sensor_write != spi_sensor_read)
 		{
 			decode_sensor(spi_data_from_sensor[spi_sensor_read]);
@@ -443,6 +433,7 @@ void decode_comm()
 
 void decode_sensor(uint8_t data)
 {
+	static uint8_t tape_count=0;
 	/* Första byten i ett meddelande är storleken */
 	if(sensor_start)
 	{
@@ -483,27 +474,35 @@ void decode_sensor(uint8_t data)
 			sensor_debug_hex();
 			break;
 		case SENSOR: {
-			enum { IR_LEFT = 1, IR_RIGHT = 2, IR_FRONT = 3 };
+ 			//enum { IR_LEFT = 1, IR_RIGHT = 2, IR_FRONT = 3};
+	//,IR_LEFT_BACK =4,IR_RIGHT_BACK = 5, 
+// 				 GYRO =6, REFLEX1 = 7,REFLEX2 = 8,REFLEX3 = 9,REFLEX4 = 10,REFLEX5 = 11,REFLEX6 = 12,REFLEX7 = 13,REFLEX8 = 14,REFLEX9 = 15,REFLEX10 = 16,REFLEX11 = 17};
+			
+			if(sensor_buffer[9] > 0x15)
+			{
+				tape_count++;
+			}
 			char tmp[100];
 			sprintf(tmp,
-			 "%02X "
-			 "%02X "
-			 "%02X "
-			 "%02X "
-			 "%02X ",
-			  sensor_buffer[1],
-			  sensor_buffer[2],
-			  sensor_buffer[3],
-			  sensor_buffer[4],
-			  sensor_buffer[5]);
-			clear_screen();
+			 "Reflex: %02X       "
+			 "Front: %02X ",
+			  sensor_buffer[9],
+			  sensor_buffer[3]);
+  			clear_screen();
+			send_string(tmp);
+			sprintf(tmp,"%02d",tape_count);
+
+
+
 			send_string(tmp);
 			update();
-			if(sensor_buffer[IR_FRONT] > 0x30) 
-			{
-					stop_motors();
-			}				
-			else drive_forwards(85);
+// 			if(sensor_buffer[IR_FRONT] > 0x20) 
+// 			{
+// 					stop_motors();
+// 			}				
+			//else drive_forwards(SPEED);
+			
+			
 			break;
 		} default:
 			// Unimplemented command
@@ -516,31 +515,6 @@ void decode_sensor(uint8_t data)
 	sensor_packet_length = 0;
 	sensor_start = 1;
 	
-//	uint8_t sensor_type = command & TYPE_OF_SENSOR;
-// 	if( sensor_type == REFLEX )
-// 	{
-// 		if(command == CROSSING_RIGHT_PROT)	
-// 		{
-// 			tank_turn_right(SPEED);
-// 			send_string( "h ");
-// 			update();
-// 		}
-// 		else if (command == CROSSING_LEFT_PROT)
-// 		{
-// 			tank_turn_left(SPEED);	
-// 			send_string("v ");
-// 			update();
-// 		}
-// 		else if (command == CROSSING_FORWARD_PROT)
-// 		{
-// 			drive_forwards(SPEED);
-// 		}
-// 		
-// 
-// 	}
-/*	else //SKRIV UT DATA*/
-
-
 }
 
 
@@ -565,13 +539,6 @@ void sensor_debug_hex()
 	update();
 }
 
-void obstacle_check()
-{
-	if (sensor_buffer[1] >= 0x60)
-	{
-		stop_motors();
-	}
-}
 
 
 

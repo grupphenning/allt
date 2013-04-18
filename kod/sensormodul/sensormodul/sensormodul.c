@@ -31,7 +31,7 @@ int main(void)
 	DDRD = 0xFF;
 	init_spi();
 	init_adc();
-	_delay_ms(500);	// Ja, vänta! Annars hamnar SPI-protokollet i osynk!
+//	_delay_ms(500);	// Ja, vänta! Annars hamnar SPI-protokollet i osynk!
 	
     while(1)
     {
@@ -40,7 +40,6 @@ int main(void)
  		test_data[0] = SENSOR; 
  		read_ir(0);
 		read_ir(1);
-_delay_ms(10); 
 		read_ir(2);
 		read_ir(3);
 		read_ir(4);
@@ -56,7 +55,6 @@ _delay_ms(10);
 		read_tape(8);
 		read_tape(9);
 		read_tape(10);
-		
 		_delay_ms(10);
 		send_to_master(18, test_data);
 		
@@ -95,7 +93,7 @@ void init_adc()
 	//SKalning av klockfrekvens
 	setbit(ADCSRA,ADPS2);
 	setbit(ADCSRA,ADPS1);
-	clearbit(ADCSRA,ADPS0);
+	setbit(ADCSRA,ADPS0);
 	
 	
 }
@@ -106,6 +104,8 @@ void read_gyro()
 	clearbit(ADMUX,MUX0);
 	setbit(ADMUX,MUX1);
 	clearbit(ADMUX,MUX2);
+	clearbit(ADMUX,MUX3);
+	clearbit(ADMUX,MUX4);
 	read_adc();
 }	
 void read_ir(uint8_t sensor_no)
@@ -121,7 +121,9 @@ void read_ir(uint8_t sensor_no)
 	PORTD = ((11+sensor_no)<<4); //Tell mux where to read from
 	read_adc();
 	
-	second_to_last[sensor_no] = last[sensor_no];
+	
+	/*MJUKVARUFILTER ???*/
+	second_to_last[sensor_no] = last[sensor_no]; 
 	last[sensor_no] = test_data[index];
 	
 	test_data[index] = second_to_last[sensor_no] < last[sensor_no] ? second_to_last[sensor_no] : last[sensor_no];
@@ -129,6 +131,9 @@ void read_ir(uint8_t sensor_no)
 
 void read_tape(uint8_t sensor_no)
 {
+	unsigned index = data_index;
+	static uint8_t last[20], second_to_last[20];
+	
 	clearbit(ADMUX,MUX0);
 	clearbit(ADMUX,MUX1);
 	clearbit(ADMUX,MUX2);

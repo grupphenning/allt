@@ -28,3 +28,22 @@
 #define DISPLAY_RS PC7
 #define DISPLAY_ENABLE PC6
 
+#define IR_LEFT_FRONT	1
+#define IR_RIGHT_FRONT  2
+#define IR_LEFT_BACK	4
+#define IR_RIGHT_BACK   5
+#define IR_FRONT		3
+#define GYRO			6
+#define REFLEX1			7
+#define REFLEX2			8
+#define REFLEX3			9
+#define REFLEX4			10
+#define REFLEX5			11
+#define REFLEX6			12
+#define REFLEX7			13
+#define REFLEX8			14
+#define REFLEX9			15
+#define REFLEX10		16
+#define REFLEX11		17
+
+
