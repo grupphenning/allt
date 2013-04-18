@@ -23,44 +23,24 @@ volatile uint8_t adc_interrupt = 0;
 
 int main(void)
 {
-	init_sensor_timer();
-	
-	
 	setbit(DDRA, PINA7); //Sätter avbrottpinne mot styr som output
 	clearbit(DDRA,PINA0); //Sätter IR/Reflexdata som input
 	setbit(DDRA,PINA1); //Sätter reflex-enable som output
 	clearbit(DDRA,PINA2); // Gyro som input
 	
 	DDRD = 0xFF;
+	setbit(DDRC, PINC0);
 	init_spi();
 	init_adc();
+
+	init_sensor_timer();
+
 //	_delay_ms(500);	// Ja, vänta! Annars hamnar SPI-protokollet i osynk!
 	
     while(1)
     {
-		 
-// 		data_index = 1;
-//  		test_data[0] = SENSOR; 
-//  		read_ir(0);
-// 		read_ir(1);
-// 		read_ir(2);
-// 		read_ir(3);
-// 		read_ir(4);
-// 		read_gyro();
-// 		read_tape(0);
-// // 		read_tape(1);
-// // 		read_tape(2);
-// // 		read_tape(3);
-// // 		read_tape(4);
-// // 		read_tape(5);
-// // 		read_tape(6);
-// // 		read_tape(7);
-// // 		read_tape(8);
-// // 		read_tape(9);
-// // 		read_tape(10);
-//  		_delay_ms(9);
-// 		send_to_master(8, test_data);
-		
+// 		read_all_sensors();
+// 		_delay_ms(10);
     }
 }
 
@@ -79,34 +59,42 @@ void init_sensor_timer()
 	//ICR1 = 1250;
 	
 	//62,5 Hz
-	ICR1 = 250;
+	ICR1 = 150;
 	
+}
+
+void read_all_sensors()
+{
+	setbit(PORTC, PINC0);		// For debug!
+	data_index = 1;
+	test_data[0] = SENSOR;
+	read_ir(0);
+	read_ir(1);
+	read_ir(2);
+	read_ir(3);
+	read_ir(4);
+	read_gyro();
+	read_tape(0);
+	read_tape(1);
+	read_tape(2);
+	read_tape(3);
+	read_tape(4);
+	read_tape(5);
+	read_tape(6);
+	read_tape(7);
+	read_tape(8);
+	read_tape(9);
+	read_tape(10);
+	clearbit(PORTC, PINC0);		// For debug!!
+	send_to_master(17, test_data);
+	setbit(PORTC, PINC0);		// For debug!!
+	clearbit(PORTC, PINC0);		// For debug!!
 }
 
 //Sensor timer! (25 Hz)
 ISR(TIMER1_OVF_vect)
 {
-	//asm("nop");
-	data_index = 1;
-	test_data[0] = SENSOR;
-	//read_ir(0);
-	//read_ir(1);
-	//read_ir(2);
-	//read_ir(3);
-	//read_ir(4);
-	//read_gyro();
-	read_tape(0);
-	// 		read_tape(1);
-	// 		read_tape(2);
-	// 		read_tape(3);
-	// 		read_tape(4);
-	// 		read_tape(5);
-	// 		read_tape(6);
-	// 		read_tape(7);
-	// 		read_tape(8);
-	// 		read_tape(9);
-	// 		read_tape(10);
-	send_to_master(2, test_data);
+	read_all_sensors();
 }
 
 
@@ -131,7 +119,8 @@ void init_adc()
 	setbit(ADCSRA,ADEN);
 	
 	//Left adjust measurment
-	setbit(ADMUX,ADLAR);
+	setbit(ADMUX, ADLAR);
+//	setbit(ADMUX, MUX3);		// 10x gain!
 	
 	//Set ADC in free running- mode
 	//setbit(ADCSRA,ADATE);
@@ -143,8 +132,6 @@ void init_adc()
 	setbit(ADCSRA,ADPS2);
 	setbit(ADCSRA,ADPS1);
 	setbit(ADCSRA,ADPS0);
-	
-	
 }
 
 
@@ -171,7 +158,7 @@ void read_ir(uint8_t sensor_no)
 	read_adc();
 	
 	
-	/*MJUKVARUFILTER ???*/
+	/*MJUKVARUFILTER*/
 	second_to_last[sensor_no] = last[sensor_no]; 
 	last[sensor_no] = test_data[index];
 	

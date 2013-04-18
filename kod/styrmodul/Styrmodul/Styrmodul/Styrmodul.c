@@ -27,8 +27,8 @@ uint8_t sensor_buffer_pointer;			// Pekare till aktuell position i bufferten
 uint8_t sensor_start;					// Flagga som avgör huruvida vi är i början av meddelande
 uint8_t sensor_packet_length;					// Anger aktuell längd av meddelandet
 
-uint8_t ir_voltage_array[INTERPOLATION_POINTS] = {2.74, 2.32, 1.64, 1.31, 1.08, 0.93, 0.74, 0.61, 0.52, 0.45, 0.41, 0.38};		// Innehåller de spänningsvärden som ses i grafen på https://docs.isy.liu.se/twiki/pub/VanHeden/DataSheets/gp2y0a21.pdf, sid. 4.
-uint8_t ir_centimeter_array[INTERPOLATION_POINTS] = {8, 10, 15, 20, 25, 30, 40, 50, 60, 70, 80, 90};			// Innehåller de centimetervärden som ses i grafen på https://docs.isy.liu.se/twiki/pub/VanHeden/DataSheets/gp2y0a21.pdf, sid. 4.
+//uint8_t ir_voltage_array[INTERPOLATION_POINTS] = {2.74, 2.32, 1.64, 1.31, 1.08, 0.93, 0.74, 0.61, 0.52, 0.45, 0.41, 0.38};		// Innehåller de spänningsvärden som ses i grafen på https://docs.isy.liu.se/twiki/pub/VanHeden/DataSheets/gp2y0a21.pdf, sid. 4.
+//uint8_t ir_centimeter_array[INTERPOLATION_POINTS] = {8, 10, 15, 20, 25, 30, 40, 50, 60, 70, 80, 90};			// Innehåller de centimetervärden som ses i grafen på https://docs.isy.liu.se/twiki/pub/VanHeden/DataSheets/gp2y0a21.pdf, sid. 4.
 
 int main(void)
 {
@@ -48,9 +48,9 @@ int main(void)
 	
 	//_delay_ms(50);
 	
-	init_pid(40, 255, 0);
-	clear_pid();
-	update_k_values(1, 1, 1);
+	//init_pid(40, 255, 0);
+	//clear_pid();
+	//update_k_values(1, 1, 1);
 
 	while(1)
 	{
@@ -483,23 +483,25 @@ void decode_sensor(uint8_t data)
 			sensor_debug_hex();
 			break;
 		case SENSOR: {
- 			//enum { IR_LEFT = 1, IR_RIGHT = 2, IR_FRONT = 3};
-	//,IR_LEFT_BACK =4,IR_RIGHT_BACK = 5, 
-// 				 GYRO =6, REFLEX1 = 7,REFLEX2 = 8,REFLEX3 = 9,REFLEX4 = 10,REFLEX5 = 11,REFLEX6 = 12,REFLEX7 = 13,REFLEX8 = 14,REFLEX9 = 15,REFLEX10 = 16,REFLEX11 = 17};
+//  			enum { IR_LEFT = 1, IR_RIGHT = 2, IR_FRONT = 3,
+// 				 IR_LEFT_BACK =4,IR_RIGHT_BACK = 5, 
+//  				 GYRO =6, REFLEX1 = 7,REFLEX2 = 8,REFLEX3 = 9,REFLEX4 = 10,REFLEX5 = 11,REFLEX6 = 12,REFLEX7 = 13,REFLEX8 = 14,REFLEX9 = 15,REFLEX10 = 16,REFLEX11 = 17};
 			
-			if(sensor_buffer[1] > 0x50)
+			if(sensor_buffer[7] > 0x50)
 			{
 				tape_count++;
 			}
 static uint8_t a=0;
-if(!(a++ % 256)) {
+
+if((a++ & 0b10000)) {
+			a=0;
 			char tmp[100];
 			sprintf(tmp,
 			 "Reflex: %02X      "
 			 "Front: %02X ",
 			 
 			 
-			  sensor_buffer[1],
+			  sensor_buffer[GYRO],
 			  sensor_buffer[3]);
   			clear_screen();
 			send_string(tmp);
