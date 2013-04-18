@@ -7,9 +7,9 @@ uint16_t input, output;
 uint16_t k_prop, k_int, k_der; //Regulatorkonstanter
 int8_t I_term = 0, last_input = 0;
 uint16_t cykle_time; //Vilken intervall reglering körs.
-uint8_t max_out, min_out; //Maxvärde för utsignalen, undvika fel med mättad styrsignal.
+int16_t max_out, min_out; //Maxvärde för utsignalen, undvika fel med mättad styrsignal.
 
-void init_pid(uint16_t time, uint8_t max, uint8_t min)
+void init_pid(uint16_t time, int16_t max, int16_t min)
 {
 	if (time > 0)
 	{
@@ -36,7 +36,7 @@ void update_k_values(uint8_t kp, uint8_t ki, uint8_t kd)
 {
 	k_prop = 128*kp;
 	k_int = ki*cykle_time;
-	k_der = 128*kd/cykle_time;	
+	k_der = 128*kd;	
 }
 
 void clear_pid()
@@ -52,7 +52,7 @@ void regulator(uint16_t input)
 	
 	uint16_t dinput = input - last_input;
 	
-	output = k_prop*input + I_term - k_der*dinput;
+	output = k_prop*input + I_term - k_der*dinput/cykle_time;
 	if (output > max_out) output = max_out;
 	else if (output < min_out) output = min_out;
 	

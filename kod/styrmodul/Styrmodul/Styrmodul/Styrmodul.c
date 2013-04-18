@@ -47,6 +47,10 @@ int main(void)
 	sei();		//aktivera global interrupts
 	
 	//_delay_ms(50);
+	
+	init_pid(40, 255, 0);
+	clear_pid();
+	update_k_values(1, 1, 1);
 
 	while(1)
 	{
@@ -59,9 +63,14 @@ int main(void)
 	
 		if(spi_sensor_write != spi_sensor_read)
 		{
+			uint8_t turn_amount;
+			
 			decode_sensor(spi_data_from_sensor[spi_sensor_read]);
 			++spi_sensor_read;
 			spi_sensor_read %= BUF_SZ;
+			
+			//turn_amount = regulator(
+			//	(sensor_buffer[] + sensor_buffer[] - sensor_buffer[] - sensor_buffer[])/2);
 		}
 	}
 }
@@ -478,12 +487,12 @@ void decode_sensor(uint8_t data)
 	//,IR_LEFT_BACK =4,IR_RIGHT_BACK = 5, 
 // 				 GYRO =6, REFLEX1 = 7,REFLEX2 = 8,REFLEX3 = 9,REFLEX4 = 10,REFLEX5 = 11,REFLEX6 = 12,REFLEX7 = 13,REFLEX8 = 14,REFLEX9 = 15,REFLEX10 = 16,REFLEX11 = 17};
 			
-			if(sensor_buffer[1] > 0x25)
+			if(sensor_buffer[1] > 0x50)
 			{
 				tape_count++;
 			}
 static uint8_t a=0;
-if(!(a++ % 16)) {
+if(!(a++ % 256)) {
 			char tmp[100];
 			sprintf(tmp,
 			 "Reflex: %02X      "
