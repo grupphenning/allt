@@ -5,11 +5,12 @@
  *  Author: rasme879
  */
 //Måste definieras först!
-//#define F_CPU 8000000UL
+#define F_CPU 8000000UL
 
 #include <avr/io.h>
 #include <avr/delay.h>
 #include "bitmacros.h"
+#include "Kommunikationsmodul.h"
 #include <avr/interrupt.h>
 
 
@@ -158,6 +159,7 @@ void USART_Init(unsigned int baud)
 	UCSRB = (1<<RXEN)|(1<<TXEN);
 	
 	//Set frame format: 8data, 2stop bit
+	
 	UCSRC = (1<<URSEL)|(1<<USBS)|(3<<UCSZ0);
 	
 	// Set RTS output and 1
