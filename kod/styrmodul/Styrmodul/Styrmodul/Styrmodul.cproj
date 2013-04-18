@@ -107,12 +107,6 @@
     <Compile Include="komm_styr_protokoll.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="pid.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="pid.h">
-      <SubType>compile</SubType>
-    </Compile>
     <Compile Include="sensor_styr_protokoll.h">
       <SubType>compile</SubType>
     </Compile>

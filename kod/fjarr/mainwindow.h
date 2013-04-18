@@ -2,7 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
-#include <QtWidgets/QPushButton>
+#include <QtWidgets>
 #include "qextserialport.h"
 #include "qextserialenumerator.h"
 
@@ -19,8 +19,49 @@ public:
 protected:
     bool eventFilter(QObject *recipient, QEvent *event);
 
+private slots:
+    void on_pushButton_9_clicked();
+
 private:
     MainWindow *w;
+};
+
+class PIDDialog : public QDialog
+{
+    Q_OBJECT
+
+public:
+    PIDDialog()
+    {
+        l1.setText("P");
+        l2.setText("I");
+        l3.setText("D");
+
+        lo.addRow(&l1, &spin1);
+        lo.addRow(&l2, &spin2);
+        lo.addRow(&l3, &spin3);
+
+        b.setStandardButtons(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
+
+        g.addLayout(&lo);
+        g.addWidget(&b);
+
+        //this->setGeometry();
+        this->setWindowTitle("PID-konstanter");
+        this->setLayout(&g);
+
+        connect(&b, SIGNAL(accepted()), this, SLOT(accept()));
+        connect(&b, SIGNAL(rejected()), this, SLOT(reject()));
+    }
+
+    int getP() { return spin1.value(); }
+
+private:
+    QDialogButtonBox b;
+    QVBoxLayout g;
+    QFormLayout lo;
+    QLabel l1, l2, l3;
+    QSpinBox spin1, spin2, spin3;
 };
 
 class MainWindow : public QMainWindow
@@ -43,6 +84,7 @@ private:
     Ui::MainWindow *ui;
     KeyPressEater *eat;
     QextSerialPort *port;
+    PIDDialog pid;
 
 private slots:
     void on_pushButton_2_clicked();
@@ -63,6 +105,9 @@ private slots:
     void on_pushButton_7_released();
     void on_pushButton_10_released();
     void onDataAvailable();
+
+    void on_pushButton_9_clicked();
+    void on_pid();
 };
 
 #endif // MAINWINDOW_H
