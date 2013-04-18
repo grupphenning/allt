@@ -52,6 +52,7 @@ int main(void)
 	//clear_pid();
 	//update_k_values(1, 1, 1);
 
+	//drive_forwards(SPEED);
 	while(1)
 	{
 	
@@ -439,10 +440,26 @@ void decode_comm()
 	}
 }
 
+uint8_t is_turning;
+uint16_t full_turn, gyro_int;
+// Börja snurra. positiv degrees = medurs. Har slutat då is_turning blir 0.
+void begin_turning(int16_t degrees)
+{
+	full_turn = 55 * abs(degrees);
+	if(degrees < 0) {
+		tank_turn_left(255);
+	}
+	else
+	{
+		tank_turn_right(255);
+	}		
+	is_turning = 1;
+	gyro_int = 0;
+}
 
 void decode_sensor(uint8_t data)
 {
-	static uint8_t tape_count=0;
+
 	/* Första byten i ett meddelande är storleken */
 	if(sensor_start)
 	{
@@ -486,43 +503,45 @@ void decode_sensor(uint8_t data)
 //  			enum { IR_LEFT = 1, IR_RIGHT = 2, IR_FRONT = 3,
 // 				 IR_LEFT_BACK =4,IR_RIGHT_BACK = 5, 
 //  				 GYRO =6, REFLEX1 = 7,REFLEX2 = 8,REFLEX3 = 9,REFLEX4 = 10,REFLEX5 = 11,REFLEX6 = 12,REFLEX7 = 13,REFLEX8 = 14,REFLEX9 = 15,REFLEX10 = 16,REFLEX11 = 17};
-			
-			if(sensor_buffer[7] > 0x50)
-			{
-				tape_count++;
+
+			if(is_turning) {
+				gyro_int += abs(0x86 - (int)sensor_buffer[6]);
+				if(gyro_int >= full_turn) {
+					stop_motors();
+					is_turning = 0;
+				}
 			}
-static uint8_t a=0;
+			
+			decode_tape_sensor_data();
+			static uint8_t a=0;
 
-if((a++ & 0b10000)) {
-			a=0;
-			char tmp[100];
-			sprintf(tmp,
-			 "Reflex: %02X      "
-			 "Front: %02X ",
+			if((a++ & 0b10000)) {
+				a=0;
+				char tmp[100];
+				sprintf(tmp,
+					"Reflex: %02X      "
+					"Front: %02X ",
 			 
 			 
-			  sensor_buffer[GYRO],
-			  sensor_buffer[3]);
-  			clear_screen();
-			send_string(tmp);
-			sprintf(tmp,"%02d",tape_count);
-
-
-			send_string(tmp);
-			update();
-}			
-// 			if(sensor_buffer[IR_FRONT] > 0x20) 
-// 			{
-// 				stop_motors();
-// 			}				
-			//else drive_forwards(SPEED);
+					sensor_buffer[6],
+					sensor_buffer[3]);
+  				clear_screen();
+				send_string(tmp);
+				update();
+			}			
+			// 			if(sensor_buffer[IR_FRONT] > 0x20) 
+			// 			{
+			// 				stop_motors();
+			// 			}				
+				//else drive_forwards(SPEED);
 			
 			
 			break;
-		} default:
-			// Unimplemented command
-		break;
-	}
+		} 
+		default:
+				// Unimplemented command
+			break;
+		}
 
 	
 	/* Återställ pekare, för att visa att nästa byte är början av meddelande */
@@ -532,7 +551,68 @@ if((a++ & 0b10000)) {
 	
 }
 
+void decode_tape_sensor_data()
+{
+	static uint8_t tape_count=0;
+	static uint8_t is_over_tape = 0;
+	static uint8_t is_in_tape_segment = 0;
+	static char first_tape;
+	static char second_tape;
+	
+	if (sensor_buffer[7]>REFLEX_SENSITIVITY) //Tejpbitsstart hittad
+	{
+		is_over_tape = 1;
+		tape_count++;
+	}
+	else if (is_over_tape & sensor_buffer[7]<REFLEX_SENSITIVITY) //Tejpbit avslutad
+	{
+		is_over_tape = 0;
+		if(is_in_tape_segment) //Andra tejpbiten avslutad
+		{
+			is_in_tape_segment = 0;
+			second_tape = tape_count < 5 ? 's': 'l';
+			decode_tape_segment(first_tape,second_tape); //Kör tejpsegmentsavkodning
+		}
+		else // Första tejpbit avslutad
+		{
+			is_in_tape_segment = 1;
+			first_tape = tape_count < 5 ? 's': 'l';
+		}
+		tape_count=0;
+	}
+	
+}
 
+void decode_tape_segment(char first, char second)
+{
+	if(first == 's' & second == 'l')
+	{
+		//turn left
+		stop_motors();
+		_delay_ms(250);
+		begin_turning(-90);
+	}
+	else if (first == 'l' & second == 's')
+	{
+		//turn right
+		stop_motors();
+		_delay_ms(250);
+		begin_turning(90);
+	}
+	else if (first == 's' & second == 's')
+	{
+		//keep going
+		stop_motors();
+		_delay_ms(250);
+		drive_forwards(SPEED);
+	}
+	else
+	{
+		//ERROR nu, kanske hantering av målgång här senare ?
+	}
+
+
+}
 
 
 void sensor_debug_message()
