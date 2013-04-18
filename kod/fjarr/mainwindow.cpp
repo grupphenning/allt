@@ -41,6 +41,13 @@ MainWindow::MainWindow(QWidget *parent) :
     port = new QextSerialPort("COM12", settings);
     connect(port, SIGNAL(readyRead()), this, SLOT(onDataAvailable()));
     port->open(QIODevice::ReadWrite);
+
+    connect(&pid, SIGNAL(accepted()), this, SLOT(on_pid()));
+}
+
+void MainWindow::on_pid()
+{
+    std::cout << pid.getP() << std::endl;
 }
 
 void MainWindow::onDataAvailable()
@@ -154,3 +161,9 @@ void MainWindow::on_pushButton_6_released() { ui->pushButton_6->setChecked(true)
 void MainWindow::on_pushButton_7_released() { ui->pushButton_7->setChecked(true); }
 void MainWindow::on_pushButton_10_released() { ui->pushButton_10->setChecked(true); }
 
+
+void KeyPressEater::on_pushButton_9_clicked(){}
+void MainWindow::on_pushButton_9_clicked()
+{
+    pid.show();
+}
