@@ -28,3 +28,4 @@
 #define DISPLAY_RS PC7
 #define DISPLAY_ENABLE PC6
 
+void regulator_timer_init();

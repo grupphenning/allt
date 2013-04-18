@@ -17,6 +17,7 @@ volatile uint8_t spi_data_from_sensor[BUF_SZ];
 uint16_t spi_sensor_read;
 volatile uint16_t spi_sensor_write;
 volatile uint8_t comm_interrupt_occoured = 0;
+volatile uint8_t regulator_interrupt_occoured = 0;
 //uint8_t amount = 255;
 #define SPEED 255
 uint8_t ninety_timer, turn;
@@ -44,6 +45,7 @@ int main(void)
 	update();
 	spi_init();
 	pwm_init();
+	regulator_timer_init();
 	drive_forwards(85);	
 	sei();		//aktivera global interrupts
 	
@@ -51,22 +53,18 @@ int main(void)
 
 	while(1)
 	{
-// 		if(turn)
-// 			tank_turn_left(207);
-// 		else
-// 			stop_motors();
-	/*
+		if(regulator_interrupt_occoured)
+		{
+			send_character('1');
+			update();
+			//regulator();
+			//regulator_interrupt = 0;
+		}
 		if(comm_interrupt_occoured)
 		{
 			comm_interrupt_occoured = 0;
 			decode_comm();
 		}
-	*/
-		/*if(sensor_interrupt_occoured)
-		{
-			sensor_interrupt_occoured = 0;
-			decode_sensor();
-		}*/
 		if(spi_sensor_write != spi_sensor_read)
 		{
 			decode_sensor(spi_data_from_sensor[spi_sensor_read]);
@@ -74,6 +72,29 @@ int main(void)
 			spi_sensor_read %= BUF_SZ;
 		}
 	}
+}
+
+
+/*
+ *	Timer interrupt!
+ */
+ISR(TIMER0_OVF_vect)
+{
+	regulator_interrupt_occoured = 1;
+}
+
+
+/*
+ *	Initiering av timer!
+ *
+ *
+ */
+void regulator_timer_init()
+{
+	TCCR0B = ((1 << CS02) | (1 << CS00));	/* 1024 prescaler */
+	TCCR0A = 0x00;							/* Normal operation */
+	TCNT0 = 0x00;							/* Start value */
+	TIMSK0 |= (1 << TOIE0);					/* Enable interrupt! */
 }
 
 
@@ -206,6 +227,7 @@ void spi_get_data_from_comm(uint8_t message_byte)
 	spi_data_from_comm = SPDR;
 	setbit(PORTB, PORTB3);		//Sätter komm till sleepmode
 }
+
 
 void spi_get_data_from_sensor(uint8_t message_byte)
 {
@@ -364,7 +386,7 @@ ISR(INT0_vect)
 
 ISR(TIMER1_COMPA_vect)
 {
-	ninety_timer++;
+-	ninety_timer++;
 	
 	//en sekund har gått
 	if(ninety_timer == 20)
@@ -372,9 +394,7 @@ ISR(TIMER1_COMPA_vect)
 		turn ^= 0xff;
 		//tank_turn_left(60);
 		ninety_timer=0;
-	}
-	
-	
+	}	
 }
 
 void decode_comm()
