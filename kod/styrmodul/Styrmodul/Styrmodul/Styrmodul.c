@@ -478,7 +478,7 @@ void decode_sensor(uint8_t data)
 	//,IR_LEFT_BACK =4,IR_RIGHT_BACK = 5, 
 // 				 GYRO =6, REFLEX1 = 7,REFLEX2 = 8,REFLEX3 = 9,REFLEX4 = 10,REFLEX5 = 11,REFLEX6 = 12,REFLEX7 = 13,REFLEX8 = 14,REFLEX9 = 15,REFLEX10 = 16,REFLEX11 = 17};
 			
-			if(sensor_buffer[1] > 0x16)
+			if(sensor_buffer[1] > 0x25)
 			{
 				tape_count++;
 			}
