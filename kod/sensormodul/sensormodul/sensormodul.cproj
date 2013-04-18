@@ -33,11 +33,7 @@
       </OverrideVtorValue>
       <Channel>
         <host>127.0.0.1</host>
-<<<<<<< HEAD
-        <port>1301</port>
-=======
         <port>3844</port>
->>>>>>> 873df6b72741348f7669193d0c4b9f2832d2f494
         <ssl>False</ssl>
       </Channel>
       <ToolOptions>

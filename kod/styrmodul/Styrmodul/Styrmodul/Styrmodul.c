@@ -482,6 +482,8 @@ void decode_sensor(uint8_t data)
 			{
 				tape_count++;
 			}
+static uint8_t a=0;
+if(!(a++ % 16)) {
 			char tmp[100];
 			sprintf(tmp,
 			 "Reflex: %02X      "
@@ -495,9 +497,9 @@ void decode_sensor(uint8_t data)
 			sprintf(tmp,"%02d",tape_count);
 
 
-
 			send_string(tmp);
 			update();
+}			
 // 			if(sensor_buffer[IR_FRONT] > 0x20) 
 // 			{
 // 				stop_motors();

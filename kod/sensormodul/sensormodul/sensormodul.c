@@ -79,7 +79,7 @@ void init_sensor_timer()
 	//ICR1 = 1250;
 	
 	//62,5 Hz
-	ICR1 = 500;
+	ICR1 = 250;
 	
 }
 
