@@ -23,6 +23,9 @@ volatile uint8_t adc_interrupt = 0;
 
 int main(void)
 {
+	init_sensor_timer();
+	
+	
 	setbit(DDRA, PINA7); //Sätter avbrottpinne mot styr som output
 	clearbit(DDRA,PINA0); //Sätter IR/Reflexdata som input
 	setbit(DDRA,PINA1); //Sätter reflex-enable som output
@@ -36,30 +39,76 @@ int main(void)
     while(1)
     {
 		 
-		data_index = 1;
- 		test_data[0] = SENSOR; 
- 		read_ir(0);
-		read_ir(1);
-		read_ir(2);
-		read_ir(3);
-		read_ir(4);
-		read_gyro();
-		read_tape(0);
-		read_tape(1);
-		read_tape(2);
-		read_tape(3);
-		read_tape(4);
-		read_tape(5);
-		read_tape(6);
-		read_tape(7);
-		read_tape(8);
-		read_tape(9);
-		read_tape(10);
-		_delay_ms(10);
-		send_to_master(18, test_data);
+// 		data_index = 1;
+//  		test_data[0] = SENSOR; 
+//  		read_ir(0);
+// 		read_ir(1);
+// 		read_ir(2);
+// 		read_ir(3);
+// 		read_ir(4);
+// 		read_gyro();
+// 		read_tape(0);
+// // 		read_tape(1);
+// // 		read_tape(2);
+// // 		read_tape(3);
+// // 		read_tape(4);
+// // 		read_tape(5);
+// // 		read_tape(6);
+// // 		read_tape(7);
+// // 		read_tape(8);
+// // 		read_tape(9);
+// // 		read_tape(10);
+//  		_delay_ms(9);
+// 		send_to_master(8, test_data);
 		
     }
 }
+
+void init_sensor_timer()
+{
+	setbit(TCCR1A, WGM11);
+	setbit(TCCR1B, WGM12);
+	setbit(TCCR1B, WGM13);
+	//set prescaler på fck/256
+	setbit(TCCR1B, CS12);
+	
+	//aktivera interrupt på overflow
+	setbit(TIMSK, TOIE1);
+	
+	//25 hertz, ges av 8000000/(256*1250) = 25 Hz
+	//ICR1 = 1250;
+	
+	//62,5 Hz
+	ICR1 = 500;
+	
+}
+
+//Sensor timer! (25 Hz)
+ISR(TIMER1_OVF_vect)
+{
+	//asm("nop");
+	data_index = 1;
+	test_data[0] = SENSOR;
+	//read_ir(0);
+	//read_ir(1);
+	//read_ir(2);
+	//read_ir(3);
+	//read_ir(4);
+	//read_gyro();
+	read_tape(0);
+	// 		read_tape(1);
+	// 		read_tape(2);
+	// 		read_tape(3);
+	// 		read_tape(4);
+	// 		read_tape(5);
+	// 		read_tape(6);
+	// 		read_tape(7);
+	// 		read_tape(8);
+	// 		read_tape(9);
+	// 		read_tape(10);
+	send_to_master(2, test_data);
+}
+
 
 void init_spi()
 {
@@ -88,7 +137,7 @@ void init_adc()
 	//setbit(ADCSRA,ADATE);
 	
 	//Enable interupt
-	setbit(ADCSRA,ADIE);
+	//setbit(ADCSRA,ADIE);
 	
 	//SKalning av klockfrekvens
 	setbit(ADCSRA,ADPS2);
@@ -131,9 +180,6 @@ void read_ir(uint8_t sensor_no)
 
 void read_tape(uint8_t sensor_no)
 {
-	unsigned index = data_index;
-	static uint8_t last[20], second_to_last[20];
-	
 	clearbit(ADMUX,MUX0);
 	clearbit(ADMUX,MUX1);
 	clearbit(ADMUX,MUX2);
@@ -148,15 +194,17 @@ void read_tape(uint8_t sensor_no)
 void read_adc()
 {
 	setbit(ADCSRA,ADSC); //start_reading
-	while(!adc_interrupt); //Wait for interupt to occur
-	adc_interrupt = 0;
+	//while(!adc_interrupt); //Wait for interupt to occur
+	while(bitclear(ADCSRA, ADIF));
+	test_data[data_index++] = ADCH;
+	//adc_interrupt = 0;
 }
 
 
 ISR(ADC_vect)
 {
-	test_data[data_index++] = ADCH;
-	adc_interrupt = 1;
+	
+	/*adc_interrupt = 1;*/
 }
 
 
