@@ -182,7 +182,7 @@ void USART_Transmit(unsigned char data)
 	while(!(UCSRA & (1<<UDRE)));
 }
 
-unsigned char USART_Receive(void)
+uint8_t USART_Receive(void)
 {
 	// Ready to receive
 	clearbit(PORTC, PINC0);
@@ -246,16 +246,22 @@ void decode_remote(uint8_t ch)
 	
 	// Konverterar från Blåtand till styr-komm-protokollet!
 	switch(ch) {
-		case 'l': commando = 0b00101100; break;
-		case 'd': commando = 0b00100000; break;
-		case 'r': commando = 0b00110000; break;
-		case 's': commando = 0b00101000; break;
-		case 'b': commando = 0b00100100; break;
+		case 'l': send_to_master(0b00101100); break;
+		case 'd': send_to_master(0b00100000); break;
+		case 'r': send_to_master(0b00110000); break;
+		case 's': send_to_master(0b00101000); break;
+		case 'b': send_to_master(0b00100100); break;
 		//claw in
-		case 'c': commando = 0b01100000; break;
+		case 'c': send_to_master(0b01100000); break;
 		//claw out
-		case 'o': commando = 0b01100100; break;
-		default: commando = 0xff; break;
+		case 'o': send_to_master(0b01100100); break;
+		case 'p': {
+			send_to_master(0b10000000);
+			send_to_master(USART_Receive());
+			send_to_master(USART_Receive());
+			send_to_master(USART_Receive());
+			break;
+		}			
 	}
 	// Ej löst då vi skickar flera byte!
 	/*if (ch == 'v') // fram vänster
@@ -274,10 +280,10 @@ void decode_remote(uint8_t ch)
 	}*/
 	
 	//om det var något av l,d,r,s,b
-	if(commando != 0xff)
+	/*if(commando != 0xff)
 	{
 		send_to_master(commando);
-	}		
+	}*/
 	
 	/*if(ch == 'v' || ch == 'h') {
 		send_to_master(drive_turn_right_value);

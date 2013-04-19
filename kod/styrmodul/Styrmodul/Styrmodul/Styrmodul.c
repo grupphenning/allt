@@ -21,6 +21,8 @@ volatile uint8_t comm_interrupt_occoured = 0;
 uint8_t ninety_timer, turn;
 uint8_t left = 1;
 
+uint8_t gyro_init_value;						//Gyrots initialvärde
+
 
 uint8_t sensor_buffer[SENSOR_BUFFER_SIZE];		// Buffer som håller data från sensorenheten
 uint8_t sensor_buffer_pointer;			// Pekare till aktuell position i bufferten
@@ -445,13 +447,13 @@ uint16_t full_turn, gyro_int;
 // Börja snurra. positiv degrees = medurs. Har slutat då is_turning blir 0.
 void begin_turning(int16_t degrees)
 {
-	full_turn = 55 * abs(degrees);
+	full_turn = 55*abs(degrees);	//Sväng x antal grader
 	if(degrees < 0) {
-		tank_turn_left(255);
+		tank_turn_left(150);
 	}
 	else
 	{
-		tank_turn_right(255);
+		tank_turn_right(150);
 	}		
 	is_turning = 1;
 	gyro_int = 0;
@@ -459,6 +461,8 @@ void begin_turning(int16_t degrees)
 
 void decode_sensor(uint8_t data)
 {
+	
+	static uint8_t sensor_transmission_number = 0;
 
 	/* Första byten i ett meddelande är storleken */
 	if(sensor_start)
@@ -503,10 +507,20 @@ void decode_sensor(uint8_t data)
 //  			enum { IR_LEFT = 1, IR_RIGHT = 2, IR_FRONT = 3,
 // 				 IR_LEFT_BACK =4,IR_RIGHT_BACK = 5, 
 //  				 GYRO =6, REFLEX1 = 7,REFLEX2 = 8,REFLEX3 = 9,REFLEX4 = 10,REFLEX5 = 11,REFLEX6 = 12,REFLEX7 = 13,REFLEX8 = 14,REFLEX9 = 15,REFLEX10 = 16,REFLEX11 = 17};
-
-			if(is_turning) {
-				gyro_int += abs(0x86 - (int)sensor_buffer[6]);
-				if(gyro_int >= full_turn) {
+			
+			
+			//First time? Calibrate gyro
+			if(sensor_transmission_number<5)
+			{
+				gyro_init_value = sensor_buffer[GYRO];
+				sensor_transmission_number++;
+			}
+			
+			if(is_turning) 
+			{
+				gyro_int += 3*abs(gyro_init_value - (int)sensor_buffer[GYRO]); //Maxxhastighet 300grader/s,
+				if(gyro_int >= full_turn)									   //maxvärde-nollnivå ung 100.
+				{
 					stop_motors();
 					is_turning = 0;
 				}
@@ -554,17 +568,19 @@ void decode_sensor(uint8_t data)
 void decode_tape_sensor_data()
 {
 	static uint8_t tape_count=0;
+	static uint8_t no_tape_count = 0;
 	static uint8_t is_over_tape = 0;
 	static uint8_t is_in_tape_segment = 0;
 	static char first_tape;
 	static char second_tape;
 	
-	if (sensor_buffer[7]>REFLEX_SENSITIVITY) //Tejpbitsstart hittad
+	if (sensor_buffer[REFLEX1]>REFLEX_SENSITIVITY) //Tejpbitsstart hittad
 	{
 		is_over_tape = 1;
+		no_tape_count = 0;
 		tape_count++;
 	}
-	else if (is_over_tape & sensor_buffer[7]<REFLEX_SENSITIVITY) //Tejpbit avslutad
+	else if (is_over_tape & sensor_buffer[REFLEX1]<REFLEX_SENSITIVITY) //Tejpbit avslutad
 	{
 		is_over_tape = 0;
 		if(is_in_tape_segment) //Andra tejpbiten avslutad
@@ -580,11 +596,16 @@ void decode_tape_sensor_data()
 		}
 		tape_count=0;
 	}
+	else if(sensor_buffer[REFLEX1]<REFLEX_SENSITIVITY) //Utanför tejp
+	{
+		is_in_tape_segment = no_tape_count++ > 7 ? 0 : is_in_tape_segment;
+	}
 	
 }
 
 void decode_tape_segment(char first, char second)
 {
+	_delay_ms(250);
 	if(first == 's' & second == 'l')
 	{
 		//turn left
