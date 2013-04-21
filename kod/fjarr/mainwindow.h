@@ -21,10 +21,16 @@ protected:
 
 private slots:
     void on_pushButton_9_clicked();
+    void on_pushButton_clicked();
+    void on_pushButtonPID_clicked();
+    void on_pushButtonClearDisplay_clicked();
+    void on_pushButtonLeft90_clicked();
+    void on_pushButtonRight90_clicked();
 
 private:
     MainWindow *w;
 };
+
 
 class PIDDialog : public QDialog
 {
@@ -54,7 +60,10 @@ public:
         connect(&b, SIGNAL(rejected()), this, SLOT(reject()));
     }
 
+
     int getP() { return spin1.value(); }
+    int getI() { return spin2.value(); }
+    int getD() { return spin3.value(); }
 
 private:
     QDialogButtonBox b;
@@ -87,6 +96,7 @@ private:
     PIDDialog pid;
 
 private slots:
+    void on_pushButton_clicked();
     void on_pushButton_2_clicked();
     void on_pushButton_3_clicked();
     void on_pushButton_4_clicked();
@@ -96,6 +106,7 @@ private slots:
     void on_pushButton_10_clicked();
     void on_pushButton_11_clicked();
     void on_pushButton_12_clicked();
+    void on_pushButton_14_clicked();
 
     void on_pushButton_2_released();
     void on_pushButton_3_released();
@@ -108,6 +119,10 @@ private slots:
 
     void on_pushButton_9_clicked();
     void on_pid();
+    void on_pushButtonPID_clicked();
+    void on_pushButtonClearDisplay_clicked();
+    void on_pushButtonLeft90_clicked();
+    void on_pushButtonRight90_clicked();
 };
 
 #endif // MAINWINDOW_H
