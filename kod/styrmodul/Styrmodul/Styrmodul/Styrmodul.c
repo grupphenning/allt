@@ -21,14 +21,16 @@ volatile uint8_t comm_interrupt_occoured = 0;
 uint8_t ninety_timer, turn;
 uint8_t left = 1;
 
+uint8_t gyro_init_value;						//Gyrots initialvärde
+
 
 uint8_t sensor_buffer[SENSOR_BUFFER_SIZE];		// Buffer som håller data från sensorenheten
 uint8_t sensor_buffer_pointer;			// Pekare till aktuell position i bufferten
 uint8_t sensor_start;					// Flagga som avgör huruvida vi är i början av meddelande
 uint8_t sensor_packet_length;					// Anger aktuell längd av meddelandet
 
-uint8_t ir_voltage_array[INTERPOLATION_POINTS] = {2.74, 2.32, 1.64, 1.31, 1.08, 0.93, 0.74, 0.61, 0.52, 0.45, 0.41, 0.38};		// Innehåller de spänningsvärden som ses i grafen på https://docs.isy.liu.se/twiki/pub/VanHeden/DataSheets/gp2y0a21.pdf, sid. 4.
-uint8_t ir_centimeter_array[INTERPOLATION_POINTS] = {8, 10, 15, 20, 25, 30, 40, 50, 60, 70, 80, 90};			// Innehåller de centimetervärden som ses i grafen på https://docs.isy.liu.se/twiki/pub/VanHeden/DataSheets/gp2y0a21.pdf, sid. 4.
+//uint8_t ir_voltage_array[INTERPOLATION_POINTS] = {2.74, 2.32, 1.64, 1.31, 1.08, 0.93, 0.74, 0.61, 0.52, 0.45, 0.41, 0.38};		// Innehåller de spänningsvärden som ses i grafen på https://docs.isy.liu.se/twiki/pub/VanHeden/DataSheets/gp2y0a21.pdf, sid. 4.
+//uint8_t ir_centimeter_array[INTERPOLATION_POINTS] = {8, 10, 15, 20, 25, 30, 40, 50, 60, 70, 80, 90};			// Innehåller de centimetervärden som ses i grafen på https://docs.isy.liu.se/twiki/pub/VanHeden/DataSheets/gp2y0a21.pdf, sid. 4.
 
 int main(void)
 {
@@ -47,7 +49,12 @@ int main(void)
 	sei();		//aktivera global interrupts
 	
 	//_delay_ms(50);
+	
+	//init_pid(40, 255, 0);
+	//clear_pid();
+	//update_k_values(1, 1, 1);
 
+	//drive_forwards(SPEED);
 	while(1)
 	{
 	
@@ -59,9 +66,14 @@ int main(void)
 	
 		if(spi_sensor_write != spi_sensor_read)
 		{
+			uint8_t turn_amount;
+			
 			decode_sensor(spi_data_from_sensor[spi_sensor_read]);
 			++spi_sensor_read;
 			spi_sensor_read %= BUF_SZ;
+			
+			//turn_amount = regulator(
+			//	(sensor_buffer[] + sensor_buffer[] - sensor_buffer[] - sensor_buffer[])/2);
 		}
 	}
 }
@@ -430,10 +442,28 @@ void decode_comm()
 	}
 }
 
+uint8_t is_turning;
+uint16_t full_turn, gyro_int;
+// Börja snurra. positiv degrees = medurs. Har slutat då is_turning blir 0.
+void begin_turning(int16_t degrees)
+{
+	full_turn = 55*abs(degrees);	//Sväng x antal grader
+	if(degrees < 0) {
+		tank_turn_left(150);
+	}
+	else
+	{
+		tank_turn_right(150);
+	}		
+	is_turning = 1;
+	gyro_int = 0;
+}
 
 void decode_sensor(uint8_t data)
 {
-	static uint8_t tape_count=0;
+	
+	static uint8_t sensor_transmission_number = 0;
+
 	/* Första byten i ett meddelande är storleken */
 	if(sensor_start)
 	{
@@ -474,40 +504,58 @@ void decode_sensor(uint8_t data)
 			sensor_debug_hex();
 			break;
 		case SENSOR: {
- 			//enum { IR_LEFT = 1, IR_RIGHT = 2, IR_FRONT = 3};
-	//,IR_LEFT_BACK =4,IR_RIGHT_BACK = 5, 
-// 				 GYRO =6, REFLEX1 = 7,REFLEX2 = 8,REFLEX3 = 9,REFLEX4 = 10,REFLEX5 = 11,REFLEX6 = 12,REFLEX7 = 13,REFLEX8 = 14,REFLEX9 = 15,REFLEX10 = 16,REFLEX11 = 17};
+//  			enum { IR_LEFT = 1, IR_RIGHT = 2, IR_FRONT = 3,
+// 				 IR_LEFT_BACK =4,IR_RIGHT_BACK = 5, 
+//  				 GYRO =6, REFLEX1 = 7,REFLEX2 = 8,REFLEX3 = 9,REFLEX4 = 10,REFLEX5 = 11,REFLEX6 = 12,REFLEX7 = 13,REFLEX8 = 14,REFLEX9 = 15,REFLEX10 = 16,REFLEX11 = 17};
 			
-			if(sensor_buffer[9] > 0x15)
+			
+			//First time? Calibrate gyro
+			if(sensor_transmission_number<5)
 			{
-				tape_count++;
+				gyro_init_value = sensor_buffer[GYRO];
+				sensor_transmission_number++;
 			}
-			char tmp[100];
-			sprintf(tmp,
-			 "Reflex: %02X       "
-			 "Front: %02X ",
-			  sensor_buffer[9],
-			  sensor_buffer[3]);
-  			clear_screen();
-			send_string(tmp);
-			sprintf(tmp,"%02d",tape_count);
+			
+			if(is_turning) 
+			{
+				gyro_int += 3*abs(gyro_init_value - (int)sensor_buffer[GYRO]); //Maxxhastighet 300grader/s,
+				if(gyro_int >= full_turn)									   //maxvärde-nollnivå ung 100.
+				{
+					stop_motors();
+					is_turning = 0;
+				}
+			}
+			
+			decode_tape_sensor_data();
+			static uint8_t a=0;
 
-
-
-			send_string(tmp);
-			update();
-// 			if(sensor_buffer[IR_FRONT] > 0x20) 
-// 			{
-// 					stop_motors();
-// 			}				
-			//else drive_forwards(SPEED);
+			if((a++ & 0b10000)) {
+				a=0;
+				char tmp[100];
+				sprintf(tmp,
+					"Reflex: %02X      "
+					"Front: %02X ",
+			 
+			 
+					sensor_buffer[6],
+					sensor_buffer[3]);
+  				clear_screen();
+				send_string(tmp);
+				update();
+			}			
+			// 			if(sensor_buffer[IR_FRONT] > 0x20) 
+			// 			{
+			// 				stop_motors();
+			// 			}				
+				//else drive_forwards(SPEED);
 			
 			
 			break;
-		} default:
-			// Unimplemented command
-		break;
-	}
+		} 
+		default:
+				// Unimplemented command
+			break;
+		}
 
 	
 	/* Återställ pekare, för att visa att nästa byte är början av meddelande */
@@ -517,7 +565,75 @@ void decode_sensor(uint8_t data)
 	
 }
 
+void decode_tape_sensor_data()
+{
+	static uint8_t tape_count=0;
+	static uint8_t no_tape_count = 0;
+	static uint8_t is_over_tape = 0;
+	static uint8_t is_in_tape_segment = 0;
+	static char first_tape;
+	static char second_tape;
+	
+	if (sensor_buffer[REFLEX1]>REFLEX_SENSITIVITY) //Tejpbitsstart hittad
+	{
+		is_over_tape = 1;
+		no_tape_count = 0;
+		tape_count++;
+	}
+	else if (is_over_tape & sensor_buffer[REFLEX1]<REFLEX_SENSITIVITY) //Tejpbit avslutad
+	{
+		is_over_tape = 0;
+		if(is_in_tape_segment) //Andra tejpbiten avslutad
+		{
+			is_in_tape_segment = 0;
+			second_tape = tape_count < 5 ? 's': 'l';
+			decode_tape_segment(first_tape,second_tape); //Kör tejpsegmentsavkodning
+		}
+		else // Första tejpbit avslutad
+		{
+			is_in_tape_segment = 1;
+			first_tape = tape_count < 5 ? 's': 'l';
+		}
+		tape_count=0;
+	}
+	else if(sensor_buffer[REFLEX1]<REFLEX_SENSITIVITY) //Utanför tejp
+	{
+		is_in_tape_segment = no_tape_count++ > 7 ? 0 : is_in_tape_segment;
+	}
+	
+}
 
+void decode_tape_segment(char first, char second)
+{
+	_delay_ms(250);
+	if(first == 's' & second == 'l')
+	{
+		//turn left
+		stop_motors();
+		_delay_ms(250);
+		begin_turning(-90);
+	}
+	else if (first == 'l' & second == 's')
+	{
+		//turn right
+		stop_motors();
+		_delay_ms(250);
+		begin_turning(90);
+	}
+	else if (first == 's' & second == 's')
+	{
+		//keep going
+		stop_motors();
+		_delay_ms(250);
+		drive_forwards(SPEED);
+	}
+	else
+	{
+		//ERROR nu, kanske hantering av målgång här senare ?
+	}
+
+
+}
 
 
 void sensor_debug_message()

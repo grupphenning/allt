@@ -46,4 +46,4 @@
 #define REFLEX10		16
 #define REFLEX11		17
 
-
+#define REFLEX_SENSITIVITY 0x50 
