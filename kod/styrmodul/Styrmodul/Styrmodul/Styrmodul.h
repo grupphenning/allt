@@ -47,3 +47,5 @@
 #define REFLEX11		17
 
 #define REFLEX_SENSITIVITY 0x50 
+
+void send_byte_to_comm(uint8_t byte);

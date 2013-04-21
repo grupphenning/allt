@@ -7,7 +7,7 @@ void SPI_read_byte();
 void SPI_write_byte(uint8_t byte);
 void init_spi();
 void serial_send_byte(uint8_t val);
-void USART_Init(unsigned int baud);
+void USART_init();
 void USART_Transmit(unsigned char data);
 unsigned char USART_Receive(void);
 void create_master_interrupt();

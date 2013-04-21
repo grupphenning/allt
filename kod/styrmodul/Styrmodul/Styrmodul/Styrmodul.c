@@ -11,12 +11,19 @@
 #define SENSOR_BUFFER_SIZE 256
 #define INTERPOLATION_POINTS 12
 uint8_t test;
-volatile uint8_t spi_data_from_comm;
-#define BUF_SZ 1024
+
+#define BUF_SZ 256
+
+// Buffrar för interrupt-koden
+
+volatile uint8_t spi_data_from_comm[BUF_SZ];
+uint8_t spi_comm_read;
+volatile uint16_t spi_comm_write;
+
 volatile uint8_t spi_data_from_sensor[BUF_SZ];
-uint16_t spi_sensor_read;
+uint8_t spi_sensor_read;
 volatile uint16_t spi_sensor_write;
-volatile uint8_t comm_interrupt_occoured = 0;
+
 #define SPEED 255
 uint8_t ninety_timer, turn;
 uint8_t left = 1;
@@ -24,13 +31,15 @@ uint8_t left = 1;
 uint8_t gyro_init_value;						//Gyrots initialvärde
 
 
+// Denna ancänds bara av inte-interrupt-koden
 uint8_t sensor_buffer[SENSOR_BUFFER_SIZE];		// Buffer som håller data från sensorenheten
 uint8_t sensor_buffer_pointer;			// Pekare till aktuell position i bufferten
 uint8_t sensor_start;					// Flagga som avgör huruvida vi är i början av meddelande
 uint8_t sensor_packet_length;					// Anger aktuell längd av meddelandet
-
-//uint8_t ir_voltage_array[INTERPOLATION_POINTS] = {2.74, 2.32, 1.64, 1.31, 1.08, 0.93, 0.74, 0.61, 0.52, 0.45, 0.41, 0.38};		// Innehåller de spänningsvärden som ses i grafen på https://docs.isy.liu.se/twiki/pub/VanHeden/DataSheets/gp2y0a21.pdf, sid. 4.
-//uint8_t ir_centimeter_array[INTERPOLATION_POINTS] = {8, 10, 15, 20, 25, 30, 40, 50, 60, 70, 80, 90};			// Innehåller de centimetervärden som ses i grafen på https://docs.isy.liu.se/twiki/pub/VanHeden/DataSheets/gp2y0a21.pdf, sid. 4.
+// Innehåller de spänningsvärden som ses i grafen på https://docs.isy.liu.se/twiki/pub/VanHeden/DataSheets/gp2y0a21.pdf, sid. 4.
+// uint8_t ir_voltage_array[INTERPOLATION_POINTS] = {2.74, 2.32, 1.64, 1.31, 1.08, 0.93, 0.74, 0.61, 0.52, 0.45, 0.41, 0.38};	
+//	uint8_t ir_centimeter_array[INTERPOLATION_POINTS] = {8, 10, 15, 20, 25, 30, 40, 50, 60, 70, 80, 90};
+// Innehåller de centimetervärden som ses i grafen på https://docs.isy.liu.se/twiki/pub/VanHeden/DataSheets/gp2y0a21.pdf, sid. 4.
 
 int main(void)
 {
@@ -57,11 +66,11 @@ int main(void)
 	//drive_forwards(SPEED);
 	while(1)
 	{
-	
-		if(comm_interrupt_occoured)
+		if(spi_comm_write != spi_comm_read)
 		{
-			comm_interrupt_occoured = 0;
-			decode_comm();
+			decode_comm(spi_data_from_comm[spi_comm_read]);
+			++spi_comm_read;
+			spi_comm_read %= BUF_SZ;
 		}
 	
 		if(spi_sensor_write != spi_sensor_read)
@@ -71,13 +80,18 @@ int main(void)
 			decode_sensor(spi_data_from_sensor[spi_sensor_read]);
 			++spi_sensor_read;
 			spi_sensor_read %= BUF_SZ;
-			
-			//turn_amount = regulator(
-			//	(sensor_buffer[] + sensor_buffer[] - sensor_buffer[] - sensor_buffer[])/2);
 		}
 	}
 }
 
+/*
+ * Skickar en sträng till fjärrenheten (via komm) som dumpar den på skärmen
+ */
+void send_string_remote(char *str)
+{
+	while(*str)
+		send_byte_to_comm(*str++);
+}	
 
 void pwm_init()
 {	
@@ -200,26 +214,7 @@ void spi_init()
 
 }
 
-void spi_get_data_from_comm(uint8_t message_byte)
-{
-	clearbit(PORTB, PORTB3);	//Väljer komm
-	SPDR = message_byte;		//Lägger in meddelande i SPDR, startar överföringen
-	while(!(SPSR & (1 << SPIF)));
-	spi_data_from_comm = SPDR;
-	setbit(PORTB, PORTB3);		//Sätter komm till sleepmode
-}
-
-void spi_get_data_from_sensor(uint8_t message_byte)
-{
-	clearbit(PORTB, PORTB2);	//Väljer sensor
-	SPDR = message_byte;		//Lägger in meddelande i SPDR, startar överföringen
-	while(!(SPSR & (1 << SPIF)));
-	spi_data_from_sensor[spi_sensor_write] = SPDR;
-	spi_sensor_write = (spi_sensor_write + 1) % BUF_SZ;
-	setbit(PORTB, PORTB2);		//Sätter sensor till sleepmode
-}
-
-void spi_send_byte(uint8_t byte)
+void send_byte_to_comm(uint8_t byte)
 {
 	clearbit(PORTB, PORTB3); //Välj Komm-enheten måste ändras till allmän slav!
 	SPDR = byte;
@@ -301,12 +296,12 @@ void tank_turn_right(uint8_t amount)
 
 void claw_out()
 {
-	CLAW_AMOUNT = 78*4;
+	CLAW_AMOUNT = 70*4;
 }
 
 void claw_in()
 {
-	CLAW_AMOUNT = 15*4;
+	CLAW_AMOUNT = 50*4;
 }
 
 
@@ -329,39 +324,27 @@ void claw_in()
 ..................................................|         \ |__________________|  |                  |  |                  |........................
 */
 
-/*//-----------------AVBRYT-------------------
-
-//-----------------STYRKOMMANDON------------
-uint8_t break_prot = 0b00000000;
-uint8_t control_command_prot = 0b00100000;
-uint8_t drive_prot = 0b00100000;
-uint8_t back_prot = 0b00100100;
-uint8_t stop_prot = 0b00101000;
-uint8_t tank_turn_left_prot = 0b00101100;
-uint8_t tank_turn_right_prot = 0b00110000;
-uint8_t drive_turn_prot = 0b00110100;
-
-uint8_t drive_turn_left_request = 0b00111000;
-uint8_t drive_turn_right_request = 0b00111100;
-//-----------KALIBRERING AV SENSORER---------
-
-//-------------GRIPKLOKOMMANDON--------------
-uint8_t claw_in_prot = 0b01100000;
-uint8_t claw_out_prot = 0b01100100;
-//----------SÄTT PD-KONSTANTER---------------
-*/
 
 // Kommunikationsenheten skickar en avbrottsförfrågan
 ISR(INT1_vect)
 {
-	comm_interrupt_occoured = 1;
-	spi_get_data_from_comm(0x00);	//Sparar undan data från comm
+	clearbit(PORTB, PORTB3);	//Väljer komm
+	SPDR = 0;		//Lägger in meddelande i SPDR, startar överföringen
+	while(!(SPSR & (1 << SPIF)));
+	spi_data_from_comm[spi_comm_write] = SPDR;
+	spi_comm_write = (spi_comm_write + 1) % BUF_SZ;
+	setbit(PORTB, PORTB3);		//Sätter komm till sleepmode
 }
 
 // Sensorenheten skickar en avbrottsförfrågan
 ISR(INT0_vect)
 {
-	spi_get_data_from_sensor(0x00);
+	clearbit(PORTB, PORTB2);	//Väljer sensor
+	SPDR = 0;		//Lägger in meddelande i SPDR, startar överföringen
+	while(!(SPSR & (1 << SPIF)));
+	spi_data_from_sensor[spi_sensor_write] = SPDR;
+	spi_sensor_write = (spi_sensor_write + 1) % BUF_SZ;
+	setbit(PORTB, PORTB2);		//Sätter sensor till sleepmode
 }
 
 ISR(TIMER1_COMPA_vect)
@@ -379,65 +362,128 @@ ISR(TIMER1_COMPA_vect)
 	
 }
 
-void decode_comm()
+void decode_comm(uint8_t command)
 {
-	uint8_t command = spi_data_from_comm;
-	uint8_t byte = command & 0b11100000;
-	
-	if (command == BREAK_PROT)
+	static uint8_t pid = 0;		// Hantera PID-argument
+	static uint8_t constant_p;	// Akutellt PID-argument
+	static uint8_t constant_i;	// Dito...
+	static uint8_t constant_d;	// Dito...
+
+	static uint8_t display = 0;	// Aktuell byte ska ut på displayen
+	static uint8_t drive = 0;	// Förra kommandot väntar på ett hastighetsargument
+
+	if(pid)
 	{
-		// Någon som vet vilken "Avbryt"-funktion som avses i designspecen!?!?!?
-		// Kör iaf den avbrytfunktion som avses i designspecen!!!!!!
-		//send_string("break");
-		//update();
-	}
-	else if (byte == CONTROL_COMMAND_PROT)
+		if(pid == 3)
+			constant_p = command;
+		else if(pid == 2)
+			constant_i = command;
+		else // pid == 1
+		{
+			constant_d = command;
+			update_k_values(constant_p, constant_i, constant_d);
+		}
+		--pid;
+	} else if(display)
 	{
-		if (command == DRIVE_PROT)
+		display = 0;
+		send_character(command);
+		update();
+	} else if(drive)
+	{
+		if(drive == COMM_DRIVE)
 		{
-			drive_forwards(SPEED);
-		}
-		else if (command == BACK_PROT)
+			drive = 0;
+			drive_forwards(command);
+		} else if(drive == COMM_BACK)
 		{
-			drive_backwards(SPEED);
-		}
-		else if (command == STOP_PROT)
+			drive = 0;
+			drive_backwards(command);
+		} else if(drive == COMM_STOP)
 		{
+			drive = 0;
 			stop_motors();
-		}
-		else if (command == TANK_TURN_LEFT_PROT)
+		} else if(drive == COMM_LEFT)
 		{
-			tank_turn_left(SPEED);
-//			send_string("Rotera vänster");
-//			update();
-		}
-		else if (command == TANK_TURN_RIGHT_PROT)
+			drive = 0;
+			tank_turn_left(command);
+		} else if(drive == COMM_RIGHT)
 		{
-			tank_turn_right(SPEED);
-//			send_string("Rotera höger");
-//			update();
-		}
-		/*else if (command == drive_turn_prot)
+			drive = 0;
+			tank_turn_right(command);
+		} else if(drive == COMM_DRIVE_LEFT)	// Ignorera argumentet tills vidare, vet inte hur vi ska lösa det...
 		{
-			spi_get_data_from_comm(drive_turn_left_request);
-			spi_get_data_from_comm(drive_turn_left_request);
-			turn_left(spi_data_from_comm);
-			spi_get_data_from_comm(drive_turn_right_request);
-			spi_get_data_from_comm(drive_turn_right_request);
-			turn_right(spi_data_from_comm);
-		}*/
-	}	
-	else if (command == CLAW_IN_PROT)
+			drive = 0;
+			LEFT_AMOUNT = 60;
+			RIGHT_AMOUNT = 255;
+		
+			setbit(PORT_DIR, LEFT_DIR);
+			setbit(PORT_DIR, RIGHT_DIR);
+		}	else if(drive == COMM_DRIVE_RIGHT)	// Ignorera argumentet även här, tills vidare...
+		{
+			drive = 0;
+			LEFT_AMOUNT = 255;
+			RIGHT_AMOUNT = 60;
+
+			setbit(PORT_DIR, LEFT_DIR);
+			setbit(PORT_DIR, RIGHT_DIR);
+		} else if(drive == COMM_CLAW_OUT)
+		{
+			drive = 0;
+			claw_out();
+		} else if(drive == COMM_CLAW_IN)
+		{
+			drive = 0;
+			claw_in();
+		}
+		return;
+	} // if(drive)
+	else if(command == COMM_DRIVE || command == COMM_BACK || command == COMM_LEFT || command == COMM_RIGHT ||
+	command == COMM_DRIVE_LEFT || command == COMM_DRIVE_RIGHT || command == COMM_CLAW_OUT || command == COMM_CLAW_IN)
 	{
-		claw_in();
+		drive = command;
+		return;
 	}
-	else if (command == CLAW_OUT_PROT)
+	else if(command == COMM_STOP)
 	{
-		claw_out();
+		stop_motors();
 	}
-	else 
+	else if(command == COMM_SET_PID)
 	{
-		send_string("SYNTAX ERROR!");
+		pid = 3;
+	}
+	else if(command == COMM_CLEAR_DISPLAY)
+	{
+		clear_screen();
+		update();
+	}		
+	else if(command == COMM_DISPLAY)
+	{
+		display = 1;
+	}
+	else if(command == COMM_TOGGLE_SENSORS)
+	{
+		if(bitset(EIMSK, INT0))
+			clearbit(EIMSK, INT0);	// Avaktivera avbrottsförfrågan från sensorenheten
+		else
+			setbit(EIMSK, INT0);	// Akvitera avbrottsförfrågan från sensorenheten
+	}
+	else if(command == COMM_TURN_90_DEGREES_LEFT)
+	{
+		send_string("PERPENDICULAR LEFT");
+		update();
+	}
+	else if(command == COMM_TURN_90_DEGREES_RIGHT)
+	{
+		send_string("PERPENDICULAR RIGHT");
+		send_string_remote("PERPENDICULAR RIGHT");
+		update();
+	}				
+	else	
+	{
+		char tmp[30];
+		sprintf(tmp, "Err%02X ", command);
+		send_string(tmp);
 		update();
 	}
 }
@@ -482,7 +528,7 @@ void decode_sensor(uint8_t data)
 	
 	
 // 	char tmpstr[50];
-// 	//clear_screen();
+// 	clear_screen();
 // 	sprintf(tmpstr, "%02X", sensor_packet_length);
 // 	send_string(tmpstr);
 // 	send_string(" ");
@@ -504,18 +550,14 @@ void decode_sensor(uint8_t data)
 			sensor_debug_hex();
 			break;
 		case SENSOR: {
-//  			enum { IR_LEFT = 1, IR_RIGHT = 2, IR_FRONT = 3,
-// 				 IR_LEFT_BACK =4,IR_RIGHT_BACK = 5, 
-//  				 GYRO =6, REFLEX1 = 7,REFLEX2 = 8,REFLEX3 = 9,REFLEX4 = 10,REFLEX5 = 11,REFLEX6 = 12,REFLEX7 = 13,REFLEX8 = 14,REFLEX9 = 15,REFLEX10 = 16,REFLEX11 = 17};
-			
-			
 			//First time? Calibrate gyro
+			/*
 			if(sensor_transmission_number<5)
 			{
 				gyro_init_value = sensor_buffer[GYRO];
 				sensor_transmission_number++;
 			}
-			
+			*/
 			if(is_turning) 
 			{
 				gyro_int += 3*abs(gyro_init_value - (int)sensor_buffer[GYRO]); //Maxxhastighet 300grader/s,
@@ -532,17 +574,11 @@ void decode_sensor(uint8_t data)
 			if((a++ & 0b10000)) {
 				a=0;
 				char tmp[100];
-				sprintf(tmp,
-					"Reflex: %02X      "
-					"Front: %02X ",
-			 
-			 
-					sensor_buffer[6],
-					sensor_buffer[3]);
-  				clear_screen();
+				clear_screen();
+				sprintf(tmp, "Reflex: %02X      Front: %02X ", sensor_buffer[6], sensor_buffer[3]);
 				send_string(tmp);
 				update();
-			}			
+			}
 			// 			if(sensor_buffer[IR_FRONT] > 0x20) 
 			// 			{
 			// 				stop_motors();

@@ -5,169 +5,124 @@
  *  Author: rasme879
  */
 //Måste definieras först!
-#define F_CPU 8000000UL
+#define F_CPU 7380000UL
 
 #include <avr/io.h>
 #include <avr/delay.h>
 #include "bitmacros.h"
 #include "Kommunikationsmodul.h"
+#include "../../Styrmodul/Styrmodul/Styrmodul/komm_styr_protokoll.h"
 #include <avr/interrupt.h>
 
+#define BUF_SZ 256
 
-// Our dear baud rate
-//#define F_CPU 8000000UL
-#define USART_BAUDRATE 9600
-#define BAUD_PRESCALE (((F_CPU / (USART_BAUDRATE * 16UL))) - 1)
-
-uint8_t SPI_SlaveReceive()
-{
-	//SPDR = 0x32;
-	/* Wait for reception complete */
-	setbit(PORTB, PB1);
-	
-	while(!(SPSR & (1<<SPIF)));
-	clearbit(PORTB, PB1);
-	/* Return data register */
-	return SPDR;
-}
-
-uint8_t spi_data_from_master;
-uint8_t spi_data_to_master;
-
-void SPI_read_byte()
-{
-	//PORTA = SPDR;	// Bra för felsökning!
-	spi_data_from_master = SPDR;
-}
+volatile uint8_t data_from_styr;
 
 
-void SPI_write_byte(uint8_t byte)
-{
-	SPDR = byte;
-}
+uint8_t
+	spiw_data[256], spiw_r, spiw_w,
+	usartw_data[256], usartw_r, usartw_w, usartw_byte;
 
-
-//unsigned char USART_Recieve(void);
-unsigned char USART_Receive(void);
-void USART_Init(unsigned int baud);
-void USART_Transmit(unsigned char data);
-
-uint8_t out;
-
+void send_spi(uint8_t data) { spiw_data[spiw_w++] = data; }
+void send_usart(uint8_t data) { usartw_data[usartw_w++] = data; }
 
 int main(void)
 {
-	out = 1;
-	//PORTA = 0;
-	setbit(DDRB, PORTB1);
-	setbit(DDRA, PORTA7);
-	setbit(DDRA, PORTA6);
-	sei(); //Enable global interrupts
+//	out = 1;
 
 	init_spi();
-	SPDR = 0x32;
+	USART_init();
 	
+	sei(); //Enable global interrupts
+	clearbit(PORTC, PINC0);
 
-	/*DDRA = 0xff;
-	DDRB = 0xff;
-	DDRC = 0xff;
-	DDRD = 0xff;
-	PORTA = 0xff;
-	PORTB = 0xff;*/
-	//PORTC = 0xff;
-	//PORTD = 0xff;
-	//	USART_Init(9600);
-
-	// kom (ff) cts=(is) clear to send (?), rts=request to send
-	// d0 cts <- (rts)
-	// d1 tx  -> (rx)
-	// d2 rx  <- (tx)
-	// d3 rts -> (cts)
-
-	// 1 byte ska ta runt 80 us
-	// Ok nu kör vi 2400 baud i stället
-	//UCSRB = (1<<RXEN)|(1<<TXEN);
-
-	//ggr 20 us det tar att överföra 'a' då UBRR=3:
-	//c0:4.3 b0:4.3 a0:4.3 90:5 80:5 70:5.4 60:5.7 50:6 40:6.4 30:6.7 20:7
-	OSCCAL = 0x70;
-	unsigned ubrr = F_CPU / (16 * 9600) - 1;
-	//UBRRH = (unsigned char)(ubrr>>8);
-	//UBRRL = (unsigned char)ubrr;
-	UBRRH = 0x00;
-	UBRRL = 0x02;
-	UCSRC = (1<<URSEL)|(1<<USBS)|(3<<UCSZ0);
-	UCSRB = (1<<TXEN)|(1<<RXEN);
-
-	uint8_t data_from_bt, data_from_bt_old;
-	//unsigned data_from_bt, data_from_bt_old;
-	
     while(1)
     {
-		////setbit(PORTA, PORTA6);
-		data_from_bt = USART_Receive();
-		USART_Transmit(data_from_bt);
-// 		if ( data_from_bt != data_from_bt_old)
-// 		{
-			data_from_bt_old = data_from_bt;
-			decode_remote(data_from_bt);
-		//}
-		////clearbit(PORTA, PORTA6);
-		//send_to_master(b);
-		//clearbit(PORTB, PB0);
-		//PORTA = 2;
-		//_delay_ms(100);
-		//setbit(SPCR, SPE);		//Enables spi
-		//PORTA = SPI_SlaveReceive();
+		static uint8_t spi_state = 0; // 0 väntar, 1 skriver
+		static uint8_t usart_state = 0; // 0 väntar, 1 skriver
+		uint8_t spir, has_spir = 0, usartr, has_usartr = 0;
+		
+		// Processa SPI
+		if(spi_state == 0) {
+			// Kolla om vi har fått nåt
+			if(SPSR & (1 << SPIF)) {
+				spir = SPDR;
+				has_spir = 1;
+			}
+			// Finns det nåt att skicka?
+			else if(spiw_r != spiw_w) {
+				SPDR = spiw_data[spiw_r++];
+				PORTA ^= (1 << PORTA7);
+				spi_state = 1;
+			}				
+		}
+		else if(spi_state == 1) {
+			if(SPSR & (1 << SPIF)) spi_state = 0;
+		}
+				
+		// Processa USART
+		if(usart_state == 0) {
+			// Firefly vill sända data
+			if(UCSRA & (1 << RXC)) {
+				usartr = UDR;
+				has_usartr = 1;
+			}
+			// Vi vill sända data
+			else if(usartw_r != usartw_w) {
+				usart_state = 1;
+				setbit(PORTC, PINC0);
+			}				
+		}
+		else if(usart_state == 1) {
+			if(UCSRA & (1 << UDRE)) {
+				UDR = usartw_data[usartw_r++];
+				usart_state = 0;
+				clearbit(PORTC, PINC0);
+			}				
+		}
+	
+		// Nu finns data i usartr om has_usartr == 1
+		// och i spir om has_spir == 1
+		
+		if(has_usartr) {
+			send_usart(usartr);
+			decode_remote(usartr);
+		}
+		if(has_spir) {
+			send_usart(spir);
+		}
+		
+//		data = USART_Receive();
+//		uint8_t data;
+//		data = SPI_SlaveReceive();
+//		decode_remote(data);
+//		USART_Transmit(data);
+		
+//		char tmp[10];sprintf(tmp, "%02X", data_from_styr);
+//		USART_Transmit(tmp[0]);
+//		USART_Transmit(tmp[1]);
     }
 }
 
 
 void init_spi()
 {
+//	setbit(DDRB, PORTB1);		// Va ä dä här?
+
 	setbit(SPCR, SPE);		//Enables spi
-	//SPCR = 0;
 	clearbit(DDRB, PINB4);	// SS är input
 	clearbit(DDRB, PINB5);	// MOSI är input
 	setbit(DDRB, PINB6);	// MISO är output
 	clearbit(DDRB, PINB7);	//CLK är input
 	setbit(DDRA, PINA7);	// Avbrottsförfrågan är output
 	setbit(PORTA, PINA7);	// 1 = normal, 0 = avbrottsförfrågan
-	//setbit(SPCR, SPE);		//Enables spi
-	//setbit(SPCR,SPIE);		//Enable interupt
-	//setbit(SPCR,SPR0);		//FCK/16
-	//setbit(SPCR,SPR1);		
-	
+	SPDR = 0x32;
 }
 
 void serial_send_byte(uint8_t val)
 {
 	while((UCSRA &(1<<UDRE)) == 0);	// Vänta på att föregående värde redan skickats
 	UDR = val;
-}
-
-void USART_Init(unsigned int baud)
-{
-	unsigned ubrr;
-	ubrr = F_CPU / (16 * baud) - 1;
-	
-	//Set baud rate
-	UBRRH = (unsigned char)(ubrr>>8);
-	UBRRL = (unsigned char)ubrr;
-	
-	//Enable receiver and transmitter
-	UCSRB = (1<<RXEN)|(1<<TXEN);
-	
-	//Set frame format: 8data, 2stop bit
-	
-	UCSRC = (1<<URSEL)|(1<<USBS)|(3<<UCSZ0);
-	
-	// Set RTS output and 1
-	setbit(DDRC, PINC0);
-	setbit(PORTC, PINC0);
-	
-	// CTS input
-	clearbit(DDRC, PINC1);
 }
 
 void USART_Transmit(unsigned char data)
@@ -197,117 +152,79 @@ uint8_t USART_Receive(void)
 	return UDR;
 }
 
-ISR(SPI_STC_vect)
+void USART_init()
 {
-	SPI_read_byte(); //Sparar ner SPDR till PORTA och spi_data_from_master
-	//decode_spi_from_master();
-	//SPI_write_byte(spi_data_to_master);  //Ska ta något argument!
-}	
-
-void create_master_interrupt()
-{
-	//PORTA &= ~(1 << PINA7);
-	PORTA ^= (1 << PORTA7);
-	/*
-	if(out)
-	{
-		setbit(PORTA, PORTA7);
-		out = 0;
-	}
-	else
-	{
-		clearbit(PORTA, PORTA7);
-		out = 1;
-	}
-	*/
+	OSCCAL = 0x70;		// Sänk klockhastigheten (0x7f betyder standard, dvs 8MHz).
+	// Funkar inte om man debuggar och därför går det inte att använda seriell då.
+	
+	UBRRH = 0x00;
+	UBRRL = 0x02;
+	UCSRC = (1<<URSEL)|(1<<USBS)|(3<<UCSZ0);
+	UCSRB = (1<<TXEN)|(1<<RXEN);
 }
 
-// ------------------------------------------------------------------------
-// --------------------------------PROTOKOLL-------------------------------
-// ------------------------------------------------------------------------
+ISR(SPI_STC_vect)
+{
+	data_from_styr = SPDR;
+}	
 
-/*
-uint8_t break_prot = 0b00000000;
-uint8_t drive_prot = 0b00100000;
-uint8_t back_prot = 0b00100100;
-uint8_t stop_prot = 0b00101000;
-uint8_t tank_turn_left_prot = 0b00101100;
-uint8_t tank_turn_right_prot = 0b00110000;
-*/
-uint8_t drive_turn_prot = 0b00110100;
-uint8_t drive_turn_left_request = 0b00111000;
-uint8_t drive_turn_right_request = 0b00111100;  // Ska sättas till ngt fint!!!!
-uint8_t drive_turn_left_value;
-uint8_t drive_turn_right_value;
 
 void decode_remote(uint8_t ch)
 {
-	uint8_t commando;
+	
+	/* Hanterar kommando 'p', som tar tre argument: de tre PID-värden som används till regleringen */
+	static uint8_t pid = 0;	// Flagga som anger att sist mottagna kommando från fjärrenheten var just pid!
+	static uint8_t display = 0; // Indikerar att nästa byte är en byte som ska vidare till styr
+	static uint8_t speed = 0;	// Nästa byte är en hastighet
+	static uint8_t p, i, d;	// Argumenten till PID!
+
+	/* Om PID är aktiverat (dvs. icke-noll), behandla den aktuella byten som ett argument till PID */
+	if(pid) {
+		if(pid == 3) p = ch;
+		else if(pid == 2) i = ch;
+		else if(pid == 1) {
+			d = ch;
+			send_spi(COMM_SET_PID);
+			send_spi(p);
+			send_spi(i);
+			send_spi(d);
+			return;			// This ought to be needed, shound't it?
+		}
+		--pid;
+	} else if(display)	/* Nästa byte är ett tecken som ska vidare till displayen på styrenheten */
+	{
+		display = 0;
+		send_spi(ch);
+		return;
+	} else if(speed)	/* Nästa byte är ett hastighetsargument till styrfunktionerna på styrenheten */
+	{
+		speed = 0;
+		send_spi(ch);
+		return;
+	}		
 	
 	// Konverterar från Blåtand till styr-komm-protokollet!
 	switch(ch) {
-		case 'l': send_to_master(0b00101100); break;
-		case 'd': send_to_master(0b00100000); break;
-		case 'r': send_to_master(0b00110000); break;
-		case 's': send_to_master(0b00101000); break;
-		case 'b': send_to_master(0b00100100); break;
-		//claw in
-		case 'c': send_to_master(0b01100000); break;
-		//claw out
-		case 'o': send_to_master(0b01100100); break;
-		case 'p': {
-			send_to_master(0b10000000);
-			send_to_master(USART_Receive());
-			send_to_master(USART_Receive());
-			send_to_master(USART_Receive());
-			break;
-		}			
+		case 'l': send_spi(COMM_LEFT); speed = 1; break;					// vänster
+		case 'd': send_spi(COMM_DRIVE); speed = 1; break;					// fram
+		case 'r': send_spi(COMM_RIGHT); speed = 1; break;					// höger
+		case 's': send_spi(COMM_STOP); break;								// stop
+		case 'b': send_spi(COMM_BACK); speed = 1; break;					// bakåt
+		case 'c': send_spi(COMM_CLAW_IN); speed = 1; break;					// claw in
+		case 'o': send_spi(COMM_CLAW_OUT); speed = 1; break;				// claw out
+		case 'v': send_spi(COMM_DRIVE_LEFT); speed = 1; break;				// kör framåt och vänster
+		case 'h': send_spi(COMM_DRIVE_RIGHT); speed = 1; break;				// framåt och höger
+		case 'q': send_spi(COMM_CLEAR_DISPLAY); break;						// Rensa displayen
+		case 'z': send_spi(COMM_DISPLAY); display = 1; break;				// tecken till displayen
+		case 'p': pid = 3; break;											// PID-konstanter
+		case 't': send_spi(COMM_TOGGLE_SENSORS); break;						// Aktivera/deaktivera sensorer
+		case 'w': send_spi(COMM_TURN_90_DEGREES_LEFT); break;				// Vrid 90 grader vänster
+		case 'e': send_spi(COMM_TURN_90_DEGREES_RIGHT); break;				// Vrid 90 grader höger
 	}
-	// Ej löst då vi skickar flera byte!
-	/*if (ch == 'v') // fram vänster
-	{
-		commando = 0b00110100;
-		// Sparar undan värdet för vänster resp. höger hjulpar!!!
-		drive_turn_left_value = 0x00; // OBS!!!! Blajvärde!!!!
-		drive_turn_right_value = 0xff; // OBS!!!! Blajvärde!!!!
-	}
-	if (ch == 'h') // fram  höger
-	{
-		commando = 0b00110100;
-		// Sparar undan värdet för vänster resp. höger hjulpar!!!
-		drive_turn_left_value = 0xff; // OBS!!!! Blajvärde!!!!
-		drive_turn_right_value = 0x00; // OBS!!!! Blajvärde!!!!
-	}*/
-	
-	//om det var något av l,d,r,s,b
-	/*if(commando != 0xff)
-	{
-		send_to_master(commando);
-	}*/
-	
-	/*if(ch == 'v' || ch == 'h') {
-		send_to_master(drive_turn_right_value);
-		send_to_master(drive_turn_right_value);
-	}*/
 }
-
-/*void decode_spi_from_master()
-{
-	if (spi_data_from_master = drive_turn_left_request)
-	{
-		SPDR = drive_turn_left_value;
-		create_master_interrupt();
-	}
-	else if (spi_data_from_master = drive_turn_left_request)
-	{
-		SPDR = drive_turn_right_value;
-		create_master_interrupt();
-	}
-	
-}*/
 
 void send_to_master(uint8_t byte)
 {
 	SPDR = byte;
-	create_master_interrupt();
+	PORTA ^= (1 << PORTA7);
 }
