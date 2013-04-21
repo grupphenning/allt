@@ -45,10 +45,27 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(&pid, SIGNAL(accepted()), this, SLOT(on_pid()));
 }
 
+/*
+ *5  d0  aa
+ *6  d1  mosi
+ *7  d2  miso
+ *33 d3  int0
+ *8  d4  clk
+ */
+
 void MainWindow::on_pid()
 {
-    std::cout << pid.getP() << std::endl;
+    unsigned char t;
+    port->write(QByteArray(1, 'p'));
+    t = pid.getP();
+    port->write(QByteArray(1, t));
+    t = pid.getI();
+    port->write(QByteArray(1, t));
+    t = pid.getD();
+    port->write(QByteArray(1, t));
+    port->flush();
 }
+
 
 void MainWindow::onDataAvailable()
 {
@@ -73,6 +90,36 @@ void MainWindow::setDirection(unsigned dir)
     current_direction = dir;
 
     port->write(QByteArray(1, "vdhlsrb"[dir]));
+
+    /* Eventuellt ändra hastigheten */
+    unsigned char speed = ui->speed->value(); // Standardhastighet
+    switch("vdhlsrb"[dir])
+    {
+    case 'v':
+        speed = ui->speedDriveLeft->value();
+        break;
+    case 'd':
+        speed = ui->speedDrive->value();
+        break;
+    case 'h':
+        speed = ui->speedDriveRight->value();
+        break;
+    case 'l':
+        speed = ui->speedLeft->value();
+        break;
+    case 'r':
+        speed = ui->speedRight->value();
+        break;
+    case 'b':
+        speed = ui->speedBack->value();
+        break;
+    default:
+        break;
+    }
+
+    // Behöver ingen hastighet för "stop"!
+    if("vdhlsrb"[dir] != 's')
+        port->write(QByteArray(1, speed));
     port->flush();
 }
 
@@ -141,15 +188,23 @@ void MainWindow::on_pushButton_10_clicked() { setDirection(6); }
 void MainWindow::on_pushButton_11_clicked() { open_claw(); }
 void MainWindow::on_pushButton_12_clicked() { close_claw(); }
 
+void MainWindow::on_pushButton_14_clicked()
+{
+    port->write(QByteArray(1, 't'));
+    port->flush();
+}
+
 void MainWindow::open_claw()
 {
     port->write(QByteArray(1, 'o'));
+    port->write(QByteArray(1, ui->speedClawIn->value()));
     port->flush();
 }
 
 void MainWindow::close_claw()
 {
     port->write(QByteArray(1, 'c'));
+    port->write(QByteArray(1, ui->speedClawOut->value()));
     port->flush();
 }
 
@@ -166,4 +221,59 @@ void KeyPressEater::on_pushButton_9_clicked(){}
 void MainWindow::on_pushButton_9_clicked()
 {
     pid.show();
+}
+
+void KeyPressEater::on_pushButton_clicked(){}
+void MainWindow::on_pushButton_clicked()
+{
+//    QString str = ui->stringEdit;
+    QByteArray array;
+
+    for(int i = 0; i < ui->stringEdit->text().length(); i++)
+    {
+        array.append('z');
+        array.append(ui->stringEdit->text().at(i));
+    }
+    port->write(array);
+    port->flush();
+}
+
+
+void KeyPressEater::on_pushButtonPID_clicked(){}
+void MainWindow::on_pushButtonPID_clicked()
+{
+    QByteArray array;
+    array.append('p');
+    array.append(ui->spinBoxP->value());
+    array.append(ui->spinBoxI->value());
+    array.append(ui->spinBoxD->value());
+    port->write(array);
+    port->flush();
+}
+
+void KeyPressEater::on_pushButtonClearDisplay_clicked(){}
+void MainWindow::on_pushButtonClearDisplay_clicked()
+{
+    QByteArray array;
+    array.append('q');      // Clear display command!
+    port->write(array);
+    port->flush();
+}
+
+void KeyPressEater::on_pushButtonLeft90_clicked(){}
+void MainWindow::on_pushButtonLeft90_clicked()
+{
+    QByteArray array;
+    array.append('w');
+    port->write(array);
+    port->flush();
+}
+
+void KeyPressEater::on_pushButtonRight90_clicked(){}
+void MainWindow::on_pushButtonRight90_clicked()
+{
+    QByteArray array;
+    array.append('e');
+    port->write(array);
+    port->flush();
 }
