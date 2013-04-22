@@ -258,6 +258,7 @@ void MainWindow::on_pushButtonClearDisplay_clicked()
     array.append('q');      // Clear display command!
     port->write(array);
     port->flush();
+    ui->stringEdit->setText("");
 }
 
 void KeyPressEater::on_pushButtonLeft90_clicked(){}
@@ -276,4 +277,24 @@ void MainWindow::on_pushButtonRight90_clicked()
     array.append('e');
     port->write(array);
     port->flush();
+}
+
+void KeyPressEater::on_pid_toggle_clicked(){}
+void MainWindow::on_pid_toggle_clicked()
+{
+    QByteArray array;
+    if(ui->pid_toggle->text()=="Enable")    //Skicka enable
+    {
+        array.append('n');
+        ui->pid_toggle->setText("Disable");
+    }
+    else                                    //annars skicka disable
+    {
+        array.append('m');
+        ui->pid_toggle->setText("Enable");
+    }
+    port->write(array);
+    port->flush();
+    array.clear();
+
 }
