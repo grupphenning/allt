@@ -25,11 +25,11 @@ uint8_t spi_sensor_read;
 volatile uint16_t spi_sensor_write;
 
 #define SPEED 255
-uint8_t ninety_timer, turn;
+uint8_t ninety_timer, turn, pid_timer;
 uint8_t left = 1;
 
 uint8_t gyro_init_value;						//Gyrots initialvärde
-
+uint8_t regulator_enable = 0;					//Flagga för att indikera 40 ms åt regulatorn.
 
 // Denna ancänds bara av inte-interrupt-koden
 uint8_t sensor_buffer[SENSOR_BUFFER_SIZE];		// Buffer som håller data från sensorenheten
@@ -54,16 +54,14 @@ int main(void)
 	update();
 	spi_init();
 	pwm_init();
+	//pid_timer_init(); //detta kanske ej behövs!
 	//drive_forwards(SPEED);	
 	sei();		//aktivera global interrupts
 	
-	//_delay_ms(50);
-	
-	//init_pid(40, 255, 0);
-	//clear_pid();
-	//update_k_values(1, 1, 1);
+	clear_pid();
+	init_pid(40, 255, -255);
+	update_k_values(1, 1, 1);
 
-	//drive_forwards(SPEED);
 	while(1)
 	{
 		if(spi_comm_write != spi_comm_read)
@@ -81,6 +79,34 @@ int main(void)
 			++spi_sensor_read;
 			spi_sensor_read %= BUF_SZ;
 		}
+		
+		if (regulator_enable)
+		{
+			int16_t temp_input = 0,temp_output = 0;
+			temp_input = (sensor_buffer[IR_RIGHT_BACK] + sensor_buffer[IR_RIGHT_FRONT] - sensor_buffer[IR_LEFT_BACK] - sensor_buffer[IR_LEFT_FRONT])/2;
+			temp_output = regulator(temp_input);
+			
+			if(temp_output == 0)
+			{
+				LEFT_AMOUNT = SPEED;
+				RIGHT_AMOUNT = SPEED;
+			}
+				
+			if(temp_output > 0)
+			{
+				RIGHT_AMOUNT = RIGHT_AMOUNT - temp_output;
+				LEFT_AMOUNT = SPEED;	
+			}				
+				
+			if (temp_output < 0)
+			{
+				LEFT_AMOUNT = LEFT_AMOUNT + temp_output;
+				RIGHT_AMOUNT = SPEED;
+			}
+			
+		regulator_enable = 0;
+		
+		}	
 	}
 }
 
@@ -92,6 +118,26 @@ void send_string_remote(char *str)
 	while(*str)
 		send_byte_to_comm(*str++);
 }	
+
+void pid_timer_init()
+{
+	//sätt "Fast PWM mode", med OCRA (OCR0A?) som toppvärde!
+	setbit(TCCR0A, WGM00);
+	setbit(TCCR0A, WGM01);
+	setbit(TCCR0B, WGM02);
+	
+	//sätt klockskalning, fck = f/1024
+	setbit(TCCR0B, CS00);
+	setbit(TCCR0B, CS02);
+	
+	//aktivera interrupts, skickas på overflow
+	setbit(TIMSK0, TOIE0);
+	
+	//8 bit-register
+	//frekvensen blir då 8000000/(1024*255) = 30.63 Hz
+	//vilket är mingränsen!
+	OCR0A = 255;
+}
 
 void pwm_init()
 {	
@@ -125,7 +171,6 @@ void pwm_init()
 	setbit(TCCR1B, WGM11);
 	setbit(TCCR1B, WGM12);
 	setbit(TCCR1B, WGM13);
-	
 	
 	//sätt klockan på fclk/64!
 	setbit(TCCR1B, CS10);
@@ -168,6 +213,8 @@ void pwm_init()
 	//TCCR2B = (1 << CS20);
 	////////////////////////////////////////////TIMSK2 = (1 << OCIE2A);
 	//fullt ös på OCR=0xff, inget på 0x00
+	
+	
 }
 
 void spi_init()
@@ -347,6 +394,8 @@ ISR(INT0_vect)
 	setbit(PORTB, PORTB2);		//Sätter sensor till sleepmode
 }
 
+//kör i 50 Hz! Ändra ej frekvensen, då denna även
+//används till gripklon, som måste köras i 50 Hz!
 ISR(TIMER1_COMPA_vect)
 {
 	ninety_timer++;
@@ -362,6 +411,16 @@ ISR(TIMER1_COMPA_vect)
 	
 }
 
+//overflow på timer0, ställ in frekvens med
+//OCR0A, och CSxx-flaggorna i TCCR0B
+ISR(TIMER0_OVF_vect)
+{
+	
+	
+}
+
+
+
 void decode_comm(uint8_t command)
 {
 	static uint8_t pid = 0;		// Hantera PID-argument
@@ -372,19 +431,31 @@ void decode_comm(uint8_t command)
 	static uint8_t display = 0;	// Aktuell byte ska ut på displayen
 	static uint8_t drive = 0;	// Förra kommandot väntar på ett hastighetsargument
 
+// 	char temp[32];
+// 	sprintf(temp,"%02X ", command);
+// 	send_string(temp);
+// 	update();
+	
 	if(pid)
 	{
-		if(pid == 3)
+// 		char tmp[30];
+// 		sprintf(tmp, "%02X ",  pid);
+// 		send_string(tmp);
+// 		update();
+		if(pid == 3){
 			constant_p = command;
-		else if(pid == 2)
+		}			
+		else if(pid == 2){
 			constant_i = command;
+		}
 		else // pid == 1
 		{
 			constant_d = command;
 			update_k_values(constant_p, constant_i, constant_d);
 		}
 		--pid;
-	} else if(display)
+	} 
+	else if(display)
 	{
 		display = 0;
 		send_character(command);
@@ -452,6 +523,14 @@ void decode_comm(uint8_t command)
 	{
 		pid = 3;
 	}
+	else if(command == COMM_ENABLE_PID)
+	{
+		enable_pid();
+	}
+	else if(command == COMM_DISABLE_PID)
+	{
+		disable_pid();
+	}
 	else if(command == COMM_CLEAR_DISPLAY)
 	{
 		clear_screen();
@@ -476,7 +555,6 @@ void decode_comm(uint8_t command)
 	else if(command == COMM_TURN_90_DEGREES_RIGHT)
 	{
 		send_string("PERPENDICULAR RIGHT");
-		send_string_remote("PERPENDICULAR RIGHT");
 		update();
 	}				
 	else	
@@ -526,18 +604,6 @@ void decode_sensor(uint8_t data)
 		return;
 	/* Aha, vi har tagit emot hela meddelandet! Tolka detta! */
 	
-	
-// 	char tmpstr[50];
-// 	clear_screen();
-// 	sprintf(tmpstr, "%02X", sensor_packet_length);
-// 	send_string(tmpstr);
-// 	send_string(" ");
-// 	sprintf(tmpstr, "%02X", sensor_buffer[0]);
-// 	send_string(tmpstr);
-// 	send_string(" ");
-// 	sprintf(tmpstr, "%02X", sensor_buffer[1]);
-// 	send_string(tmpstr);
-// 	update();
 
 /**********************************************************************
  * Här hanteras kommandon från sensorenheten
@@ -550,17 +616,17 @@ void decode_sensor(uint8_t data)
 			sensor_debug_hex();
 			break;
 		case SENSOR: {
+			
 			//First time? Calibrate gyro
-			/*
 			if(sensor_transmission_number<5)
 			{
 				gyro_init_value = sensor_buffer[GYRO];
 				sensor_transmission_number++;
 			}
-			*/
+			
 			if(is_turning) 
 			{
-				gyro_int += 3*abs(gyro_init_value - (int)sensor_buffer[GYRO]); //Maxxhastighet 300grader/s,
+				gyro_int += 3*abs(gyro_init_value - (int)sensor_buffer[GYRO]); //Maxhastighet 300grader/s,
 				if(gyro_int >= full_turn)									   //maxvärde-nollnivå ung 100.
 				{
 					stop_motors();
@@ -575,7 +641,7 @@ void decode_sensor(uint8_t data)
 				a=0;
 				char tmp[100];
 				clear_screen();
-				sprintf(tmp, "Reflex: %02X      Front: %02X ", sensor_buffer[6], sensor_buffer[3]);
+				sprintf(tmp, "Left: %02X        Right: %02X ", sensor_buffer[IR_LEFT_BACK], sensor_buffer[IR_RIGHT_BACK]);
 				send_string(tmp);
 				update();
 			}
@@ -599,6 +665,7 @@ void decode_sensor(uint8_t data)
 	sensor_packet_length = 0;
 	sensor_start = 1;
 	
+	regulator_enable = 1;		//Här har det gått ~40 ms dvs starta regleringen.
 }
 
 void decode_tape_sensor_data()

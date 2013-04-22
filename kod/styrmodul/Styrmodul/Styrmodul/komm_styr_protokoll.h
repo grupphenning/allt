@@ -17,8 +17,10 @@
 #define COMM_CLAW_IN			0x0B
 #define COMM_CLAW_OUT			0x0C
 
-//----------SÄTT PD-KONSTANTER---------------
+//----------SÄTT PID-KONSTANTER--------------
 #define COMM_SET_PID			0x08
+#define COMM_ENABLE_PID		    0x12
+#define COMM_DISABLE_PID		0x13
 
 //----------DEBUG-----------------------------
 #define COMM_DISPLAY			0x0D

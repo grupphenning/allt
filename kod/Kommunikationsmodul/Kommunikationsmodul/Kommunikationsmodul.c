@@ -188,6 +188,7 @@ void decode_remote(uint8_t ch)
 			send_spi(p);
 			send_spi(i);
 			send_spi(d);
+			--pid;
 			return;			// This ought to be needed, shound't it?
 		}
 		--pid;
@@ -217,6 +218,8 @@ void decode_remote(uint8_t ch)
 		case 'q': send_spi(COMM_CLEAR_DISPLAY); break;						// Rensa displayen
 		case 'z': send_spi(COMM_DISPLAY); display = 1; break;				// tecken till displayen
 		case 'p': pid = 3; break;											// PID-konstanter
+		case 'n': send_spi(COMM_ENABLE_PID); break;							// Slå på reglering
+		case 'm': send_spi(COMM_DISABLE_PID); break;						// Slå av reglering
 		case 't': send_spi(COMM_TOGGLE_SENSORS); break;						// Aktivera/deaktivera sensorer
 		case 'w': send_spi(COMM_TURN_90_DEGREES_LEFT); break;				// Vrid 90 grader vänster
 		case 'e': send_spi(COMM_TURN_90_DEGREES_RIGHT); break;				// Vrid 90 grader höger
