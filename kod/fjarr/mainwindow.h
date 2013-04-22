@@ -27,6 +27,8 @@ private slots:
     void on_pushButtonLeft90_clicked();
     void on_pushButtonRight90_clicked();
 
+    void on_pid_toggle_clicked();
+
 private:
     MainWindow *w;
 };
@@ -120,6 +122,7 @@ private slots:
     void on_pushButton_9_clicked();
     void on_pid();
     void on_pushButtonPID_clicked();
+    void on_pid_toggle_clicked();
     void on_pushButtonClearDisplay_clicked();
     void on_pushButtonLeft90_clicked();
     void on_pushButtonRight90_clicked();
