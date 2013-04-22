@@ -59,7 +59,7 @@ int main(void)
 		else if(spi_state == 1) {
 			if(SPSR & (1 << SPIF)) spi_state = 0;
 		}
-				
+
 		// Processa USART
 		if(usart_state == 0) {
 			// Firefly vill sända data
