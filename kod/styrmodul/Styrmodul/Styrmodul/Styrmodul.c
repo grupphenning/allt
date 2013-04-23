@@ -420,7 +420,7 @@ ISR(TIMER0_OVF_vect)
 }
 
 
-
+uint8_t display_printf_string[100];
 void decode_comm(uint8_t command)
 {
 	static uint8_t pid = 0;		// Hantera PID-argument
@@ -428,7 +428,8 @@ void decode_comm(uint8_t command)
 	static uint8_t constant_i;	// Dito...
 	static uint8_t constant_d;	// Dito...
 
-	static uint8_t display = 0;	// Aktuell byte ska ut på displayen
+	static uint8_t display_printf_p = 0; // Används vid uppdatering av printf-strängen
+	static uint8_t display = 0;	// Dislayen uppdateras!
 	static uint8_t drive = 0;	// Förra kommandot väntar på ett hastighetsargument
 
 // 	char temp[32];
@@ -457,9 +458,17 @@ void decode_comm(uint8_t command)
 	} 
 	else if(display)
 	{
+		/* Slutet på printf-strängen? */
+		if(command == 0x00)
+		{
+			clear_screen();
+			display_printf_p = 0;
+		} else
+		{
+			display_printf_string[display_printf_p++] = command;
+		}			
 		display = 0;
-		send_character(command);
-		update();
+		return;
 	} else if(drive)
 	{
 		if(drive == COMM_DRIVE)
@@ -635,15 +644,12 @@ void decode_sensor(uint8_t data)
 			}
 			
 			decode_tape_sensor_data();
-			static uint8_t a=0;
 
-			if((a++ & 0b10000)) {
+			static uint8_t a=0;
+			if((a++ & 0b10000))
+			{
 				a=0;
-				char tmp[100];
-				clear_screen();
-				sprintf(tmp, "Left: %02X        Right: %02X ", sensor_buffer[IR_LEFT_BACK], sensor_buffer[IR_RIGHT_BACK]);
-				send_string(tmp);
-				update();
+				update_display_string();
 			}
 			// 			if(sensor_buffer[IR_FRONT] > 0x20) 
 			// 			{
@@ -666,6 +672,71 @@ void decode_sensor(uint8_t data)
 	sensor_start = 1;
 	
 	regulator_enable = 1;		//Här har det gått ~40 ms dvs starta regleringen.
+}
+
+
+#define BUFFER_SIZE 100
+#define MAX_SENSORS 15
+void update_display_string()
+{
+	char tmp[100];
+	clear_screen();
+	sprintf(tmp, "Left: %02X        Right: %02X ", sensor_buffer[IR_LEFT_BACK], sensor_buffer[IR_RIGHT_BACK]);
+	send_string(tmp);
+	update();
+	return;
+
+
+// 	clear_screen();
+// 	send_string(display_printf_string);
+// 	update();
+// 	return;
+    uint8_t *inp = display_printf_string;
+
+    char tmpStr[BUFFER_SIZE];
+    char *tmpp = tmpStr;
+    while(inp < display_printf_string + BUFFER_SIZE)
+    {
+	    if(*inp != '%') // Normal-tecken, kopiera och gå vidare!
+	    {
+		    *tmpp = *inp;
+		    if(*inp == '\0')
+		    break;
+		    inp++;
+		    tmpp++;
+		    continue;
+	    } else
+	    {
+		    inp++;    // Bortom %-tecknet
+		    uint8_t base;   // Nästa är d för decimal, x för hex
+		    if(*inp == 'd')
+		    base = 10;
+		    else if((*inp == 'x') || (*inp == 'X'))
+		    base = 16;
+		    inp++;
+		    uint8_t sensor = *inp; // Nästa är sensor-index
+		    inp++;
+		    if(sensor > MAX_SENSORS)
+		    continue;
+		    if(base == 10)
+		    {
+			    sprintf(tmpp, "%3d", sensor_buffer[sensor]);
+			    tmpp++; // Decimal-strängen är tre tecken
+			    tmpp++;
+			    tmpp++;
+		    } else
+		    {
+			    sprintf(tmpp, "%02X", sensor_buffer[sensor]);
+			    tmpp++; // Hex-strängen är två tecken
+			    tmpp++;
+		    }
+		    continue;
+	    }
+    }
+	clear_screen();
+	send_string(tmpStr);
+	update();
+
 }
 
 void decode_tape_sensor_data()
