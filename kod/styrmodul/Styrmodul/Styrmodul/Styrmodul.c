@@ -37,8 +37,34 @@ uint8_t sensor_buffer_pointer;			// Pekare till aktuell position i bufferten
 uint8_t sensor_start;					// Flagga som avgör huruvida vi är i början av meddelande
 uint8_t sensor_packet_length;					// Anger aktuell längd av meddelandet
 // Innehåller de spänningsvärden som ses i grafen på https://docs.isy.liu.se/twiki/pub/VanHeden/DataSheets/gp2y0a21.pdf, sid. 4.
-// uint8_t ir_voltage_array[INTERPOLATION_POINTS] = {2.74, 2.32, 1.64, 1.31, 1.08, 0.93, 0.74, 0.61, 0.52, 0.45, 0.41, 0.38};	
-//	uint8_t ir_centimeter_array[INTERPOLATION_POINTS] = {8, 10, 15, 20, 25, 30, 40, 50, 60, 70, 80, 90};
+// uint8_t small_ir_voltage_array[INTERPOLATION_POINTS] = {140, 139, 138, 137, 136, 135, 134, 133, 132, 131, 130, 129, 128, 127, 
+// 														126, 125, 124, 123, 122, 121, 120, 119, 118, 117, 116, 115, 114, 113, 
+// 														112, 111, 110, 109, 108, 107, 106, 105, 104, 103, 102, 101, 100, 99,
+// 														98, 97, 96, 95, 94, 93, 92, 91, 90, 89, 88, 87, 86, 85, 84,
+// 														83, 82, 81, 80, 79, 78, 77, 76, 75, 74, 73, 72, 71, 70, 69, 68, 67, 66, 65,
+// 														64, 63, 62, 61, 60, 59, 58, 57, 56, 55, 54, 53, 52, 51, 50, 49, 48, 47, 46,
+// 														45, 44, 43, 42, 41, 40, 39, 38, 37, 36, 35, 34, 33, 32, 31, 30, 29, 28, 27,
+// 														26, 25, 24, 23, 22, 21, 20, 19};	
+// uint8_t small_ir_centimeter_array[INTERPOLATION_POINTS] = {8, 8, 8, 8, 8, 8, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 10, 10, 10, 10, 10,
+// 														   10, 10, 10, 10, 11, 11, 11, 11, 11, 11, 11, 12, 12, 12, 12, 12, 12, 13, 
+// 														   13, 13, 13, 13, 13, 13, 14, 14, 14, 14, 14, 14, 14, 15, 15, 15, 15, 15,
+// 														   16, 16, 16, 16, 17, 17, 17, 18, 18, 18, 19, 19, 19, 19, 20, 20, 20, 21,
+// 														   21, 22, 22, 23, 23, 23, 24, 24, 25, 25, 26, 26, 27, 28, 28, 29, 29, 30, 
+// 														   31, 32, 33, 34, 36, 37, 38, 39, 40, 41, 43, 44, 46, 47, 49, 50, 53, 55,
+// 														   58, 60, 63, 65, 68, 70, 75, 80, 85, 90};	
+// uint8_t big_ir_voltage_array[INTERPOLATION_POINTS] =  {138, 137, 136, 135, 134, 133, 132, 131, 130, 129, 128, 127, 126, 125, 124, 
+// 													   123, 122, 121, 120, 119, 118, 117, 116, 115, 114, 113, 112, 111, 110, 109, 
+// 													   108, 107, 106, 105, 104, 103, 102, 101, 100, 99, 98, 97, 96, 95, 94, 93, 
+// 													   92, 91, 90, 89, 88, 87, 86, 85, 84, 83, 82, 81, 80, 79, 78, 77, 76, 75, 
+// 													   74, 73, 72, 71, 70, 69, 68, 67, 66, 65, 64, 63, 62, 61, 60, 59, 58, 57, 
+// 													   56, 55, 54, 53, 52, 51, 50, 49, 48, 47, 46, 45, 44, 43, 42, 41, 40, 39, 
+// 													   38, 37, 36, 35, 34, 33, 32, 31, 30, 29, 28, 27, 26, 25, 24, 23, 22};	
+// uint8_t big_ir_centimeter_array[INTERPOLATION_POINTS] = {16, 16, 17, 17, 18, 18, 19, 19, 20, 20, 20, 21, 21, 21, 22, 22, 23, 23, 23, 24, 24,
+// 														 24, 25, 25, 25, 26, 26, 27, 27, 27, 28, 28, 28, 29, 29, 30, 30, 30, 31, 31, 32, 32, 
+// 														 33, 33, 33, 34, 34, 35, 35, 35, 36, 36, 37, 37, 38, 38, 38, 39, 39, 40, 40, 41, 41, 
+// 														 42, 42, 43, 43, 44, 44, 45, 46, 47, 48, 49, 50, 51, 53, 54, 55, 56, 58, 59, 60, 60, 
+// 														 61, 62, 63, 63, 64, 64, 65, 67, 68, 70, 73, 75, 78, 80, 82, 84, 86, 88, 90, 93, 97, 
+// 														 100, 105, 110, 113, 117, 120, 125, 130, 135, 140, 145, 150};
 // Innehåller de centimetervärden som ses i grafen på https://docs.isy.liu.se/twiki/pub/VanHeden/DataSheets/gp2y0a21.pdf, sid. 4.
 
 int main(void)
@@ -259,6 +285,20 @@ void spi_init()
 	sensor_start = 1;				// Flagga som avgör huruvida vi är i början av meddelande
 	sensor_packet_length = 0x00;			// Anger aktuell längd av meddelandet
 
+}
+
+void send_byte_to_sensor(uint8_t byte)
+{
+	clearbit(PORTB, PORTB2); //Välj Komm-enheten måste ändras till allmän slav!
+	SPDR = byte;
+	
+	//SPDR = 0xaa;
+	/* Wait for transmission complete */
+	while(!(SPSR & (1 << SPIF)));
+	setbit(PORTB, PORTB2); //Sätt slave till sleepmode
+	//test = SPDR;
+	
+	//PORTD = test;
 }
 
 void send_byte_to_comm(uint8_t byte)
@@ -575,21 +615,20 @@ void decode_comm(uint8_t command)
 	}
 }
 
-uint8_t is_turning;
-uint16_t full_turn, gyro_int;
 // Börja snurra. positiv degrees = medurs. Har slutat då is_turning blir 0.
 void begin_turning(int16_t degrees)
 {
-	full_turn = 55*abs(degrees);	//Sväng x antal grader
-	if(degrees < 0) {
+	if(degrees < 0) 
+	{
 		tank_turn_left(150);
+		send_byte_to_sensor(TURN_LEFT);
 	}
 	else
 	{
 		tank_turn_right(150);
+		send_byte_to_sensor(TURN_RIGHT);
 	}		
-	is_turning = 1;
-	gyro_int = 0;
+
 }
 
 void decode_sensor(uint8_t data)
@@ -624,24 +663,27 @@ void decode_sensor(uint8_t data)
 		case SENSOR_HEX:
 			sensor_debug_hex();
 			break;
+		case GYRO_SENSOR:
+			stop_motors();
+			break;	
 		case SENSOR: {
 			
-			//First time? Calibrate gyro
-			if(sensor_transmission_number<5)
-			{
-				gyro_init_value = sensor_buffer[GYRO];
-				sensor_transmission_number++;
-			}
-			
-			if(is_turning) 
-			{
-				gyro_int += 3*abs(gyro_init_value - (int)sensor_buffer[GYRO]); //Maxhastighet 300grader/s,
-				if(gyro_int >= full_turn)									   //maxvärde-nollnivå ung 100.
-				{
-					stop_motors();
-					is_turning = 0;
-				}
-			}
+// 			//First time? Calibrate gyro
+// 			if(sensor_transmission_number<5)
+// 			{
+// 				gyro_init_value = sensor_buffer[GYRO];
+// 				sensor_transmission_number++;
+// 			}
+// 			
+// 			if(is_turning) 
+// 			{
+// 				gyro_int += 3*abs(gyro_init_value - (int)sensor_buffer[GYRO]); //Maxhastighet 300grader/s,
+// 				if(gyro_int >= full_turn)									   //maxvärde-nollnivå ung 100.
+// 				{
+// 					stop_motors();
+// 					is_turning = 0;
+// 				}
+// 			}
 			
 			decode_tape_sensor_data();
 
@@ -670,6 +712,8 @@ void decode_sensor(uint8_t data)
 	sensor_buffer_pointer = 0x00;
 	sensor_packet_length = 0;
 	sensor_start = 1;
+	
+	
 	
 	regulator_enable = 1;		//Här har det gått ~40 ms dvs starta regleringen.
 }
