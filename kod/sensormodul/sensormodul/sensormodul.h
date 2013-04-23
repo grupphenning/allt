@@ -10,6 +10,7 @@
 #define SENSOR_DEBUG	0x01
 #define SENSOR_HEX		0x02
 #define SENSOR			0x03
+#define GYRO			0x04	
 //FIXME: Lägg till fler!
 
 
