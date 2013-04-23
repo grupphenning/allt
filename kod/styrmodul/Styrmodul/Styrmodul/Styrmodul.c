@@ -261,6 +261,20 @@ void spi_init()
 
 }
 
+void send_byte_to_sensor(uint8_t byte)
+{
+	clearbit(PORTB, PORTB2); //Välj Komm-enheten måste ändras till allmän slav!
+	SPDR = byte;
+	
+	//SPDR = 0xaa;
+	/* Wait for transmission complete */
+	while(!(SPSR & (1 << SPIF)));
+	setbit(PORTB, PORTB2); //Sätt slave till sleepmode
+	//test = SPDR;
+	
+	//PORTD = test;
+}
+
 void send_byte_to_comm(uint8_t byte)
 {
 	clearbit(PORTB, PORTB3); //Välj Komm-enheten måste ändras till allmän slav!
@@ -566,21 +580,20 @@ void decode_comm(uint8_t command)
 	}
 }
 
-uint8_t is_turning;
-uint16_t full_turn, gyro_int;
 // Börja snurra. positiv degrees = medurs. Har slutat då is_turning blir 0.
 void begin_turning(int16_t degrees)
 {
-	full_turn = 55*abs(degrees);	//Sväng x antal grader
-	if(degrees < 0) {
+	if(degrees < 0) 
+	{
 		tank_turn_left(150);
+		send_byte_to_sensor(TURN_LEFT);
 	}
 	else
 	{
 		tank_turn_right(150);
+		send_byte_to_sensor(TURN_RIGHT);
 	}		
-	is_turning = 1;
-	gyro_int = 0;
+
 }
 
 void decode_sensor(uint8_t data)
@@ -615,24 +628,27 @@ void decode_sensor(uint8_t data)
 		case SENSOR_HEX:
 			sensor_debug_hex();
 			break;
+		case GYRO_SENSOR:
+			stop_motors();
+			break;	
 		case SENSOR: {
 			
-			//First time? Calibrate gyro
-			if(sensor_transmission_number<5)
-			{
-				gyro_init_value = sensor_buffer[GYRO];
-				sensor_transmission_number++;
-			}
-			
-			if(is_turning) 
-			{
-				gyro_int += 3*abs(gyro_init_value - (int)sensor_buffer[GYRO]); //Maxhastighet 300grader/s,
-				if(gyro_int >= full_turn)									   //maxvärde-nollnivå ung 100.
-				{
-					stop_motors();
-					is_turning = 0;
-				}
-			}
+// 			//First time? Calibrate gyro
+// 			if(sensor_transmission_number<5)
+// 			{
+// 				gyro_init_value = sensor_buffer[GYRO];
+// 				sensor_transmission_number++;
+// 			}
+// 			
+// 			if(is_turning) 
+// 			{
+// 				gyro_int += 3*abs(gyro_init_value - (int)sensor_buffer[GYRO]); //Maxhastighet 300grader/s,
+// 				if(gyro_int >= full_turn)									   //maxvärde-nollnivå ung 100.
+// 				{
+// 					stop_motors();
+// 					is_turning = 0;
+// 				}
+// 			}
 			
 			decode_tape_sensor_data();
 			static uint8_t a=0;

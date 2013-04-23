@@ -10,7 +10,11 @@
 #define SENSOR_DEBUG	0x01
 #define SENSOR_HEX		0x02
 #define SENSOR			0x03
-#define GYRO			0x04	
+#define GYRO_SENSOR		0x04
+
+
+#define TURN_RIGHT		0x10
+#define TURN_LEFT		0x11	
 //FIXME: Lägg till fler!
 
 
@@ -22,7 +26,7 @@
 
 void read_adc();
 void read_ir(uint8_t sensor_no);
-void read_gyro();
+uint8_t read_gyro();
 void init_adc();
 
 #endif /* SENSORMODUL_H */

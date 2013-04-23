@@ -19,6 +19,7 @@ uint8_t spi_data_to_master;
 volatile uint8_t test_data[18];
 volatile uint8_t data_index=1;
 volatile uint8_t adc_interrupt = 0;
+volatile uint8_t has_data_from_spi = 0;
 
 
 int main(void)
@@ -40,6 +41,21 @@ int main(void)
 	
     while(1)
     {
+		if(has_data_from_spi)
+		{
+			switch(spi_data_to_master)
+			{
+				case TURN_RIGHT:
+					begin_turning(90);
+					break;
+				case TURN_LEFT:
+					begin_turning(-90);
+					break;
+				default:
+					break; 
+			}
+			has_data_from_spi = 0;
+		}			
     }
 }
 
@@ -276,6 +292,7 @@ void disable_gyro_timer()
  * Initeietra timer kopplad till gyrot
  */
 
+// HÅÅÅÅÅÅÅÅÅKÅÅÅÅÅÅÅÅÅÅÅÅÅÅÅÅÅÅÅÅÅÅÅÅÅÅÅÅÅÅÅÅÅÅÅÅÅÅÅÅÅÅÅÅÅÅÅÅÅ!!!!!!!!!!
 void init_gyro_timer()
 {
 	setbit(TCCR2, WGM20);
@@ -286,6 +303,9 @@ void init_gyro_timer()
 	
 	//aktivera interrupt på overflow
 	setbit(TIMSK, TOIE2);
+	
+	//TEST
+	//OCR2A = 150;
 }
 
 /*=====================================SPI========================================*/
@@ -312,6 +332,7 @@ void SPI_read_byte()
 ISR(SPI_STC_vect)
 {
 	SPI_read_byte();
+	has_data_from_spi = 1;
 }
 
 /*
