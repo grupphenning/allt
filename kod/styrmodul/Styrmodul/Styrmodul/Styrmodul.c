@@ -852,6 +852,7 @@ void decode_tape_segment(char first, char second)
 	}
 	else
 	{
+		
 		//ERROR nu, kanske hantering av målgång här senare ?
 	}
 
@@ -898,4 +899,13 @@ void interpret_big_ir(uint8_t value)
 		i++;
 	}
 	value = big_ir_centimeter_array[i];
+}
+
+/********************************************************
+				Linjeföljning test
+********************************************************/ 
+
+int8_t get_position_from_reflex()
+{
+	
 }

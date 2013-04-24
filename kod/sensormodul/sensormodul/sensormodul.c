@@ -176,6 +176,21 @@ void read_all_sensors()
 	clearbit(PORTC, PINC0);		// For debug!!
 }
 
+/* 
+ * Läser bara av tejpsensorer, skicka rådata eller beräkna mittpunkt här?!
+ */
+void read_and_send_tape()
+{
+	data_index = 1;
+	test_data[0] = SENSOR;
+	for(i = 0; i < 11; i++)
+	{
+		read_tape(i);
+	}
+	
+	send_to_master(11, test_data);
+}
+
 /*
  * Läs av gyrot.
  * OBS!! Använder inte read_adc() likt andra sensoravläsningsfunktioner
