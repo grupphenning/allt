@@ -88,6 +88,7 @@ int main(void)
 	init_pid(40, 255, -255);
 	update_k_values(1, 1, 1);
 	
+		
 	while(1)
 	{
 		if(spi_comm_write != spi_comm_read)
@@ -719,8 +720,20 @@ void decode_sensor(uint8_t data)
 // 	interpret_big_ir(sensor_buffer[IR_RIGHT_FRONT]);
 // 	interpret_small_ir(sensor_buffer[IR_LEFT_BACK]);
 // 	interpret_small_ir(sensor_buffer[IR_RIGHT_BACK]);
+	sensor_buffer[IR_FRONT] = interpret_big_ir(sensor_buffer[IR_FRONT]);
+	sensor_buffer[IR_LEFT_FRONT] = interpret_big_ir(sensor_buffer[IR_LEFT_FRONT]);
+	sensor_buffer[IR_RIGHT_FRONT] = interpret_big_ir(sensor_buffer[IR_RIGHT_FRONT]);
+	sensor_buffer[IR_LEFT_BACK] = interpret_small_ir(sensor_buffer[IR_LEFT_BACK]);
+	sensor_buffer[IR_RIGHT_BACK] = interpret_small_ir(sensor_buffer[IR_RIGHT_BACK]);
 	
 	regulator_enable = 1;		//Här har det gått ~40 ms dvs starta regleringen.
+	
+	static uint8_t a=0;
+	if((a++ & 0b10000))
+	{
+		a=0;
+		update_display_string();
+	}
 }
 
 
@@ -731,6 +744,7 @@ void update_display_string()
 	char tmp[100];
 	clear_screen();
 	sprintf(tmp, "Left: %02X        Right: %02X ", sensor_buffer[IR_LEFT_FRONT], sensor_buffer[IR_RIGHT_FRONT]);
+	sprintf(tmp, "Left:  %03d      Right: %03d ", sensor_buffer[IR_LEFT_FRONT], sensor_buffer[IR_RIGHT_FRONT]);
 	send_string(tmp);
 	update();
 	return;
@@ -880,25 +894,45 @@ void sensor_debug_hex()
 }
 
 void interpret_small_ir(uint8_t value)
+uint8_t interpret_small_ir(uint8_t value)
 {
  	uint8_t i = 0;
 	 
+	uint8_t i = 0;
+	if (value<19)
+	{
+		return 90;
+	} 
+	else if (value>140)
+	{
+		return 8;
+	}
  	while ( !(value == small_ir_voltage_array[i] ) )
  	{
  		i++;
  	}
  	value = small_ir_centimeter_array[i];
+ 	return small_ir_centimeter_array[i];
 }
 
 void interpret_big_ir(uint8_t value)
+uint8_t interpret_big_ir(uint8_t value)
 {
 	uint8_t i = 0;
-
+	if (value<22)
+	{
+		return 150;
+	}
+	else if (value>138)
+	{
+		return 16;
+	}
 	while ( !(value == big_ir_voltage_array[i]) )
 	{
 		i++;
 	}
 	value = big_ir_centimeter_array[i];
+	return big_ir_centimeter_array[i];
 }
 
 /********************************************************

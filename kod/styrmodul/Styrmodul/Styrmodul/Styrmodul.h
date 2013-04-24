@@ -49,3 +49,6 @@
 #define REFLEX_SENSITIVITY 0x50 
 
 void send_byte_to_comm(uint8_t byte);
+
+uint8_t interpret_big_ir(uint8_t value);
+uint8_t interpret_small_ir(uint8_t value);
