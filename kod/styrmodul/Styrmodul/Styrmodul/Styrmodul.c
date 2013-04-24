@@ -3,7 +3,8 @@
  *
  * Created: 4/2/2013 2:20:45 PM
  *  Author: klawi021 ET AL!
- */ 
+ */
+
 #define F_CPU 8000000UL
 #include "Styrmodul.h"
 #include "pid.h"
@@ -24,7 +25,7 @@ volatile uint8_t spi_data_from_sensor[BUF_SZ];
 uint8_t spi_sensor_read;
 volatile uint16_t spi_sensor_write;
 
-#define SPEED 255
+#define SPEED 200
 uint8_t ninety_timer, turn, pid_timer;
 uint8_t left = 1;
 
@@ -67,6 +68,9 @@ uint8_t big_ir_centimeter_array[117] = {16, 16, 17, 17, 18, 18, 19, 19, 20, 20, 
 										100, 105, 110, 113, 117, 120, 125, 130, 135, 140, 145, 150};
 // Innehåller de centimetervärden som ses i grafen på https://docs.isy.liu.se/twiki/pub/VanHeden/DataSheets/gp2y0a21.pdf, sid. 4.
 
+
+uint8_t follow_end_tape = 0;
+
 int main(void)
 {
 	//don't turn!
@@ -88,9 +92,13 @@ int main(void)
 	init_pid(40, 255, -255);
 	update_k_values(1, 1, 1);
 	
-		
 	while(1)
 	{
+		if (follow_end_tape)
+		{
+			//regulate_end_tape(spi_data_from_sensor[]);
+		}
+		
 		if(spi_comm_write != spi_comm_read)
 		{
 			decode_comm(spi_data_from_comm[spi_comm_read]);
@@ -109,25 +117,26 @@ int main(void)
 		
 		if (regulator_enable && regulator_flag)
 		{
-			int16_t temp_input = 0,temp_output = 0;
+			static int16_t temp_input = 0,temp_output = 0;
+			static int16_t old_temp_output;
 			temp_input = (sensor_buffer[IR_RIGHT_BACK] + sensor_buffer[IR_RIGHT_FRONT] - sensor_buffer[IR_LEFT_BACK] - sensor_buffer[IR_LEFT_FRONT])/2;
-			temp_output = regulator(temp_input);
+			temp_output = regulator(temp_input); //borde skrivas om så den ger ut ett åttabitarsvärde?
 			
 			if(temp_output == 0)
 			{
 				LEFT_AMOUNT = SPEED;
 				RIGHT_AMOUNT = SPEED;
 			}
-				
+			
 			if(temp_output > 0)
 			{
-				RIGHT_AMOUNT = RIGHT_AMOUNT - temp_output;
-				LEFT_AMOUNT = SPEED;	
-			}				
+				RIGHT_AMOUNT = RIGHT_AMOUNT - (uint8_t)temp_output;
+				LEFT_AMOUNT = SPEED;
+			}
 				
 			if (temp_output < 0)
 			{
-				LEFT_AMOUNT = LEFT_AMOUNT + temp_output;
+				LEFT_AMOUNT = LEFT_AMOUNT + (uint8_t)temp_output;
 				RIGHT_AMOUNT = SPEED;
 			}
 			
@@ -817,14 +826,15 @@ void decode_tape_sensor_data()
 		no_tape_count = 0;
 		tape_count++;
 	}
-	else if (is_over_tape & sensor_buffer[REFLEX1]<REFLEX_SENSITIVITY) //Tejpbit avslutad
+	
+	else if (is_over_tape && sensor_buffer[REFLEX1]<REFLEX_SENSITIVITY) //Tejpbit avslutad
 	{
 		is_over_tape = 0;
 		if(is_in_tape_segment) //Andra tejpbiten avslutad
 		{
 			is_in_tape_segment = 0;
 			second_tape = tape_count < 5 ? 's': 'l';
-			decode_tape_segment(first_tape,second_tape); //Kör tejpsegmentsavkodning
+			decode_tape_segment(first_tape, second_tape); //Kör tejpsegmentsavkodning
 		}
 		else // Första tejpbit avslutad
 		{
@@ -833,9 +843,21 @@ void decode_tape_sensor_data()
 		}
 		tape_count=0;
 	}
+	
 	else if(sensor_buffer[REFLEX1]<REFLEX_SENSITIVITY) //Utanför tejp
 	{
-		is_in_tape_segment = no_tape_count++ > 7 ? 0 : is_in_tape_segment;
+		//checka om den bara sett en tejpbit, alltså är den vid mål
+		if(first_tape == 's' && no_tape_count > 7 && is_in_tape_segment)
+		{
+			decode_tape_segment(first_tape, 0);
+		}
+		is_in_tape_segment = no_tape_count++ > 7 ? 0 : is_in_tape_segment; //vilken jävla oneliner!
+		
+		
+		//overflowskydd
+		if(no_tape_count == 255)
+			no_tape_count = 255;
+			
 	}
 	
 }
@@ -843,27 +865,44 @@ void decode_tape_sensor_data()
 void decode_tape_segment(char first, char second)
 {
 	_delay_ms(250);
-	if(first == 's' & second == 'l')
+	if(first == 's' && second == 'l')
 	{
 		//turn left
 		stop_motors();
 		_delay_ms(250);
-		begin_turning(-90);
+		//begin_turning(-90);
+		tank_turn_left(SPEED);
 	}
-	else if (first == 'l' & second == 's')
+	else if (first == 'l' && second == 's')
 	{
 		//turn right
 		stop_motors();
-		_delay_ms(250);
-		begin_turning(90);
+		_delay_ms(2500);
+		//begin_turning(90);
+		tank_turn_right(SPEED);
 	}
-	else if (first == 's' & second == 's')
+	else if (first == 's' && second == 's')
 	{
 		//keep going
 		stop_motors();
 		_delay_ms(250);
 		drive_forwards(SPEED);
 	}
+	//första var smal, andra fanns ej, vi är vid mål!
+	else if (first == 's' && !second)
+	{
+		follow_end_tape = 1;
+		
+		uint8_t i = 0;
+		for (i=0;i<10;i++)
+		{
+			tank_turn_right(SPEED);
+			_delay_ms(500);
+			tank_turn_left(SPEED);
+			_delay_ms(500);
+		}
+	}
+	
 	else
 	{
 		
@@ -893,12 +932,11 @@ void sensor_debug_hex()
 	update();
 }
 
-void interpret_small_ir(uint8_t value)
+//void interpret_small_ir(uint8_t value) //wtf??
 uint8_t interpret_small_ir(uint8_t value)
 {
  	uint8_t i = 0;
-	 
-	uint8_t i = 0;
+	
 	if (value<19)
 	{
 		return 90;
@@ -915,7 +953,7 @@ uint8_t interpret_small_ir(uint8_t value)
  	return small_ir_centimeter_array[i];
 }
 
-void interpret_big_ir(uint8_t value)
+//void interpret_big_ir(uint8_t value) //wtf??
 uint8_t interpret_big_ir(uint8_t value)
 {
 	uint8_t i = 0;
