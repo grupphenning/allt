@@ -80,7 +80,7 @@ int main(void)
 			spi_sensor_read %= BUF_SZ;
 		}
 		
-		if (regulator_enable)
+		if (regulator_enable && regulator_flag)
 		{
 			int16_t temp_input = 0,temp_output = 0;
 			temp_input = (sensor_buffer[IR_RIGHT_BACK] + sensor_buffer[IR_RIGHT_FRONT] - sensor_buffer[IR_LEFT_BACK] - sensor_buffer[IR_LEFT_FRONT])/2;

@@ -63,6 +63,12 @@ void init_sensor_timer()
 	
 }
 
+void init_gyro_timer()
+{
+	
+}
+
+
 void read_all_sensors()
 {
 	setbit(PORTC, PINC0);		// For debug!

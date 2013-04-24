@@ -14,4 +14,6 @@ void enable_pid();
 void disable_pid();
 int16_t regulator(int16_t input);
 
+extern uint8_t regulator_flag;
+
 #endif // PID_H

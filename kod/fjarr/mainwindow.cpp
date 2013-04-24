@@ -5,6 +5,8 @@
 #include <iostream>
 #include <QDebug>
 
+#include <stdio.h>  // We need sprintf()
+
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -43,6 +45,8 @@ MainWindow::MainWindow(QWidget *parent) :
     port->open(QIODevice::ReadWrite);
 
     connect(&pid, SIGNAL(accepted()), this, SLOT(on_pid()));
+    ui->labelWarning->setVisible(false);
+
 }
 
 /*
@@ -69,8 +73,26 @@ void MainWindow::on_pid()
 
 void MainWindow::onDataAvailable()
 {
-    std::cout << port->readAll().constData();
-    std::cout.flush();
+#if 0
+    static unsigned char old;
+    unsigned char ch;
+    ch = port->read(1).constData()[0];
+    std::cout << ch;
+    if(old == 'Z') {
+        if(ch == '0') {
+            std::cout << ":)" << std::endl;
+        }
+        else {
+            std::cout << ":(" << std::endl;
+        }
+    }
+    old = ch;
+    if(ch == 'Z') std::cout.flush();
+#else
+    qDebug() << port->readAll().constData();
+//    std::cout << port->readAll().constData();
+//    std::cout.flush();
+#endif
 }
 
 MainWindow::~MainWindow()
@@ -149,11 +171,11 @@ bool KeyPressEater::eventFilter(QObject *recipient, QEvent *event)
         if(!key_event->isAutoRepeat())
         {
             switch(key_event->key()) {
-            case Qt::Key_Up: { w->is_pressed[0] = event->type() == QEvent::KeyPress; break; }
-            case Qt::Key_Down: { w->is_pressed[1] = event->type() == QEvent::KeyPress; break; }
-            case Qt::Key_Left: { w->is_pressed[2] = event->type() == QEvent::KeyPress; break; }
-            case Qt::Key_Right: { w->is_pressed[3] = event->type() == QEvent::KeyPress; break; }
-            case Qt::Key_C:
+            case Qt::Key_W: { w->is_pressed[0] = event->type() == QEvent::KeyPress; break; }
+            case Qt::Key_S: { w->is_pressed[1] = event->type() == QEvent::KeyPress; break; }
+            case Qt::Key_A: { w->is_pressed[2] = event->type() == QEvent::KeyPress; break; }
+            case Qt::Key_D: { w->is_pressed[3] = event->type() == QEvent::KeyPress; break; }
+            case Qt::Key_E:
                 if(event->type() == QEvent::KeyPress) {
                     w->open_claw();
                 }
@@ -164,10 +186,10 @@ bool KeyPressEater::eventFilter(QObject *recipient, QEvent *event)
             }
 
             switch(key_event->key()) {
-            case Qt::Key_Up:
-            case Qt::Key_Down:
-            case Qt::Key_Left:
-            case Qt::Key_Right:
+            case Qt::Key_W:
+            case Qt::Key_S:
+            case Qt::Key_A:
+            case Qt::Key_D:
                 w->updateKeyState();
                 return true;
             }
@@ -264,6 +286,7 @@ void MainWindow::on_pushButtonClearDisplay_clicked()
 void KeyPressEater::on_pushButtonLeft90_clicked(){}
 void MainWindow::on_pushButtonLeft90_clicked()
 {
+std::cout.flush();
     QByteArray array;
     array.append('w');
     port->write(array);
@@ -297,4 +320,119 @@ void MainWindow::on_pid_toggle_clicked()
     port->flush();
     array.clear();
 
+}
+
+void KeyPressEater::on_pushButtonAddToDisplay_clicked(){}
+void MainWindow::on_pushButtonAddToDisplay_clicked()
+{
+    if(ui->radioButtonText->isChecked())
+    {
+        printfString.append(ui->displayText->text());
+    }
+    else // radioButtonSensor->isChecked() == true
+    {
+        int sensor = ui->comboBoxSensor->currentIndex();
+        QString str;
+        if(ui->comboBoxBase->currentText() == "decimal")
+        {
+            str = QString("%d") + sensor;
+        } else  // Hex!
+        {
+            str = QString("%X") +  sensor;
+        }
+        printfString.append(str);
+    }
+    updateDisplayExample();
+}
+
+void MainWindow::updateDisplayExample()
+{
+    uint8_t printfRawString[BUFFER_SIZE];
+    for(int i = 0; i < printfString.length(); i++)
+    {
+        printfRawString[i] = printfString.at(i);
+    }
+    printfRawString[printfString.length()] = '\0';
+
+    /* Dummy-värden, för exempel-fönstret */
+    uint8_t sensor_buffer[BUFFER_SIZE] = {100, 101, 102, 103, 104, 105, 106, 107, 108,
+                                  109, 110, 111, 112, 113, 114, 115, 116 };
+    uint8_t *inp = printfRawString;
+
+    char tmpStr[BUFFER_SIZE];
+    char *tmpp = tmpStr;
+    while(inp < printfRawString + BUFFER_SIZE)
+    {
+        if(*inp != '%') // Normal-tecken, kopiera och gå vidare!
+        {
+            *tmpp = *inp;
+            if(*inp == '\0')
+                break;
+            inp++;
+            tmpp++;
+            continue;
+        } else
+        {
+            inp++;    // Bortom %-tecknet
+
+            uint8_t base;   // Nästa är d för decimal, x för hex
+            if(*inp == 'd')
+                base = 10;
+            else if((*inp == 'x') || (*inp == 'X'))
+                base = 16;
+            inp++;
+
+            uint8_t sensor = *inp; // Nästa är sensor-index
+            inp++;
+            if(sensor > MAX_SENSORS)
+                continue;
+            if(base == 10)
+            {
+                sprintf(tmpp, "%3d", sensor_buffer[sensor]);
+                tmpp++; // Decimal-strängen är tre tecken
+                tmpp++;
+//                tmpp++;
+            } else
+            {
+                sprintf(tmpp, "%02X", sensor_buffer[sensor]);
+                tmpp++; // Hex-strängen är två tecken
+                tmpp++;
+            }
+            continue;
+        }
+    }
+    QString finishedString = QString(tmpStr);
+    ui->displayExample->setText(finishedString);
+    if(finishedString.length() > 32)
+        ui->labelWarning->setVisible(true);
+    else
+        ui->labelWarning->setVisible(false);
+
+}
+
+void KeyPressEater::on_pushButton_15_clicked(){}
+void MainWindow::on_pushButton_15_clicked()
+{
+    printfString.clear();
+    ui->displayExample->clear();
+    ui->labelWarning->setVisible(false);
+}
+
+
+void KeyPressEater::on_pushButton_13_clicked(){}
+void MainWindow::on_pushButton_13_clicked()
+{
+    QByteArray array;
+
+    for(int i = 0; i < printfString.length(); i++)
+    {
+        array.append('z');
+        array.append(printfString.at(i));
+    }
+    for(int i = 0; i < array.length(); i++)
+        std::cout << array.at(i);
+    std::cout.flush();
+    array.append('\0');
+    port->write(array);
+    port->flush();
 }
