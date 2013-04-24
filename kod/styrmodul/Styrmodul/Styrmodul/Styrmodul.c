@@ -9,7 +9,7 @@
 #include "pid.h"
 #include "../../../sensormodul/sensormodul/sensormodul.h"
 #define SENSOR_BUFFER_SIZE 256
-#define INTERPOLATION_POINTS 12
+//#define INTERPOLATION_POINTS 12
 uint8_t test;
 
 #define BUF_SZ 256
@@ -37,34 +37,34 @@ uint8_t sensor_buffer_pointer;			// Pekare till aktuell position i bufferten
 uint8_t sensor_start;					// Flagga som avgör huruvida vi är i början av meddelande
 uint8_t sensor_packet_length;					// Anger aktuell längd av meddelandet
 // Innehåller de spänningsvärden som ses i grafen på https://docs.isy.liu.se/twiki/pub/VanHeden/DataSheets/gp2y0a21.pdf, sid. 4.
-// uint8_t small_ir_voltage_array[INTERPOLATION_POINTS] = {140, 139, 138, 137, 136, 135, 134, 133, 132, 131, 130, 129, 128, 127, 
-// 														126, 125, 124, 123, 122, 121, 120, 119, 118, 117, 116, 115, 114, 113, 
-// 														112, 111, 110, 109, 108, 107, 106, 105, 104, 103, 102, 101, 100, 99,
-// 														98, 97, 96, 95, 94, 93, 92, 91, 90, 89, 88, 87, 86, 85, 84,
-// 														83, 82, 81, 80, 79, 78, 77, 76, 75, 74, 73, 72, 71, 70, 69, 68, 67, 66, 65,
-// 														64, 63, 62, 61, 60, 59, 58, 57, 56, 55, 54, 53, 52, 51, 50, 49, 48, 47, 46,
-// 														45, 44, 43, 42, 41, 40, 39, 38, 37, 36, 35, 34, 33, 32, 31, 30, 29, 28, 27,
-// 														26, 25, 24, 23, 22, 21, 20, 19};	
-// uint8_t small_ir_centimeter_array[INTERPOLATION_POINTS] = {8, 8, 8, 8, 8, 8, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 10, 10, 10, 10, 10,
-// 														   10, 10, 10, 10, 11, 11, 11, 11, 11, 11, 11, 12, 12, 12, 12, 12, 12, 13, 
-// 														   13, 13, 13, 13, 13, 13, 14, 14, 14, 14, 14, 14, 14, 15, 15, 15, 15, 15,
-// 														   16, 16, 16, 16, 17, 17, 17, 18, 18, 18, 19, 19, 19, 19, 20, 20, 20, 21,
-// 														   21, 22, 22, 23, 23, 23, 24, 24, 25, 25, 26, 26, 27, 28, 28, 29, 29, 30, 
-// 														   31, 32, 33, 34, 36, 37, 38, 39, 40, 41, 43, 44, 46, 47, 49, 50, 53, 55,
-// 														   58, 60, 63, 65, 68, 70, 75, 80, 85, 90};	
-// uint8_t big_ir_voltage_array[INTERPOLATION_POINTS] =  {138, 137, 136, 135, 134, 133, 132, 131, 130, 129, 128, 127, 126, 125, 124, 
-// 													   123, 122, 121, 120, 119, 118, 117, 116, 115, 114, 113, 112, 111, 110, 109, 
-// 													   108, 107, 106, 105, 104, 103, 102, 101, 100, 99, 98, 97, 96, 95, 94, 93, 
-// 													   92, 91, 90, 89, 88, 87, 86, 85, 84, 83, 82, 81, 80, 79, 78, 77, 76, 75, 
-// 													   74, 73, 72, 71, 70, 69, 68, 67, 66, 65, 64, 63, 62, 61, 60, 59, 58, 57, 
-// 													   56, 55, 54, 53, 52, 51, 50, 49, 48, 47, 46, 45, 44, 43, 42, 41, 40, 39, 
-// 													   38, 37, 36, 35, 34, 33, 32, 31, 30, 29, 28, 27, 26, 25, 24, 23, 22};	
-// uint8_t big_ir_centimeter_array[INTERPOLATION_POINTS] = {16, 16, 17, 17, 18, 18, 19, 19, 20, 20, 20, 21, 21, 21, 22, 22, 23, 23, 23, 24, 24,
-// 														 24, 25, 25, 25, 26, 26, 27, 27, 27, 28, 28, 28, 29, 29, 30, 30, 30, 31, 31, 32, 32, 
-// 														 33, 33, 33, 34, 34, 35, 35, 35, 36, 36, 37, 37, 38, 38, 38, 39, 39, 40, 40, 41, 41, 
-// 														 42, 42, 43, 43, 44, 44, 45, 46, 47, 48, 49, 50, 51, 53, 54, 55, 56, 58, 59, 60, 60, 
-// 														 61, 62, 63, 63, 64, 64, 65, 67, 68, 70, 73, 75, 78, 80, 82, 84, 86, 88, 90, 93, 97, 
-// 														 100, 105, 110, 113, 117, 120, 125, 130, 135, 140, 145, 150};
+uint8_t small_ir_voltage_array[122] = {140, 139, 138, 137, 136, 135, 134, 133, 132, 131, 130, 129, 128, 127, 
+									   126, 125, 124, 123, 122, 121, 120, 119, 118, 117, 116, 115, 114, 113, 
+									   112, 111, 110, 109, 108, 107, 106, 105, 104, 103, 102, 101, 100, 99,
+									   98, 97, 96, 95, 94, 93, 92, 91, 90, 89, 88, 87, 86, 85, 84, 83, 82, 
+									   81, 80, 79, 78, 77, 76, 75, 74, 73, 72, 71, 70, 69, 68, 67, 66, 65,
+									   64, 63, 62, 61, 60, 59, 58, 57, 56, 55, 54, 53, 52, 51, 50, 49, 48, 
+									   47, 46, 45, 44, 43, 42, 41, 40, 39, 38, 37, 36, 35, 34, 33, 32, 31, 
+									   30, 29, 28, 27, 26, 25, 24, 23, 22, 21, 20, 19};	
+uint8_t small_ir_centimeter_array[122] = {8, 8, 8, 8, 8, 8, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 10, 10, 10, 10, 10,
+										  10, 10, 10, 10, 11, 11, 11, 11, 11, 11, 11, 12, 12, 12, 12, 12, 12, 13, 
+										  13, 13, 13, 13, 13, 13, 14, 14, 14, 14, 14, 14, 14, 15, 15, 15, 15, 15,
+										  16, 16, 16, 16, 17, 17, 17, 18, 18, 18, 19, 19, 19, 19, 20, 20, 20, 21,
+										  21, 22, 22, 23, 23, 23, 24, 24, 25, 25, 26, 26, 27, 28, 28, 29, 29, 30, 
+										  31, 32, 33, 34, 36, 37, 38, 39, 40, 41, 43, 44, 46, 47, 49, 50, 53, 55,
+										  58, 60, 63, 65, 68, 70, 75, 80, 85, 90};	
+uint8_t big_ir_voltage_array[117] =  {138, 137, 136, 135, 134, 133, 132, 131, 130, 129, 128, 127, 126, 125, 124, 
+									  123, 122, 121, 120, 119, 118, 117, 116, 115, 114, 113, 112, 111, 110, 109, 
+									  108, 107, 106, 105, 104, 103, 102, 101, 100, 99, 98, 97, 96, 95, 94, 93, 
+									  92, 91, 90, 89, 88, 87, 86, 85, 84, 83, 82, 81, 80, 79, 78, 77, 76, 75, 
+									  74, 73, 72, 71, 70, 69, 68, 67, 66, 65, 64, 63, 62, 61, 60, 59, 58, 57, 
+									  56, 55, 54, 53, 52, 51, 50, 49, 48, 47, 46, 45, 44, 43, 42, 41, 40, 39, 
+									  38, 37, 36, 35, 34, 33, 32, 31, 30, 29, 28, 27, 26, 25, 24, 23, 22};	
+uint8_t big_ir_centimeter_array[117] = {16, 16, 17, 17, 18, 18, 19, 19, 20, 20, 20, 21, 21, 21, 22, 22, 23, 23, 23, 24, 24,
+										24, 25, 25, 25, 26, 26, 27, 27, 27, 28, 28, 28, 29, 29, 30, 30, 30, 31, 31, 32, 32, 
+										33, 33, 33, 34, 34, 35, 35, 35, 36, 36, 37, 37, 38, 38, 38, 39, 39, 40, 40, 41, 41, 
+										42, 42, 43, 43, 44, 44, 45, 46, 47, 48, 49, 50, 51, 53, 54, 55, 56, 58, 59, 60, 60, 
+										61, 62, 63, 63, 64, 64, 65, 67, 68, 70, 73, 75, 78, 80, 82, 84, 86, 88, 90, 93, 97, 
+										100, 105, 110, 113, 117, 120, 125, 130, 135, 140, 145, 150};
 // Innehåller de centimetervärden som ses i grafen på https://docs.isy.liu.se/twiki/pub/VanHeden/DataSheets/gp2y0a21.pdf, sid. 4.
 
 int main(void)
@@ -87,7 +87,7 @@ int main(void)
 	clear_pid();
 	init_pid(40, 255, -255);
 	update_k_values(1, 1, 1);
-
+	
 	while(1)
 	{
 		if(spi_comm_write != spi_comm_read)
@@ -712,8 +712,13 @@ void decode_sensor(uint8_t data)
 	sensor_buffer_pointer = 0x00;
 	sensor_packet_length = 0;
 	sensor_start = 1;
-	
-	
+
+	//Omvandla sensorvärden från spänningar till centimeter.
+// 	interpret_big_ir(sensor_buffer[IR_FRONT]);
+/*	interpret_big_ir(sensor_buffer[IR_LEFT_FRONT]);*/
+// 	interpret_big_ir(sensor_buffer[IR_RIGHT_FRONT]);
+// 	interpret_small_ir(sensor_buffer[IR_LEFT_BACK]);
+// 	interpret_small_ir(sensor_buffer[IR_RIGHT_BACK]);
 	
 	regulator_enable = 1;		//Här har det gått ~40 ms dvs starta regleringen.
 }
@@ -725,7 +730,7 @@ void update_display_string()
 {
 	char tmp[100];
 	clear_screen();
-	sprintf(tmp, "Left: %02X        Right: %02X ", sensor_buffer[IR_LEFT_BACK], sensor_buffer[IR_RIGHT_BACK]);
+	sprintf(tmp, "Left: %02X        Right: %02X ", sensor_buffer[IR_LEFT_FRONT], sensor_buffer[IR_RIGHT_FRONT]);
 	send_string(tmp);
 	update();
 	return;
@@ -873,18 +878,24 @@ void sensor_debug_hex()
 	update();
 }
 
+void interpret_small_ir(uint8_t value)
+{
+ 	uint8_t i = 0;
+	 
+ 	while ( !(value == small_ir_voltage_array[i] ) )
+ 	{
+ 		i++;
+ 	}
+ 	value = small_ir_centimeter_array[i];
+}
 
+void interpret_big_ir(uint8_t value)
+{
+	uint8_t i = 0;
 
-
-
-// uint8_t interpret_ir(uint8_t value)
-// {
-// 	uint8_t i = 0;
-// 	
-// 	// Om värdet är närmast interpolationspunkt nr. i av alla punkter, returnera denna punkts centimetervärde.
-// 	for ( !((value >= ( (ir_voltage_array[i] - ir_voltage_array[i+1]) >> 1 ) ) & (value <= ( (ir_voltage_array[i-1] - ir_voltage_array[i]) >> 1) )) )
-// 	{
-// 		i++;
-// 	}
-// 	return uint8_t ir_centimeter_array[i];
-// }
+	while ( !(value == big_ir_voltage_array[i]) )
+	{
+		i++;
+	}
+	value = big_ir_centimeter_array[i];
+}
