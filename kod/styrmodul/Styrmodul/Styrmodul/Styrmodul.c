@@ -722,7 +722,10 @@ void decode_sensor(uint8_t data)
 // 			}
 			
 			//decode_tape_sensor_data();
-			//analyze_ir_sensors();
+			if (sensor_buffer[IR_LEFT_FRONT] >= SEGMENT_LENGTH || sensor_buffer[IR_RIGHT_BACK] >= SEGMENT_LENGTH)
+			{
+				analyze_ir_sensors();
+			}
 
 
 			break;
@@ -987,17 +990,39 @@ void analyze_ir_sensors()
 	}
 	//Turn Right, allay at front
 	else if(sensor_buffer[IR_LEFT_FRONT]<=SEGMENT_LENGTH &&
-		 sensor_buffer[IR_FRONT] >=MAXIMUM_IR_DISTANCE &&
-		 sensor_buffer[IR_RIGHT_FRONT] >=MAXIMUM_IR_DISTANCE)
+		sensor_buffer[IR_FRONT] >=MAXIMUM_IR_DISTANCE &&
+		sensor_buffer[IR_RIGHT_FRONT] >=MAXIMUM_IR_DISTANCE)
 	{
 		turn_right_alley_front();
 	}
 	//Turn left, alley right
 	else if(sensor_buffer[IR_LEFT_FRONT] >= MAXIMUM_IR_DISTANCE &&
-		 sensor_buffer[IR_FRONT] <= SEGMENT_LENGTH &&
-		 sensor_buffer[IR_RIGHT_FRONT] >= MAXIMUM_IR_DISTANCE)
+		sensor_buffer[IR_FRONT] <= SEGMENT_LENGTH &&
+		sensor_buffer[IR_RIGHT_FRONT] >= SEGMENT_LENGTH &&
+		sensor_buffer[IR_RIGHT_FRONT] <= MAXIMUM_IR_DISTANCE)
 	{
-		//TURN
+		turn_left_alley_right();
+	}
+	else if(sensor_buffer[IR_LEFT_FRONT] >= SEGMENT_LENGTH &&
+		sensor_buffer[IR_LEFT_FRONT] <= MAXIMUM_IR_DISTANCE &&
+		sensor_buffer[IR_FRONT] <= SEGMENT_LENGTH &&
+		sensor_buffer[IR_RIGHT_FRONT] >= MAXIMUM_IR_DISTANCE)
+	{
+		turn_right_alley_left();
+	}
+	else if(sensor_buffer[IR_LEFT_FRONT] >= SEGMENT_LENGTH &&
+		sensor_buffer[IR_LEFT_FRONT] <= MAXIMUM_IR_DISTANCE &&
+		sensor_buffer[IR_FRONT] >= MAXIMUM_IR_DISTANCE &&
+		sensor_buffer[IR_RIGHT_FRONT] <= SEGMENT_LENGTH)
+	{
+		turn_front_alley_left();
+	}
+	else if(sensor_buffer[IR_LEFT_FRONT] <= SEGMENT_LENGTH &&
+		sensor_buffer[IR_FRONT] >= MAXIMUM_IR_DISTANCE &&
+		sensor_buffer[IR_RIGHT_FRONT] >= SEGMENT_LENGTH &&
+		sensor_buffer[IR_RIGHT_FRONT] <= MAXIMUM_IR_DISTANCE)
+	{
+		turn_front_alley_right();
 	}
 	
 }
@@ -1032,6 +1057,25 @@ void turn_right_alley_front()
 	
 }
 
+void turn_left_alley_right()
+{
+	
+}
+
+void turn_right_alley_left()
+{
+	
+}
+
+void turn_front_alley_left()
+{
+	
+}
+
+void turn_front_alley_right()
+{
+	
+}
 
 
 
