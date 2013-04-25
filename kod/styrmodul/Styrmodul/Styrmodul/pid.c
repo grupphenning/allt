@@ -5,7 +5,7 @@
 
 int16_t input, output;
 uint16_t k_prop, k_int, k_der;					//Regulatorkonstanter
-int8_t last_input = 0;				//I-term samt senaste uttryck för derivering.
+static int16_t last_input = 0;				//I-term samt senaste uttryck för derivering.
 uint8_t regulator_flag = 0;						//Flagga som tillåter reglering
 uint16_t cykle_time, max_I;					    //Vilken intervall reglering körs, begränsa I-term
 int16_t max_out, min_out,I_term = 0;						//Maxvärde för utsignalen, undvika fel med mättad styrsignal.
@@ -70,6 +70,7 @@ int16_t regulator(int16_t input)				//Själva regulatorn
 	else if (abs(I_term) > max_I) I_term = -max_I;
 	
 	int16_t dinput = input - last_input;	//Derivering
+	last_input = input;
 	
 	output = k_prop*input /*+ I_term*/ - k_der*dinput/cykle_time;	//Slutsummering och begränsning för att undvika mättad utsignal.
 	
