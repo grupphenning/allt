@@ -25,7 +25,7 @@ volatile uint8_t spi_data_from_sensor[BUF_SZ];
 uint8_t spi_sensor_read;
 volatile uint16_t spi_sensor_write;
 
-#define SPEED 100
+#define SPEED 50
 uint8_t ninety_timer, turn, pid_timer;
 uint8_t left = 1;
 
@@ -94,7 +94,7 @@ int main(void)
 	{
 		if (follow_end_tape)
 		{
-			regulate_end_tape(&spi_data_from_sensor);
+			regulate_end_tape(spi_data_from_sensor);
 		}
 		
 		if(spi_comm_write != spi_comm_read)
@@ -140,6 +140,8 @@ int main(void)
 		regulator_enable = 0;
 		
 		}	
+		
+		//follow_end_tape = 1;
 	}
 }
 
@@ -150,22 +152,46 @@ void send_string_remote(char *str)
 {
 	while(*str)
 		send_byte_to_comm(*str++);
-}	
+}
+
 
 void regulate_end_tape(uint8_t* values)
 {
 	//loopa igenom de elva sista
-	uint8_t offset = 5; //de fyra första värdena är IR-skräp, vi vill bara läsa 
+	static uint8_t offset = 5; //de fem första värdena är IR-skräp, vi vill bara läsa reflexerna
 	int8_t pos_index; //-5 för längst till vänster, 5 för höger, 0 i mitten!
 	uint8_t i;
-	int16_t average=0, position=0, res=0;
+	static int16_t average=0, position=0, res=0;
+	static int8_t old_pos, pos;	
 	
-	for (i = 0;i < 11;i++)
+	for (i = 0; i < 11; i++)
 	{
 		pos_index = i-5;
 		res += pos_index*values[i+offset];
 		average += values[i+offset];
 		
+	}
+	
+	pos = res/average;	//ojojoj
+	send_string("POS: ");
+	
+	char temp[32];
+	sprintf(temp,"%03d ", pos);
+	send_string(temp);
+	update();
+	
+	if(pos > 0)
+	{
+		RIGHT_AMOUNT = pos*SPEED;
+		LEFT_AMOUNT = SPEED*2;
+		
+	}else if(pos < 0){
+		LEFT_AMOUNT = pos*SPEED;
+		RIGHT_AMOUNT = SPEED*2;
+	}
+	else{ // == 0
+		LEFT_AMOUNT = SPEED*2;
+		RIGHT_AMOUNT = SPEED*2;
 	}
 	
 }
@@ -721,8 +747,11 @@ void decode_sensor(uint8_t data)
 // 				}
 // 			}
 			
-			//decode_tape_sensor_data();
-			//analyze_ir_sensors();
+			if (sensor_buffer[IR_LEFT_FRONT] >= SEGMENT_LENGTH || sensor_buffer[IR_RIGHT_BACK] >= SEGMENT_LENGTH)
+			{
+				analyze_ir_sensors();
+			}
+			decode_tape_sensor_data();
 
 
 			break;
@@ -744,7 +773,7 @@ void decode_sensor(uint8_t data)
 	if((a++ & 0b10000))
 	{
 		a=0;
-		update_display_string();
+		///////////////////////////////////////////////////////////////////////////////////////////////////////////////update_display_string();
 	}
 }
 
@@ -828,6 +857,8 @@ void decode_tape_sensor_data()
 		is_over_tape = 1;
 		no_tape_count = 0;
 		tape_count++;
+		send_string("tejp");
+		update();
 	}
 	
 	else if (is_over_tape && sensor_buffer[REFLEX1]<REFLEX_SENSITIVITY) //Tejpbit avslutad
@@ -896,14 +927,14 @@ void decode_tape_segment(char first, char second)
 	{
 		follow_end_tape = 1;
 		
-		uint8_t i = 0;
-		for (i=0;i<10;i++)
-		{
-			tank_turn_right(SPEED);
-			_delay_ms(500);
-			tank_turn_left(SPEED);
-			_delay_ms(500);
-		}
+// 		uint8_t i = 0;
+// 		for (i=0;i<10;i++)
+// 		{
+// 			tank_turn_right(SPEED);
+// 			_delay_ms(500);
+// 			tank_turn_left(SPEED);
+// 			_delay_ms(500);
+// 		}
 	}
 	
 	else
@@ -911,7 +942,6 @@ void decode_tape_segment(char first, char second)
 		
 		//ERROR nu, kanske hantering av målgång här senare ?
 	}
-
 
 }
 
@@ -987,17 +1017,39 @@ void analyze_ir_sensors()
 	}
 	//Turn Right, allay at front
 	else if(sensor_buffer[IR_LEFT_FRONT]<=SEGMENT_LENGTH &&
-		 sensor_buffer[IR_FRONT] >=MAXIMUM_IR_DISTANCE &&
-		 sensor_buffer[IR_RIGHT_FRONT] >=MAXIMUM_IR_DISTANCE)
+		sensor_buffer[IR_FRONT] >=MAXIMUM_IR_DISTANCE &&
+		sensor_buffer[IR_RIGHT_FRONT] >=MAXIMUM_IR_DISTANCE)
 	{
 		turn_right_alley_front();
 	}
 	//Turn left, alley right
 	else if(sensor_buffer[IR_LEFT_FRONT] >= MAXIMUM_IR_DISTANCE &&
-		 sensor_buffer[IR_FRONT] <= SEGMENT_LENGTH &&
-		 sensor_buffer[IR_RIGHT_FRONT] >= MAXIMUM_IR_DISTANCE)
+		sensor_buffer[IR_FRONT] <= SEGMENT_LENGTH &&
+		sensor_buffer[IR_RIGHT_FRONT] >= SEGMENT_LENGTH &&
+		sensor_buffer[IR_RIGHT_FRONT] <= MAXIMUM_IR_DISTANCE)
 	{
-		//TURN
+		turn_left_alley_right();
+	}
+	else if(sensor_buffer[IR_LEFT_FRONT] >= SEGMENT_LENGTH &&
+		sensor_buffer[IR_LEFT_FRONT] <= MAXIMUM_IR_DISTANCE &&
+		sensor_buffer[IR_FRONT] <= SEGMENT_LENGTH &&
+		sensor_buffer[IR_RIGHT_FRONT] >= MAXIMUM_IR_DISTANCE)
+	{
+		turn_right_alley_left();
+	}
+	else if(sensor_buffer[IR_LEFT_FRONT] >= SEGMENT_LENGTH &&
+		sensor_buffer[IR_LEFT_FRONT] <= MAXIMUM_IR_DISTANCE &&
+		sensor_buffer[IR_FRONT] >= MAXIMUM_IR_DISTANCE &&
+		sensor_buffer[IR_RIGHT_FRONT] <= SEGMENT_LENGTH)
+	{
+		turn_front_alley_left();
+	}
+	else if(sensor_buffer[IR_LEFT_FRONT] <= SEGMENT_LENGTH &&
+		sensor_buffer[IR_FRONT] >= MAXIMUM_IR_DISTANCE &&
+		sensor_buffer[IR_RIGHT_FRONT] >= SEGMENT_LENGTH &&
+		sensor_buffer[IR_RIGHT_FRONT] <= MAXIMUM_IR_DISTANCE)
+	{
+		turn_front_alley_right();
 	}
 	
 }
@@ -1032,6 +1084,25 @@ void turn_right_alley_front()
 	
 }
 
+void turn_left_alley_right()
+{
+	
+}
+
+void turn_right_alley_left()
+{
+	
+}
+
+void turn_front_alley_left()
+{
+	
+}
+
+void turn_front_alley_right()
+{
+	
+}
 
 
 
