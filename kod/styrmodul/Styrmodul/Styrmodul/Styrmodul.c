@@ -88,7 +88,7 @@ int main(void)
 	
 	clear_pid();
 	init_pid(40, 100, -100);
-	update_k_values(10, 1, 4);
+	update_k_values(20, 1, 10);
 	
 	while(1)
 	{
@@ -128,12 +128,14 @@ int main(void)
 			
 			if(temp_output > 0)
 			{
-				turn_right((uint8_t)abs(temp_output));
+				LEFT_AMOUNT = 255;
+				RIGHT_AMOUNT = 60;
 			}
 				
 			if (temp_output < 0)
 			{
-				turn_left((uint8_t)abs(temp_output));
+				LEFT_AMOUNT = 60;
+				RIGHT_AMOUNT = 255;
 			}
 			
 		regulator_enable = 0;
@@ -702,7 +704,7 @@ void decode_sensor(uint8_t data)
 // 			}
 			
 			decode_tape_sensor_data();
-			analyze_ir_sensors();
+			//analyze_ir_sensors();
 
 
 			break;
@@ -964,7 +966,7 @@ void analyze_ir_sensors()
 		turn_left_alley_front();
 	}
 	//Turn Right, allay at front
-	else if(sensor_buffer[IR_RIGHT_FRONT]>=MAXIMUM_IR_DISTANCE && sensor_buffer[IR_FRONT] >=MAXIMUM_IR_DISTANCE)
+	else if((sensor_buffer[IR_RIGHT_FRONT]>=MAXIMUM_IR_DISTANCE) && (sensor_buffer[IR_FRONT] >=MAXIMUM_IR_DISTANCE))
 	{
 		turn_right_alley_front();
 	}
@@ -976,7 +978,7 @@ void turn_left_alley_front()
 	//stäng av reglering
 	//Kör till mitten på korsning(front = 120-(halva robotens längd))
 	
-	while(sensor_buffer[IR_FRONT] > DISTANCE_TO_ALLEY_END - IR_FRONT_TO_MIDDLE_LENGTH);
+	while(sensor_buffer[IR_FRONT] > (DISTANCE_TO_ALLEY_END - IR_FRONT_TO_MIDDLE_LENGTH));
 	
 	stop_motors();
 	_delay_ms(250);
@@ -994,7 +996,7 @@ void turn_right_alley_front()
 	
 	stop_motors();
 	_delay_ms(250);
-	tank_right_left(SPEED);
+	tank_turn_left(SPEED);
 	//FIXA svängfunktion!
 	
 }

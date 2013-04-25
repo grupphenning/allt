@@ -51,9 +51,9 @@
 
 
 //KORNINGSLÄNGDDATA
-#define IR_FRONT_TO_MIDDLE_LENGTH		11;	 
-#define DISTANCE_TO_ALLEY_END			120;
-#define MAXIMUM_IR_DISTANCE				150;		
+#define IR_FRONT_TO_MIDDLE_LENGTH		11	 
+#define DISTANCE_TO_ALLEY_END			120
+#define MAXIMUM_IR_DISTANCE				150		
 
 void send_byte_to_comm(uint8_t byte);
 
