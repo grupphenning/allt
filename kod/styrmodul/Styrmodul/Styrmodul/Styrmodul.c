@@ -94,7 +94,7 @@ int main(void)
 	{
 		if (follow_end_tape)
 		{
-			//regulate_end_tape(spi_data_from_sensor[]);
+			regulate_end_tape(&spi_data_from_sensor);
 		}
 		
 		if(spi_comm_write != spi_comm_read)
@@ -152,6 +152,24 @@ void send_string_remote(char *str)
 	while(*str)
 		send_byte_to_comm(*str++);
 }	
+
+void regulate_end_tape(uint8_t* values)
+{
+	//loopa igenom de elva sista
+	uint8_t offset = 5; //de fyra första värdena är IR-skräp, vi vill bara läsa 
+	int8_t pos_index; //-5 för längst till vänster, 5 för höger, 0 i mitten!
+	uint8_t i;
+	int16_t average=0, position=0, res=0;
+	
+	for (i = 0;i < 11;i++)
+	{
+		pos_index = i-5;
+		res += pos_index*values[i+offset];
+		average += values[i+offset];
+		
+	}
+	
+}
 
 void pid_timer_init()
 {
