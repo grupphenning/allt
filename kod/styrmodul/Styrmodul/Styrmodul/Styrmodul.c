@@ -87,7 +87,7 @@ int main(void)
 	sei();		//aktivera global interrupts
 	
 	clear_pid();
-	init_pid(40, 100, -100);
+	init_pid(40, 100, -100, 100);
 	update_k_values(20, 1, 10);
 	
 	while(1)
@@ -773,7 +773,7 @@ void decode_sensor(uint8_t data)
 	if((a++ & 0b10000))
 	{
 		a=0;
-		///////////////////////////////////////////////////////////////////////////////////////////////////////////////update_display_string();
+		update_display_string();
 	}
 }
 
@@ -784,7 +784,7 @@ void update_display_string()
 {
 	char tmp[100];
 	clear_screen();
-	sprintf(tmp, "L:  %03d    R: %03d F: %03d ", sensor_buffer[IR_LEFT_FRONT], sensor_buffer[IR_RIGHT_FRONT], sensor_buffer[IR_FRONT]);
+	sprintf(tmp, "L:  %03d   R: %03d F: %03d ", sensor_buffer[IR_LEFT_FRONT], sensor_buffer[IR_RIGHT_FRONT], sensor_buffer[IR_FRONT]);
 	send_string(tmp);
 	update();
 	return;
@@ -1007,11 +1007,13 @@ uint8_t interpret_big_ir(uint8_t value)
 
 void analyze_ir_sensors()
 {
+	static uint8_t has_detected_turn_left_alley_front = 0;
 	//Turn left, alley at front
-	if(sensor_buffer[IR_LEFT_FRONT]>=MAXIMUM_IR_DISTANCE && 
-		sensor_buffer[IR_FRONT] >=MAXIMUM_IR_DISTANCE && 
+	if(	sensor_buffer[IR_LEFT_FRONT]>=MAXIMUM_IR_DISTANCE && 
+		sensor_buffer[IR_FRONT] >= DISTANCE_TO_ALLEY_END - IR_FRONT_TO_MIDDLE_LENGTH && 
 		sensor_buffer[IR_RIGHT_FRONT] <= SEGMENT_LENGTH)
 	{
+		has_detected_turn_left_alley_front = 1;
 		turn_left_alley_front();
 	}
 	//Turn Right, allay at front
@@ -1059,11 +1061,11 @@ void turn_left_alley_front()
 	//Kör till mitten på korsning(front = 120-(halva robotens längd))
 	
 	if(sensor_buffer[IR_FRONT] <= (DISTANCE_TO_ALLEY_END - IR_FRONT_TO_MIDDLE_LENGTH))
-		return;
-	
-	stop_motors();
-	_delay_ms(250);
-	tank_turn_left(SPEED);
+	{
+		stop_motors();
+		_delay_ms(500);
+		tank_turn_left(SPEED);
+	}
 	//FIXA svängfunktion!
 	
 }
@@ -1076,7 +1078,7 @@ void turn_right_alley_front()
 	if(sensor_buffer[IR_FRONT] <= DISTANCE_TO_ALLEY_END - IR_FRONT_TO_MIDDLE_LENGTH)
 	{
 		stop_motors();
-		_delay_ms(250);
+		_delay_ms(500);
 		tank_turn_right(SPEED);
 		//FIXA svängfunktion!
 	}
