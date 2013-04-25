@@ -115,25 +115,25 @@ int main(void)
 		
 		if (regulator_enable && regulator_flag)
 		{
-			static int16_t temp_input = 0,temp_output = 0; 
-			temp_input = (sensor_buffer[IR_RIGHT_BACK] + sensor_buffer[IR_RIGHT_FRONT] - sensor_buffer[IR_LEFT_BACK] - sensor_buffer[IR_LEFT_FRONT])/2;
-			temp_output = regulator(temp_input); //borde skrivas om så den ger ut ett åttabitarsvärde? Ja
+			static int16_t signal_e = 0,signal_u = 0; 
+			signal_e = -(sensor_buffer[IR_RIGHT_BACK] + sensor_buffer[IR_RIGHT_FRONT] - sensor_buffer[IR_LEFT_BACK] - sensor_buffer[IR_LEFT_FRONT])/2;
+			signal_u = regulator(signal_e); //borde skrivas om så den ger ut ett åttabitarsvärde? Ja
 			
-			if(temp_output == 0)
+			if(signal_u == 0)
 			{
 				LEFT_AMOUNT = SPEED;
 				RIGHT_AMOUNT = SPEED;
 			}
 			
-			if(temp_output > 0)
+			if(signal_u > 0)
 			{
 				LEFT_AMOUNT = SPEED;
-				RIGHT_AMOUNT = SPEED - (uint8_t)temp_output;
+				RIGHT_AMOUNT = SPEED - (uint8_t)signal_u;
 			}
 				
-			if (temp_output < 0)
+			if (signal_u < 0)
 			{
-				LEFT_AMOUNT = SPEED - (uint8_t)abs(temp_output);
+				LEFT_AMOUNT = SPEED - (uint8_t)abs(signal_u);
 				RIGHT_AMOUNT = SPEED;
 			}
 			
