@@ -94,7 +94,7 @@ int main(void)
 	{
 		if (follow_end_tape)
 		{
-			//regulate_end_tape(spi_data_from_sensor[]);
+			regulate_end_tape(&spi_data_from_sensor);
 		}
 		
 		if(spi_comm_write != spi_comm_read)
@@ -115,8 +115,7 @@ int main(void)
 		
 		if (regulator_enable && regulator_flag)
 		{
-			static int16_t temp_input = 0,temp_output = 0;
-			static int16_t old_temp_output;
+			static int16_t temp_input = 0,temp_output = 0; 
 			temp_input = (sensor_buffer[IR_RIGHT_BACK] + sensor_buffer[IR_RIGHT_FRONT] - sensor_buffer[IR_LEFT_BACK] - sensor_buffer[IR_LEFT_FRONT])/2;
 			temp_output = regulator(temp_input); //borde skrivas om så den ger ut ett åttabitarsvärde? Ja
 			
@@ -128,14 +127,14 @@ int main(void)
 			
 			if(temp_output > 0)
 			{
-				LEFT_AMOUNT = 255;
-				RIGHT_AMOUNT = 60;
+				LEFT_AMOUNT = SPEED;
+				RIGHT_AMOUNT = SPEED - (uint8_t)temp_output;
 			}
 				
 			if (temp_output < 0)
 			{
-				LEFT_AMOUNT = 60;
-				RIGHT_AMOUNT = 255;
+				LEFT_AMOUNT = SPEED - (uint8_t)abs(temp_output);
+				RIGHT_AMOUNT = SPEED;
 			}
 			
 		regulator_enable = 0;
@@ -152,6 +151,24 @@ void send_string_remote(char *str)
 	while(*str)
 		send_byte_to_comm(*str++);
 }	
+
+void regulate_end_tape(uint8_t* values)
+{
+	//loopa igenom de elva sista
+	uint8_t offset = 5; //de fyra första värdena är IR-skräp, vi vill bara läsa 
+	int8_t pos_index; //-5 för längst till vänster, 5 för höger, 0 i mitten!
+	uint8_t i;
+	int16_t average=0, position=0, res=0;
+	
+	for (i = 0;i < 11;i++)
+	{
+		pos_index = i-5;
+		res += pos_index*values[i+offset];
+		average += values[i+offset];
+		
+	}
+	
+}
 
 void pid_timer_init()
 {
@@ -704,7 +721,7 @@ void decode_sensor(uint8_t data)
 // 				}
 // 			}
 			
-			decode_tape_sensor_data();
+			//decode_tape_sensor_data();
 			//analyze_ir_sensors();
 
 
