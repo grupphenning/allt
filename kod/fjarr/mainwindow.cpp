@@ -141,7 +141,16 @@ void MainWindow::setDirection(unsigned dir)
 
     // Behöver ingen hastighet för "stop"!
     if("vdhlsrb"[dir] != 's')
+    {
         port->write(QByteArray(1, speed));
+    }
+    else
+    {
+        if(ui->pid_toggle->text()=="Disable")
+        {
+            ui->pid_toggle->setText("Enable");
+        }
+    }
     port->flush();
 }
 
@@ -435,4 +444,9 @@ void MainWindow::on_pushButton_13_clicked()
     array.append('\0');
     port->write(array);
     port->flush();
+}
+
+void KeyPressEater::on_pushButton_5_clicked()
+{
+
 }
