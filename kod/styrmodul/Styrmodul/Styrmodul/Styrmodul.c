@@ -722,16 +722,6 @@ void decode_sensor(uint8_t data)
 	sensor_buffer_pointer = 0x00;
 	sensor_packet_length = 0;
 	sensor_start = 1;
-<<<<<<< HEAD
-=======
-
-	//Omvandla sensorvärden från spänningar till centimeter.
-	sensor_buffer[IR_FRONT] = interpret_big_ir(sensor_buffer[IR_FRONT]);
-	sensor_buffer[IR_LEFT_FRONT] = interpret_big_ir(sensor_buffer[IR_LEFT_FRONT]);
-	sensor_buffer[IR_RIGHT_FRONT] = interpret_big_ir(sensor_buffer[IR_RIGHT_FRONT]);
-	sensor_buffer[IR_LEFT_BACK] = interpret_small_ir(sensor_buffer[IR_LEFT_BACK]);
-	sensor_buffer[IR_RIGHT_BACK] = interpret_small_ir(sensor_buffer[IR_RIGHT_BACK]);
->>>>>>> 6a2bb45198a995f0ef81d286342fbf6c1c2b7ae9
 	
 	regulator_enable = 1;		//Här har det gått ~40 ms dvs starta regleringen.
 	
