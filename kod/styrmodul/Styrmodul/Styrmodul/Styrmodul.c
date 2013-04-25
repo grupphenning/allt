@@ -25,7 +25,7 @@ volatile uint8_t spi_data_from_sensor[BUF_SZ];
 uint8_t spi_sensor_read;
 volatile uint16_t spi_sensor_write;
 
-#define SPEED 50
+#define SPEED 100
 uint8_t ninety_timer, turn, pid_timer;
 uint8_t left = 1;
 
@@ -87,7 +87,7 @@ int main(void)
 	sei();		//aktivera global interrupts
 	
 	clear_pid();
-	init_pid(40, 100, -100);
+	init_pid(40, 100, -100, 100);
 	update_k_values(20, 1, 10);
 	
 	while(1)
@@ -116,7 +116,7 @@ int main(void)
 		if (regulator_enable && regulator_flag)
 		{
 			static int16_t signal_e = 0,signal_u = 0; 
-			signal_e = -(sensor_buffer[IR_RIGHT_BACK] + sensor_buffer[IR_RIGHT_FRONT] - sensor_buffer[IR_LEFT_BACK] - sensor_buffer[IR_LEFT_FRONT])/2;
+			signal_e = (sensor_buffer[IR_RIGHT_BACK] + sensor_buffer[IR_RIGHT_FRONT] - sensor_buffer[IR_LEFT_BACK] - sensor_buffer[IR_LEFT_FRONT])/2;
 			signal_u = regulator(signal_e); //borde skrivas om så den ger ut ett åttabitarsvärde? Ja
 			
 			if(signal_u == 0)
