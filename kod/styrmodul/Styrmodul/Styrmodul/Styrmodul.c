@@ -87,7 +87,7 @@ int main(void)
 	sei();		//aktivera global interrupts
 	
 	clear_pid();
-	init_pid(40, 255, -255);
+	init_pid(40, 70, -70);
 	update_k_values(1, 1, 1);
 	
 	while(1)
