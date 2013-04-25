@@ -84,8 +84,6 @@ int main(void)
 	update();
 	spi_init();
 	pwm_init();
-	//pid_timer_init(); //detta kanske ej behövs!
-	//drive_forwards(SPEED);	
 	sei();		//aktivera global interrupts
 	
 	clear_pid();
@@ -120,7 +118,7 @@ int main(void)
 			static int16_t temp_input = 0,temp_output = 0;
 			static int16_t old_temp_output;
 			temp_input = (sensor_buffer[IR_RIGHT_BACK] + sensor_buffer[IR_RIGHT_FRONT] - sensor_buffer[IR_LEFT_BACK] - sensor_buffer[IR_LEFT_FRONT])/2;
-			temp_output = regulator(temp_input); //borde skrivas om så den ger ut ett åttabitarsvärde?
+			temp_output = regulator(temp_input); //borde skrivas om så den ger ut ett åttabitarsvärde? Ja
 			
 			if(temp_output == 0)
 			{
@@ -130,13 +128,13 @@ int main(void)
 			
 			if(temp_output > 0)
 			{
-				RIGHT_AMOUNT = RIGHT_AMOUNT - (uint8_t)temp_output;
+				RIGHT_AMOUNT = RIGHT_AMOUNT - (uint8_t)abs(temp_output);
 				LEFT_AMOUNT = SPEED;
 			}
 				
 			if (temp_output < 0)
 			{
-				LEFT_AMOUNT = LEFT_AMOUNT + (uint8_t)temp_output;
+				LEFT_AMOUNT = LEFT_AMOUNT - (uint8_t)abs(temp_output);
 				RIGHT_AMOUNT = SPEED;
 			}
 			
@@ -532,6 +530,7 @@ void decode_comm(uint8_t command)
 		} else if(drive == COMM_STOP)
 		{
 			drive = 0;
+			disable_pid();
 			stop_motors();
 		} else if(drive == COMM_LEFT)
 		{
@@ -576,6 +575,7 @@ void decode_comm(uint8_t command)
 	}
 	else if(command == COMM_STOP)
 	{
+		disable_pid();
 		stop_motors();
 	}
 	else if(command == COMM_SET_PID)
@@ -585,6 +585,8 @@ void decode_comm(uint8_t command)
 	else if(command == COMM_ENABLE_PID)
 	{
 		enable_pid();
+		setbit(PORT_DIR, LEFT_DIR);		//Kör framåt under regleringen.
+		setbit(PORT_DIR, RIGHT_DIR);	
 	}
 	else if(command == COMM_DISABLE_PID)
 	{
@@ -724,11 +726,6 @@ void decode_sensor(uint8_t data)
 	sensor_start = 1;
 
 	//Omvandla sensorvärden från spänningar till centimeter.
-// 	interpret_big_ir(sensor_buffer[IR_FRONT]);
-/*	interpret_big_ir(sensor_buffer[IR_LEFT_FRONT]);*/
-// 	interpret_big_ir(sensor_buffer[IR_RIGHT_FRONT]);
-// 	interpret_small_ir(sensor_buffer[IR_LEFT_BACK]);
-// 	interpret_small_ir(sensor_buffer[IR_RIGHT_BACK]);
 	sensor_buffer[IR_FRONT] = interpret_big_ir(sensor_buffer[IR_FRONT]);
 	sensor_buffer[IR_LEFT_FRONT] = interpret_big_ir(sensor_buffer[IR_LEFT_FRONT]);
 	sensor_buffer[IR_RIGHT_FRONT] = interpret_big_ir(sensor_buffer[IR_RIGHT_FRONT]);

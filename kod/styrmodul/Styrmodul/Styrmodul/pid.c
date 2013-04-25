@@ -14,9 +14,6 @@ void init_pid(uint16_t time, int16_t max, int16_t min)  //Initiera regulatorn
 {
 	if (time > 0)  //Kan inte reglera i framtiden. Uppdatera konstanterna med ny tidskonstant.
 	{
-		uint16_t	temp = time/cykle_time;
-		k_int *= temp;
-		k_der /= temp;
 		cykle_time = time;
 	}
 	
