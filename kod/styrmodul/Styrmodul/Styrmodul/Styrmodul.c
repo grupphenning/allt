@@ -25,7 +25,7 @@ volatile uint8_t spi_data_from_sensor[BUF_SZ];
 uint8_t spi_sensor_read;
 volatile uint16_t spi_sensor_write;
 
-#define SPEED 100
+#define SPEED 50
 uint8_t ninety_timer, turn, pid_timer;
 uint8_t left = 1;
 
@@ -155,10 +155,12 @@ void send_string_remote(char *str)
 void regulate_end_tape(uint8_t* values)
 {
 	//loopa igenom de elva sista
-	uint8_t offset = 5; //de fyra första värdena är IR-skräp, vi vill bara läsa 
-	int8_t pos_index; //-5 för längst till vänster, 5 för höger, 0 i mitten!
+	static uint8_t offset = 5; //de fem första värdena är IR-skräp, vi vill bara läsa reflexerna
+	static int8_t pos_index; //-5 för längst till vänster, 5 för höger, 0 i mitten!
 	uint8_t i;
-	int16_t average=0, position=0, res=0;
+	static int16_t average=0, position=0, res=0;
+	static int8_t old_pos, pos;
+	
 	
 	for (i = 0;i < 11;i++)
 	{
@@ -166,6 +168,24 @@ void regulate_end_tape(uint8_t* values)
 		res += pos_index*values[i+offset];
 		average += values[i+offset];
 		
+	}
+	
+	
+	pos = res/average;	//ojojoj
+	
+	
+	if(pos > 0)
+	{
+		RIGHT_AMOUNT = pos*SPEED;
+		LEFT_AMOUNT = SPEED*2;
+		
+	}else if(pos < 0){
+		LEFT_AMOUNT = pos*SPEED;
+		RIGHT_AMOUNT = SPEED*2;
+	}
+	else{ // == 0
+		LEFT_AMOUNT = SPEED*2;
+		RIGHT_AMOUNT = SPEED*2;
 	}
 	
 }
@@ -721,7 +741,7 @@ void decode_sensor(uint8_t data)
 // 				}
 // 			}
 			
-			//decode_tape_sensor_data();
+			decode_tape_sensor_data();
 			//analyze_ir_sensors();
 
 
@@ -896,14 +916,14 @@ void decode_tape_segment(char first, char second)
 	{
 		follow_end_tape = 1;
 		
-		uint8_t i = 0;
-		for (i=0;i<10;i++)
-		{
-			tank_turn_right(SPEED);
-			_delay_ms(500);
-			tank_turn_left(SPEED);
-			_delay_ms(500);
-		}
+// 		uint8_t i = 0;
+// 		for (i=0;i<10;i++)
+// 		{
+// 			tank_turn_right(SPEED);
+// 			_delay_ms(500);
+// 			tank_turn_left(SPEED);
+// 			_delay_ms(500);
+// 		}
 	}
 	
 	else
