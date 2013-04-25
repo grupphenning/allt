@@ -680,11 +680,6 @@ void decode_sensor(uint8_t data)
 			break;	
 		case SENSOR: {
 			//Omvandla sensorvärden från spänningar till centimeter.
-			// 	interpret_big_ir(sensor_buffer[IR_FRONT]);
-			/*	interpret_big_ir(sensor_buffer[IR_LEFT_FRONT]);*/
-			// 	interpret_big_ir(sensor_buffer[IR_RIGHT_FRONT]);
-			// 	interpret_small_ir(sensor_buffer[IR_LEFT_BACK]);
-			// 	interpret_small_ir(sensor_buffer[IR_RIGHT_BACK]);
 			sensor_buffer[IR_FRONT] = interpret_big_ir(sensor_buffer[IR_FRONT]);
 			sensor_buffer[IR_LEFT_FRONT] = interpret_big_ir(sensor_buffer[IR_LEFT_FRONT]);
 			sensor_buffer[IR_RIGHT_FRONT] = interpret_big_ir(sensor_buffer[IR_RIGHT_FRONT]);
@@ -709,7 +704,7 @@ void decode_sensor(uint8_t data)
 // 			}
 			
 			decode_tape_sensor_data();
-			analyze_ir_sensors();		
+			//analyze_ir_sensors();		
 			break;
 		} 
 		default:
