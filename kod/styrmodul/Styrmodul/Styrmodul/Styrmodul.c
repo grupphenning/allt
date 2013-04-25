@@ -756,12 +756,12 @@ void decode_sensor(uint8_t data)
 // 				}
 // 			}
 			
-			/*
+			
 			if (sensor_buffer[IR_LEFT_FRONT] >= SEGMENT_LENGTH || sensor_buffer[IR_RIGHT_BACK] >= SEGMENT_LENGTH)
 			{
 				analyze_ir_sensors();
 			}
-			*/
+			
 			
 			decode_tape_sensor_data();
 
