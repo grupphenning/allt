@@ -997,11 +997,7 @@ void turn_right_alley_front()
 	
 	stop_motors();
 	_delay_ms(250);
-<<<<<<< HEAD
-	tank_turn_left(SPEED);
-=======
 	tank_turn_right(SPEED);
->>>>>>> 729c437c94130a577406899e587a3dd4768d7790
 	//FIXA svängfunktion!
 	
 }
