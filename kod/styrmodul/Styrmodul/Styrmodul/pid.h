@@ -7,6 +7,7 @@
 #include <inttypes.h>
 #include "bitmacros.h"
 
+void init_pid(uint16_t time, int16_t max, int16_t min, uint16_t max_I);
 void init_pid(uint16_t time, int16_t max, int16_t min, uint16_t max_Iterm);
 void update_k_values(uint8_t kp, uint8_t ki, uint8_t kd);
 void clear_pid();

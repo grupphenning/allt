@@ -25,7 +25,7 @@ volatile uint8_t spi_data_from_sensor[BUF_SZ];
 uint8_t spi_sensor_read;
 volatile uint16_t spi_sensor_write;
 
-#define SPEED 50
+#define SPEED 100
 uint8_t ninety_timer, turn, pid_timer;
 uint8_t left = 1;
 
@@ -88,6 +88,8 @@ int main(void)
 	
 	clear_pid();
 	init_pid(40, 100, -100, 100);
+	update_k_values(10, 0, 10);
+	init_pid(40, 100, -100, 100);
 	update_k_values(20, 1, 10);
 	
 	while(1)
@@ -98,6 +100,10 @@ int main(void)
 			regulate_end_tape(reflex_sensors_currently_seeing_tape(spi_data_from_sensor));
 			//reflex_sensors_currently_seeing_tape(spi_data_from_sensor);
 		}
+// 		if (follow_end_tape)
+// 		{
+// 			regulate_end_tape(spi_data_from_sensor);
+// 		}
 		
 		if(spi_comm_write != spi_comm_read)
 		{
@@ -118,7 +124,7 @@ int main(void)
 		if (regulator_enable && regulator_flag)
 		{
 			static int16_t signal_e = 0,signal_u = 0; 
-			signal_e = -(sensor_buffer[IR_RIGHT_BACK] + sensor_buffer[IR_RIGHT_FRONT] - sensor_buffer[IR_LEFT_BACK] - sensor_buffer[IR_LEFT_FRONT])/2;
+			signal_e = (sensor_buffer[IR_RIGHT_BACK] + sensor_buffer[IR_RIGHT_FRONT] - sensor_buffer[IR_LEFT_BACK] - sensor_buffer[IR_LEFT_FRONT])/2;
 			signal_u = regulator(signal_e); //borde skrivas om så den ger ut ett åttabitarsvärde? Ja
 			
 			if(signal_u == 0)
@@ -190,12 +196,23 @@ void regulate_end_tape(uint8_t* values)
 	}
 	
 	pos = res*2/average;	//ojojoj
-	send_string("POS: ");
+	
 	
 	char temp[32];
 	sprintf(temp,"%03d ", pos);
 	send_string(temp);
 	update();
+	
+	static uint8_t a=0;
+	if(a++ > 250)
+	{
+	  send_string("POS: ");
+	  update();
+	  send_string(temp);
+	  update();
+	  clear_screen();
+	  update();
+	}	  
 	
 	if(pos > 0)
 	{
@@ -768,8 +785,14 @@ void decode_sensor(uint8_t data)
 			{
 				analyze_ir_sensors();
 			}
+			
+// 			if (sensor_buffer[IR_LEFT_FRONT] >= SEGMENT_LENGTH || sensor_buffer[IR_RIGHT_BACK] >= SEGMENT_LENGTH)
+// 			{
+// 				analyze_ir_sensors();
+// 			}
+			
+			
 			decode_tape_sensor_data();
-
 
 			break;
 		} 
@@ -791,6 +814,7 @@ void decode_sensor(uint8_t data)
 	{
 		a=0;
 		///////////////////////////////////////////////////////////////////////////////////////////////////////////////update_display_string();
+		update_display_string();
 	}
 }
 
