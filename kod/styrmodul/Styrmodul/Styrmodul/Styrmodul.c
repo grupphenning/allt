@@ -104,6 +104,12 @@ int main(void)
 		{
 			//regulate_end_tape(spi_data_from_sensor);
 			regulate_end_tape(reflex_sensors_currently_seeing_tape(spi_data_from_sensor));
+			
+			char temp[32];
+			sprintf(temp,"%03d ", spi_data_from_sensor[0]);
+			send_string(temp);
+			update();
+			
 			//reflex_sensors_currently_seeing_tape(spi_data_from_sensor);
 		}
 // 		if (follow_end_tape)
@@ -201,8 +207,8 @@ void regulate_end_tape(uint8_t* values)
 	static uint8_t offset = 5; //de fem första värdena är IR-skräp, vi vill bara läsa reflexerna
 	int8_t pos_index; //-5 för längst till vänster, 5 för höger, 0 i mitten!
 	uint8_t i;
-	int16_t average=0, position=0, res=0;
-	int8_t old_pos=0, pos=0;	
+	int8_t average=0, res=0;
+	int8_t old_pos=0, pos=0;
 	
 	for (i = 0; i < 11; i++)
 	{
@@ -222,12 +228,13 @@ void regulate_end_tape(uint8_t* values)
 	static uint8_t a=0;
 	if(a++ > 250)
 	{
-	  clear_screen();
-	  update();
-	  send_string("POS: ");
-	  update();
-	  send_string(temp);
-	  update();
+		
+// 	  clear_screen();
+// 	  update();
+// 	  send_string("POS: ");
+// 	  update();
+// 	  send_string(temp);
+// 	  update();
 	}
 	
 	if(is_empty(values,11))
