@@ -25,7 +25,7 @@ volatile uint8_t spi_data_from_sensor[BUF_SZ];
 uint8_t spi_sensor_read;
 volatile uint16_t spi_sensor_write;
 
-#define SPEED 255
+#define SPEED 100
 uint8_t ninety_timer, turn, pid_timer;
 uint8_t left = 1;
 
@@ -87,8 +87,8 @@ int main(void)
 	sei();		//aktivera global interrupts
 	
 	clear_pid();
-	init_pid(40, 255, -255);
-	update_k_values(1, 1, 1);
+	init_pid(40, 100, -100);
+	update_k_values(10, 1, 4);
 	
 	while(1)
 	{
@@ -680,11 +680,6 @@ void decode_sensor(uint8_t data)
 			break;	
 		case SENSOR: {
 			//Omvandla sensorvärden från spänningar till centimeter.
-			// 	interpret_big_ir(sensor_buffer[IR_FRONT]);
-			/*	interpret_big_ir(sensor_buffer[IR_LEFT_FRONT]);*/
-			// 	interpret_big_ir(sensor_buffer[IR_RIGHT_FRONT]);
-			// 	interpret_small_ir(sensor_buffer[IR_LEFT_BACK]);
-			// 	interpret_small_ir(sensor_buffer[IR_RIGHT_BACK]);
 			sensor_buffer[IR_FRONT] = interpret_big_ir(sensor_buffer[IR_FRONT]);
 			sensor_buffer[IR_LEFT_FRONT] = interpret_big_ir(sensor_buffer[IR_LEFT_FRONT]);
 			sensor_buffer[IR_RIGHT_FRONT] = interpret_big_ir(sensor_buffer[IR_RIGHT_FRONT]);
@@ -709,8 +704,12 @@ void decode_sensor(uint8_t data)
 // 			}
 			
 			decode_tape_sensor_data();
+<<<<<<< HEAD
 			analyze_ir_sensors();
 
+=======
+			//analyze_ir_sensors();		
+>>>>>>> 84a381d9020048cd0ccd4a74afd54c729f6c4306
 			break;
 		} 
 		default:
