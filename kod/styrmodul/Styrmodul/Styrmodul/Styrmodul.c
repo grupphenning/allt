@@ -92,10 +92,10 @@ int main(void)
 	
 	while(1)
 	{
-		if (follow_end_tape)
-		{
-			regulate_end_tape(spi_data_from_sensor);
-		}
+// 		if (follow_end_tape)
+// 		{
+// 			regulate_end_tape(spi_data_from_sensor);
+// 		}
 		
 		if(spi_comm_write != spi_comm_read)
 		{
@@ -173,12 +173,21 @@ void regulate_end_tape(uint8_t* values)
 	}
 	
 	pos = res/average;	//ojojoj
-	send_string("POS: ");
+	
 	
 	char temp[32];
 	sprintf(temp,"%03d ", pos);
-	send_string(temp);
-	update();
+	
+	static uint8_t a=0;
+	if(a++ > 250)
+	{
+	  send_string("POS: ");
+	  update();
+	  send_string(temp);
+	  update();
+	  clear_screen();
+	  update();
+	}	  
 	
 	if(pos > 0)
 	{
@@ -747,12 +756,14 @@ void decode_sensor(uint8_t data)
 // 				}
 // 			}
 			
+			/*
 			if (sensor_buffer[IR_LEFT_FRONT] >= SEGMENT_LENGTH || sensor_buffer[IR_RIGHT_BACK] >= SEGMENT_LENGTH)
 			{
 				analyze_ir_sensors();
 			}
+			*/
+			
 			decode_tape_sensor_data();
-
 
 			break;
 		} 
@@ -773,7 +784,7 @@ void decode_sensor(uint8_t data)
 	if((a++ & 0b10000))
 	{
 		a=0;
-		///////////////////////////////////////////////////////////////////////////////////////////////////////////////update_display_string();
+		update_display_string();
 	}
 }
 
