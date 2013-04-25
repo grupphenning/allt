@@ -116,7 +116,7 @@ int main(void)
 		if (regulator_enable && regulator_flag)
 		{
 			static int16_t signal_e = 0,signal_u = 0; 
-			signal_e = -(sensor_buffer[IR_RIGHT_BACK] + sensor_buffer[IR_RIGHT_FRONT] - sensor_buffer[IR_LEFT_BACK] - sensor_buffer[IR_LEFT_FRONT])/2;
+			signal_e = (sensor_buffer[IR_RIGHT_BACK] + sensor_buffer[IR_RIGHT_FRONT] - sensor_buffer[IR_LEFT_BACK] - sensor_buffer[IR_LEFT_FRONT])/2;
 			signal_u = regulator(signal_e); //borde skrivas om så den ger ut ett åttabitarsvärde? Ja
 			
 			if(signal_u == 0)
