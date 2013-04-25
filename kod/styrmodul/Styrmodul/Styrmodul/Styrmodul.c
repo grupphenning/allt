@@ -115,8 +115,7 @@ int main(void)
 		
 		if (regulator_enable && regulator_flag)
 		{
-			static int16_t temp_input = 0,temp_output = 0;
-			static int16_t old_temp_output;
+			static int16_t temp_input = 0,temp_output = 0; 
 			temp_input = (sensor_buffer[IR_RIGHT_BACK] + sensor_buffer[IR_RIGHT_FRONT] - sensor_buffer[IR_LEFT_BACK] - sensor_buffer[IR_LEFT_FRONT])/2;
 			temp_output = regulator(temp_input); //borde skrivas om så den ger ut ett åttabitarsvärde? Ja
 			
@@ -128,14 +127,14 @@ int main(void)
 			
 			if(temp_output > 0)
 			{
-				LEFT_AMOUNT = 255;
-				RIGHT_AMOUNT = 60;
+				LEFT_AMOUNT = SPEED;
+				RIGHT_AMOUNT = SPEED - (uint8_t)temp_output;
 			}
 				
 			if (temp_output < 0)
 			{
-				LEFT_AMOUNT = 60;
-				RIGHT_AMOUNT = 255;
+				LEFT_AMOUNT = SPEED - (uint8_t)abs(temp_output);
+				RIGHT_AMOUNT = SPEED;
 			}
 			
 		regulator_enable = 0;
@@ -722,7 +721,7 @@ void decode_sensor(uint8_t data)
 // 				}
 // 			}
 			
-			decode_tape_sensor_data();
+			//decode_tape_sensor_data();
 			//analyze_ir_sensors();
 
 
