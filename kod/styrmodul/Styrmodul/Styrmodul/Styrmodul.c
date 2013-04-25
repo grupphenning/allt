@@ -88,7 +88,7 @@ int main(void)
 	
 	clear_pid();
 	init_pid(40, 100, -100, 100);
-	update_k_values(20, 1, 10);
+	update_k_values(10, 0, 10);
 	
 	while(1)
 	{
@@ -757,10 +757,10 @@ void decode_sensor(uint8_t data)
 // 			}
 			
 			
-			if (sensor_buffer[IR_LEFT_FRONT] >= SEGMENT_LENGTH || sensor_buffer[IR_RIGHT_BACK] >= SEGMENT_LENGTH)
-			{
-				analyze_ir_sensors();
-			}
+// 			if (sensor_buffer[IR_LEFT_FRONT] >= SEGMENT_LENGTH || sensor_buffer[IR_RIGHT_BACK] >= SEGMENT_LENGTH)
+// 			{
+// 				analyze_ir_sensors();
+// 			}
 			
 			
 			decode_tape_sensor_data();
