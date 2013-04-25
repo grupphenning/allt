@@ -25,7 +25,7 @@ volatile uint8_t spi_data_from_sensor[BUF_SZ];
 uint8_t spi_sensor_read;
 volatile uint16_t spi_sensor_write;
 
-#define SPEED 200
+#define SPEED 255
 uint8_t ninety_timer, turn, pid_timer;
 uint8_t left = 1;
 
@@ -677,6 +677,17 @@ void decode_sensor(uint8_t data)
 			stop_motors();
 			break;	
 		case SENSOR: {
+			//Omvandla sensorvärden från spänningar till centimeter.
+			// 	interpret_big_ir(sensor_buffer[IR_FRONT]);
+			/*	interpret_big_ir(sensor_buffer[IR_LEFT_FRONT]);*/
+			// 	interpret_big_ir(sensor_buffer[IR_RIGHT_FRONT]);
+			// 	interpret_small_ir(sensor_buffer[IR_LEFT_BACK]);
+			// 	interpret_small_ir(sensor_buffer[IR_RIGHT_BACK]);
+			sensor_buffer[IR_FRONT] = interpret_big_ir(sensor_buffer[IR_FRONT]);
+			sensor_buffer[IR_LEFT_FRONT] = interpret_big_ir(sensor_buffer[IR_LEFT_FRONT]);
+			sensor_buffer[IR_RIGHT_FRONT] = interpret_big_ir(sensor_buffer[IR_RIGHT_FRONT]);
+			sensor_buffer[IR_LEFT_BACK] = interpret_small_ir(sensor_buffer[IR_LEFT_BACK]);
+			sensor_buffer[IR_RIGHT_BACK] = interpret_small_ir(sensor_buffer[IR_RIGHT_BACK]);
 			
 // 			//First time? Calibrate gyro
 // 			if(sensor_transmission_number<5)
@@ -696,20 +707,7 @@ void decode_sensor(uint8_t data)
 // 			}
 			
 			decode_tape_sensor_data();
-
-			static uint8_t a=0;
-			if((a++ & 0b10000))
-			{
-				a=0;
-				update_display_string();
-			}
-			// 			if(sensor_buffer[IR_FRONT] > 0x20) 
-			// 			{
-			// 				stop_motors();
-			// 			}				
-				//else drive_forwards(SPEED);
-			
-			
+			analyze_ir_sensors();		
 			break;
 		} 
 		default:
@@ -722,18 +720,6 @@ void decode_sensor(uint8_t data)
 	sensor_buffer_pointer = 0x00;
 	sensor_packet_length = 0;
 	sensor_start = 1;
-
-	//Omvandla sensorvärden från spänningar till centimeter.
-// 	interpret_big_ir(sensor_buffer[IR_FRONT]);
-/*	interpret_big_ir(sensor_buffer[IR_LEFT_FRONT]);*/
-// 	interpret_big_ir(sensor_buffer[IR_RIGHT_FRONT]);
-// 	interpret_small_ir(sensor_buffer[IR_LEFT_BACK]);
-// 	interpret_small_ir(sensor_buffer[IR_RIGHT_BACK]);
-	sensor_buffer[IR_FRONT] = interpret_big_ir(sensor_buffer[IR_FRONT]);
-	sensor_buffer[IR_LEFT_FRONT] = interpret_big_ir(sensor_buffer[IR_LEFT_FRONT]);
-	sensor_buffer[IR_RIGHT_FRONT] = interpret_big_ir(sensor_buffer[IR_RIGHT_FRONT]);
-	sensor_buffer[IR_LEFT_BACK] = interpret_small_ir(sensor_buffer[IR_LEFT_BACK]);
-	sensor_buffer[IR_RIGHT_BACK] = interpret_small_ir(sensor_buffer[IR_RIGHT_BACK]);
 	
 	regulator_enable = 1;		//Här har det gått ~40 ms dvs starta regleringen.
 	
@@ -972,6 +958,29 @@ uint8_t interpret_big_ir(uint8_t value)
 	value = big_ir_centimeter_array[i];
 	return big_ir_centimeter_array[i];
 }
+
+void analyze_ir_sensors()
+{
+	//TEST
+	if(sensor_buffer[IR_RIGHT_FRONT]<=120 && sensor_buffer[IR_LEFT_FRONT]<=120)
+	{
+		stop_motors();
+		_delay_ms(500);
+		drive_forwards(SPEED);
+	}
+	else if(sensor_buffer[IR_FRONT]<=120 && sensor_buffer[IR_LEFT_FRONT]<=120)
+	{
+		tank_turn_right(SPEED);
+		//make_right_turn();
+	}
+	else if(sensor_buffer[IR_FRONT]<=120 && sensor_buffer[IR_RIGHT_FRONT]<=120)
+	{
+		tank_turn_left(SPEED);
+		//make_left_turn();
+	}
+	
+}
+
 
 /********************************************************
 				Linjeföljning test
