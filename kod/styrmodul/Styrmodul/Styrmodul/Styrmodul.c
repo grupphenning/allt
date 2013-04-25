@@ -128,14 +128,12 @@ int main(void)
 			
 			if(temp_output > 0)
 			{
-				RIGHT_AMOUNT = RIGHT_AMOUNT - (uint8_t)abs(temp_output);
-				LEFT_AMOUNT = SPEED;
+				turn_right((uint8_t)abs(temp_output));
 			}
 				
 			if (temp_output < 0)
 			{
-				LEFT_AMOUNT = LEFT_AMOUNT - (uint8_t)abs(temp_output);
-				RIGHT_AMOUNT = SPEED;
+				turn_left((uint8_t)abs(temp_output));
 			}
 			
 		regulator_enable = 0;
