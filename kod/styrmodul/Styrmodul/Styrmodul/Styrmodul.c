@@ -25,7 +25,7 @@ volatile uint8_t spi_data_from_sensor[BUF_SZ];
 uint8_t spi_sensor_read;
 volatile uint16_t spi_sensor_write;
 
-#define SPEED 255
+#define SPEED 25
 uint8_t ninety_timer, turn, pid_timer;
 uint8_t left = 1;
 
@@ -69,16 +69,18 @@ uint8_t big_ir_centimeter_array[117] = {16, 16, 17, 17, 18, 18, 19, 19, 20, 20, 
 // Innehåller de centimetervärden som ses i grafen på https://docs.isy.liu.se/twiki/pub/VanHeden/DataSheets/gp2y0a21.pdf, sid. 4.
 
 
-uint8_t follow_end_tape = 0;
+uint8_t follow_end_tape = 1;
 
 
 //Korsningsgrejer
 uint8_t has_detected_crossing = 0;
 char crossing_direction;
 uint8_t crossing_stop_value;
+uint8_t counter = 0;
 
 int main(void)
 {
+	
 	//don't turn!
 	turn = 0;
 	//OSCCAL = 0x70;
@@ -98,18 +100,21 @@ int main(void)
 	init_pid(40, 100, -100, 100);
 	update_k_values(20, 1, 10);
 	
+	//_delay_ms(2000);
+	//drive_forwards(255);
+	
 	while(1)
 	{
+		
 		if (follow_end_tape)
 		{
-			//regulate_end_tape(spi_data_from_sensor);
-			regulate_end_tape(reflex_sensors_currently_seeing_tape(spi_data_from_sensor));
-			
-			char temp[32];
-			sprintf(temp,"%03d ", spi_data_from_sensor[0]);
-			send_string(temp);
-			update();
-			
+			//regulate_end_tape_2(spi_data_from_sensor);
+			//regulate_end_tape(reflex_sensors_currently_seeing_tape(spi_data_from_sensor));
+// 			char temp[32];
+// 			sprintf(temp,"%03d ", spi_data_from_sensor[1]);
+// 			send_string(temp);
+// 			update();
+// 			
 			//reflex_sensors_currently_seeing_tape(spi_data_from_sensor);
 		}
 // 		if (follow_end_tape)
@@ -194,7 +199,7 @@ uint8_t is_empty(uint8_t * values, uint8_t len)
 	uint8_t i;
 	for (i = 0;i<len;i++)
 	{
-		if(values[i] != 0)
+		if(values[i + 5] != 0)
 			return 0;
 	}
 	
@@ -259,6 +264,88 @@ void regulate_end_tape(uint8_t* values)
 	}
 	
 }
+
+
+
+void regulate_end_tape_2(uint8_t* values)
+{
+	//loopa igenom de elva sista
+	send_string("hej");
+	update();
+	static uint8_t offset = 6; //de fem första värdena är IR-skräp, vi vill bara läsa reflexerna
+	int8_t pos_index; //-5 för längst till vänster, 5 för höger, 0 i mitten!
+	uint8_t i;
+	int8_t average=0, res=0;
+	int8_t old_pos=0, pos=0;
+	//uint8_t _1 = 0, _2 = 0, _3 = 0, _4 = 0, _5 = 0, _6 = 0, _7 = 0, _8 = 0, _9 = 0, _10 = 0, _11 = 0;
+	uint8_t reflex[11];
+	
+	for (i = 0; i < 11; i++)
+	{
+		pos_index = i-5;
+		if(values[i+offset] > REFLEX_SENSITIVITY)
+		{
+			reflex[i] = 1;
+			res += pos_index;
+			average += 1;
+		}
+		else
+		reflex[i] = 0;
+		
+	}
+	
+	pos = res/average;	//ojojoj
+// 	
+ 	
+// 	send_string(temp);
+// 	update();
+	
+	static uint16_t a=0;
+	if(a++ > 65000)
+	{
+		clear_screen();
+		_delay_ms(100);
+		for (i=0;i < 11;i++)
+		{
+			char temp[2];
+			sprintf(temp,"%d", reflex[i]);
+			send_string(temp);
+			update();
+		}
+		
+		//update();
+// 		
+// 		send_string("POS: ");
+// 		update();
+// 		send_string(temp);
+// 		update();
+	}
+	
+	if(is_empty(values,11))
+	{
+		LEFT_AMOUNT = 0;
+		RIGHT_AMOUNT = 0;
+	}
+	
+	else if(res > 0)
+	{
+// 		RIGHT_AMOUNT = pos*SPEED;
+// 		LEFT_AMOUNT = SPEED;
+// 		
+	}
+	else if(res < 0){
+// 		LEFT_AMOUNT = abs(pos)*SPEED;
+// 		RIGHT_AMOUNT = SPEED;
+ 	}
+	else{ // == 0
+// 	LEFT_AMOUNT = SPEED;
+// 	RIGHT_AMOUNT = SPEED;
+}
+
+}
+
+
+
 
 void pid_timer_init()
 {
@@ -777,10 +864,10 @@ void decode_sensor(uint8_t data)
  **********************************************************************/
 	switch(sensor_buffer[0]) {
 		case SENSOR_DEBUG:
-			sensor_debug_message();
+			//sensor_debug_message();
 			break;
 		case SENSOR_HEX:
-			sensor_debug_hex();
+			//sensor_debug_hex();
 			break;
 		case GYRO_SENSOR:
 			stop_motors();
@@ -813,18 +900,25 @@ void decode_sensor(uint8_t data)
 			
 
 			//Om ej i korsning och får sensordata som indikerar korsning. Analysera korsningstyp
+			/*
 			if (!has_detected_crossing && (sensor_buffer[IR_LEFT_FRONT] >= SEGMENT_LENGTH || sensor_buffer[IR_RIGHT_BACK] >= SEGMENT_LENGTH))
 			{
 				analyze_ir_sensors();
 			}
+			
 			//Om korsning detekterad. Utför korningstypspecifika kommandon
 			else if(has_detected_crossing)
 			{
 				crossing_turn(crossing_direction, crossing_stop_value);
 			}
+			*/
 			
 			
 			decode_tape_sensor_data();
+//  			if (follow_end_tape)
+//  			{
+//  				regulate_end_tape_2(sensor_buffer);
+//  			}
 
 			break;
 		} 
@@ -846,7 +940,7 @@ void decode_sensor(uint8_t data)
 	{
 		a=0;
 		///////////////////////////////////////////////////////////////////////////////////////////////////////////////update_display_string();
-		update_display_string();
+		//update_display_string();
 	}
 }
 
@@ -929,8 +1023,8 @@ void decode_tape_sensor_data()
 		is_over_tape = 1;
 		no_tape_count = 0;
 		tape_count++;
-		send_string("tejp");
-		update();
+		//send_string("tejp");
+		//update();
 	}
 	
 	else if (is_over_tape && sensor_buffer[REFLEX1]<REFLEX_SENSITIVITY) //Tejpbit avslutad

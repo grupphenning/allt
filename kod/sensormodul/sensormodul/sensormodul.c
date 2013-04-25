@@ -154,11 +154,13 @@ void read_all_sensors()
 	setbit(PORTC, PINC0);		// For debug!
 	data_index = 1;
 	test_data[0] = SENSOR;
+	
 	read_ir(0);
 	read_ir(1);
 	read_ir(2);
 	read_ir(3);
 	read_ir(4);
+	
 	read_tape(0);
 	read_tape(1);
 	read_tape(2);
