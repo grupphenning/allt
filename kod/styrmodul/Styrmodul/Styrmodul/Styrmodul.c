@@ -87,14 +87,16 @@ int main(void)
 	sei();		//aktivera global interrupts
 	
 	clear_pid();
-	init_pid(40, 100, -100);
+	init_pid(40, 100, -100, 100);
 	update_k_values(20, 1, 10);
 	
 	while(1)
 	{
 		if (follow_end_tape)
 		{
-			regulate_end_tape(spi_data_from_sensor);
+			//regulate_end_tape(spi_data_from_sensor);
+			regulate_end_tape(reflex_sensors_currently_seeing_tape(spi_data_from_sensor));
+			//reflex_sensors_currently_seeing_tape(spi_data_from_sensor);
 		}
 		
 		if(spi_comm_write != spi_comm_read)
@@ -154,6 +156,21 @@ void send_string_remote(char *str)
 		send_byte_to_comm(*str++);
 }
 
+uint8_t * reflex_sensors_currently_seeing_tape(uint8_t * values)
+{
+	uint8_t i, offset=5;
+	uint8_t return_values[11];
+	for (i = 0;i < 11;i++)
+	{
+		if(values[i+offset] > REFLEX_SENSITIVITY)
+			return_values[i] = 1;
+		else
+			return_values[i] = 0;
+	}
+	
+	
+	return &return_values;
+}
 
 void regulate_end_tape(uint8_t* values)
 {
@@ -167,12 +184,12 @@ void regulate_end_tape(uint8_t* values)
 	for (i = 0; i < 11; i++)
 	{
 		pos_index = i-5;
-		res += pos_index*values[i+offset];
-		average += values[i+offset];
+		res += pos_index*values[i];
+		average += values[i];
 		
 	}
 	
-	pos = res/average;	//ojojoj
+	pos = res*2/average;	//ojojoj
 	send_string("POS: ");
 	
 	char temp[32];
