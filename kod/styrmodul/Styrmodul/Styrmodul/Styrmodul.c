@@ -795,8 +795,7 @@ void update_display_string()
 {
 	char tmp[100];
 	clear_screen();
-	sprintf(tmp, "Left: %02X        Right: %02X ", sensor_buffer[IR_LEFT_FRONT], sensor_buffer[IR_RIGHT_FRONT]);
-	sprintf(tmp, "Left:  %03d      Right: %03d ", sensor_buffer[IR_LEFT_FRONT], sensor_buffer[IR_RIGHT_FRONT]);
+	sprintf(tmp, "L:  %03d    R: %03d F: %03d ", sensor_buffer[IR_LEFT_FRONT], sensor_buffer[IR_RIGHT_FRONT], sensor_buffer[IR_FRONT]);
 	send_string(tmp);
 	update();
 	return;
@@ -1086,12 +1085,13 @@ void turn_right_alley_front()
 	//Kör till mitten på korsning(front = 120-(halva robotens längd))
 	
 	if(sensor_buffer[IR_FRONT] <= DISTANCE_TO_ALLEY_END - IR_FRONT_TO_MIDDLE_LENGTH)
-		return;
-	
-	stop_motors();
-	_delay_ms(250);
-	tank_turn_right(SPEED);
-	//FIXA svängfunktion!
+	{
+		stop_motors();
+		_delay_ms(250);
+		tank_turn_right(SPEED);
+		//FIXA svängfunktion!
+	}
+
 	
 }
 
