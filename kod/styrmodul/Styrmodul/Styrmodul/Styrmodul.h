@@ -65,5 +65,4 @@ void regulate_end_tape(uint8_t* values);
 uint8_t * reflex_sensors_currently_seeing_tape(uint8_t * values);
 
 void analyze_ir_sensors();
-void turn_right_alley_front();
-void turn_left_alley_front();
+void crossing_turn(char dir, uint8_t stop_distance);
