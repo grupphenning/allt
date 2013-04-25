@@ -25,7 +25,7 @@ volatile uint8_t spi_data_from_sensor[BUF_SZ];
 uint8_t spi_sensor_read;
 volatile uint16_t spi_sensor_write;
 
-#define SPEED 50
+#define SPEED 255
 uint8_t ninety_timer, turn, pid_timer;
 uint8_t left = 1;
 
@@ -804,22 +804,7 @@ void decode_sensor(uint8_t data)
 // 				}
 // 			}
 			
-<<<<<<< HEAD
-// 			if (sensor_buffer[IR_LEFT_FRONT] >= SEGMENT_LENGTH || sensor_buffer[IR_RIGHT_BACK] >= SEGMENT_LENGTH)
-// 			{
-// 				analyze_ir_sensors();
-// 			}
-// 			
-// 			if (sensor_buffer[IR_LEFT_FRONT] >= SEGMENT_LENGTH || sensor_buffer[IR_RIGHT_BACK] >= SEGMENT_LENGTH)
-// 			{
-// 				analyze_ir_sensors();
-// 			}
-=======
-			if (sensor_buffer[IR_LEFT_FRONT] >= SEGMENT_LENGTH || sensor_buffer[IR_RIGHT_BACK] >= SEGMENT_LENGTH)
-			{
-				analyze_ir_sensors();
-			}
-			
+
 			//Om ej i korsning och får sensordata som indikerar korsning. Analysera korsningstyp
 			if (!has_detected_crossing && (sensor_buffer[IR_LEFT_FRONT] >= SEGMENT_LENGTH || sensor_buffer[IR_RIGHT_BACK] >= SEGMENT_LENGTH))
 			{
@@ -830,7 +815,6 @@ void decode_sensor(uint8_t data)
 			{
 				crossing_turn(crossing_direction, crossing_stop_value);
 			}
->>>>>>> 15e25368073048fd3baa0e3928db424875923395
 			
 			
 			decode_tape_sensor_data();
@@ -866,7 +850,7 @@ void update_display_string()
 {
 	char tmp[100];
 	clear_screen();
-	sprintf(tmp, "L:  %03d   R: %03d F: %03d ", sensor_buffer[IR_LEFT_FRONT], sensor_buffer[IR_RIGHT_FRONT], sensor_buffer[IR_FRONT]);
+	sprintf(tmp, "L:  %03d  R: %03d F: %03d ", sensor_buffer[IR_LEFT_FRONT], sensor_buffer[IR_RIGHT_FRONT], sensor_buffer[IR_FRONT]);
 	send_string(tmp);
 	update();
 	return;
@@ -1100,11 +1084,12 @@ void analyze_ir_sensors()
 		sensor_buffer[IR_FRONT] >= MAXIMUM_IR_DISTANCE && 
 		sensor_buffer[IR_RIGHT_FRONT] <= SEGMENT_LENGTH)
 	{
+		stop_motors();
 		has_detected_crossing = 1;
 		crossing_direction = 'l';
 		crossing_stop_value = DISTANCE_TO_ALLEY_END - IR_FRONT_TO_MIDDLE_LENGTH;
 	}
-	//Turn Right, allay at front
+	//Turn Right, alley at front
 	else if(sensor_buffer[IR_LEFT_FRONT]<=SEGMENT_LENGTH &&
 		sensor_buffer[IR_FRONT] >=MAXIMUM_IR_DISTANCE &&
 		sensor_buffer[IR_RIGHT_FRONT] >=MAXIMUM_IR_DISTANCE)
@@ -1113,7 +1098,7 @@ void analyze_ir_sensors()
 		crossing_direction = 'r';
 		crossing_stop_value = DISTANCE_TO_ALLEY_END - IR_FRONT_TO_MIDDLE_LENGTH;
 	}
-	//Turn left, alley right
+	//Turn left, alley right															//FUNKAR!
 	else if(sensor_buffer[IR_LEFT_FRONT] >= MAXIMUM_IR_DISTANCE &&
 		sensor_buffer[IR_FRONT] <= SEGMENT_LENGTH &&
 		sensor_buffer[IR_RIGHT_FRONT] >= SEGMENT_LENGTH &&
@@ -1123,7 +1108,7 @@ void analyze_ir_sensors()
 		crossing_direction = 'l';
 		crossing_stop_value = SEGMENT_LENGTH/2-IR_FRONT_TO_MIDDLE_LENGTH;
 	}
-	//turn right alley to left
+	//turn right alley to left															//Funkar!
 	else if(sensor_buffer[IR_LEFT_FRONT] >= SEGMENT_LENGTH &&
 		sensor_buffer[IR_LEFT_FRONT] <= MAXIMUM_IR_DISTANCE &&
 		sensor_buffer[IR_FRONT] <= SEGMENT_LENGTH &&
@@ -1167,7 +1152,7 @@ void crossing_turn(char dir,uint8_t stop_distance)
 	{
 		has_detected_crossing = 0;
 		stop_motors();
-		_delay_ms(500);
+		
 		
 		switch(dir)
 		{
@@ -1175,6 +1160,8 @@ void crossing_turn(char dir,uint8_t stop_distance)
 			case 'r': tank_turn_right(SPEED); break;
 			default: break;
 		}
+		
+		_delay_ms(1000);
 		
 	}
 	
