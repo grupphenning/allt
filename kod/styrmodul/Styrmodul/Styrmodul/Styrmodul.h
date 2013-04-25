@@ -51,11 +51,15 @@
 
 
 //KORNINGSLÄNGDDATA
-#define IR_FRONT_TO_MIDDLE_LENGTH		11;	 
-#define DISTANCE_TO_ALLEY_END			120;
-#define MAXIMUM_IR_DISTANCE				150;		
+#define IR_FRONT_TO_MIDDLE_LENGTH		11	 
+#define DISTANCE_TO_ALLEY_END			120
+#define MAXIMUM_IR_DISTANCE				150		
 
 void send_byte_to_comm(uint8_t byte);
 
 uint8_t interpret_big_ir(uint8_t value);
 uint8_t interpret_small_ir(uint8_t value);
+
+void analyze_ir_sensors();
+void turn_right_alley_front();
+void turn_left_alley_front();
