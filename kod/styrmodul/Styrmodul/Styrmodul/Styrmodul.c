@@ -25,7 +25,7 @@ volatile uint8_t spi_data_from_sensor[BUF_SZ];
 uint8_t spi_sensor_read;
 volatile uint16_t spi_sensor_write;
 
-#define SPEED 100
+#define SPEED 50
 uint8_t ninety_timer, turn, pid_timer;
 uint8_t left = 1;
 
@@ -174,8 +174,19 @@ uint8_t * reflex_sensors_currently_seeing_tape(uint8_t * values)
 			return_values[i] = 0;
 	}
 	
+	return return_values;
+}
+
+uint8_t is_empty(uint8_t * values, uint8_t len)
+{
+	uint8_t i;
+	for (i = 0;i<len;i++)
+	{
+		if(values[i] != 0)
+			return 0;
+	}
 	
-	return &return_values;
+	return 1;
 }
 
 void regulate_end_tape(uint8_t* values)
@@ -184,8 +195,8 @@ void regulate_end_tape(uint8_t* values)
 	static uint8_t offset = 5; //de fem första värdena är IR-skräp, vi vill bara läsa reflexerna
 	int8_t pos_index; //-5 för längst till vänster, 5 för höger, 0 i mitten!
 	uint8_t i;
-	static int16_t average=0, position=0, res=0;
-	static int8_t old_pos, pos;	
+	int16_t average=0, position=0, res=0;
+	int8_t old_pos=0, pos=0;	
 	
 	for (i = 0; i < 11; i++)
 	{
@@ -195,8 +206,7 @@ void regulate_end_tape(uint8_t* values)
 		
 	}
 	
-	pos = res*2/average;	//ojojoj
-	
+	pos = res/average;	//ojojoj
 	
 	char temp[32];
 	sprintf(temp,"%03d ", pos);
@@ -206,26 +216,33 @@ void regulate_end_tape(uint8_t* values)
 	static uint8_t a=0;
 	if(a++ > 250)
 	{
+	  clear_screen();
+	  update();
 	  send_string("POS: ");
 	  update();
 	  send_string(temp);
 	  update();
-	  clear_screen();
-	  update();
-	}	  
+	}
 	
-	if(pos > 0)
+	if(is_empty(values,11))
+	{
+		LEFT_AMOUNT = 0;
+		RIGHT_AMOUNT = 0;
+	}
+	
+	else if(pos > 0)
 	{
 		RIGHT_AMOUNT = pos*SPEED;
-		LEFT_AMOUNT = SPEED*2;
+		LEFT_AMOUNT = SPEED;
 		
-	}else if(pos < 0){
-		LEFT_AMOUNT = pos*SPEED;
-		RIGHT_AMOUNT = SPEED*2;
+	}
+	else if(pos < 0){
+		LEFT_AMOUNT = abs(pos)*SPEED;
+		RIGHT_AMOUNT = SPEED;
 	}
 	else{ // == 0
-		LEFT_AMOUNT = SPEED*2;
-		RIGHT_AMOUNT = SPEED*2;
+		LEFT_AMOUNT = SPEED;
+		RIGHT_AMOUNT = SPEED;
 	}
 	
 }
@@ -781,11 +798,11 @@ void decode_sensor(uint8_t data)
 // 				}
 // 			}
 			
-			if (sensor_buffer[IR_LEFT_FRONT] >= SEGMENT_LENGTH || sensor_buffer[IR_RIGHT_BACK] >= SEGMENT_LENGTH)
-			{
-				analyze_ir_sensors();
-			}
-			
+// 			if (sensor_buffer[IR_LEFT_FRONT] >= SEGMENT_LENGTH || sensor_buffer[IR_RIGHT_BACK] >= SEGMENT_LENGTH)
+// 			{
+// 				analyze_ir_sensors();
+// 			}
+// 			
 // 			if (sensor_buffer[IR_LEFT_FRONT] >= SEGMENT_LENGTH || sensor_buffer[IR_RIGHT_BACK] >= SEGMENT_LENGTH)
 // 			{
 // 				analyze_ir_sensors();
