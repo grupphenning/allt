@@ -999,14 +999,25 @@ uint8_t interpret_big_ir(uint8_t value)
 void analyze_ir_sensors()
 {
 	//Turn left, alley at front
-	if(sensor_buffer[IR_LEFT_FRONT]>=MAXIMUM_IR_DISTANCE && sensor_buffer[IR_FRONT] >=MAXIMUM_IR_DISTANCE)
+	if(sensor_buffer[IR_LEFT_FRONT]>=MAXIMUM_IR_DISTANCE && 
+		sensor_buffer[IR_FRONT] >=MAXIMUM_IR_DISTANCE && 
+		sensor_buffer[IR_RIGHT_FRONT] <= SEGMENT_LENGTH)
 	{
 		turn_left_alley_front();
 	}
 	//Turn Right, allay at front
-	else if((sensor_buffer[IR_RIGHT_FRONT]>=MAXIMUM_IR_DISTANCE) && (sensor_buffer[IR_FRONT] >=MAXIMUM_IR_DISTANCE))
+	else if(sensor_buffer[IR_LEFT_FRONT]<=SEGMENT_LENGTH &&
+		 sensor_buffer[IR_FRONT] >=MAXIMUM_IR_DISTANCE &&
+		 sensor_buffer[IR_RIGHT_FRONT] >=MAXIMUM_IR_DISTANCE)
 	{
 		turn_right_alley_front();
+	}
+	//Turn left, alley right
+	else if(sensor_buffer[IR_LEFT_FRONT] >= MAXIMUM_IR_DISTANCE &&
+		 sensor_buffer[IR_FRONT] <= SEGMENT_LENGTH &&
+		 sensor_buffer[IR_RIGHT_FRONT] >= MAXIMUM_IR_DISTANCE)
+	{
+		//TURN
 	}
 	
 }
@@ -1016,7 +1027,8 @@ void turn_left_alley_front()
 	//stäng av reglering
 	//Kör till mitten på korsning(front = 120-(halva robotens längd))
 	
-	while(sensor_buffer[IR_FRONT] > (DISTANCE_TO_ALLEY_END - IR_FRONT_TO_MIDDLE_LENGTH));
+	if(sensor_buffer[IR_FRONT] <= (DISTANCE_TO_ALLEY_END - IR_FRONT_TO_MIDDLE_LENGTH))
+		return;
 	
 	stop_motors();
 	_delay_ms(250);
@@ -1030,7 +1042,8 @@ void turn_right_alley_front()
 	//stäng av reglering
 	//Kör till mitten på korsning(front = 120-(halva robotens längd))
 	
-	while(sensor_buffer[IR_FRONT] > DISTANCE_TO_ALLEY_END - IR_FRONT_TO_MIDDLE_LENGTH);
+	if(sensor_buffer[IR_FRONT] <= DISTANCE_TO_ALLEY_END - IR_FRONT_TO_MIDDLE_LENGTH)
+		return;
 	
 	stop_motors();
 	_delay_ms(250);
@@ -1038,6 +1051,8 @@ void turn_right_alley_front()
 	//FIXA svängfunktion!
 	
 }
+
+
 
 
 /********************************************************
