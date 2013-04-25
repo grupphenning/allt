@@ -686,12 +686,13 @@ void decode_sensor(uint8_t data)
 			sensor_buffer[IR_LEFT_BACK] = interpret_small_ir(sensor_buffer[IR_LEFT_BACK]);
 			sensor_buffer[IR_RIGHT_BACK] = interpret_small_ir(sensor_buffer[IR_RIGHT_BACK]);
 			
-// 			//First time? Calibrate gyro
-// 			if(sensor_transmission_number<5)
-// 			{
-// 				gyro_init_value = sensor_buffer[GYRO];
-// 				sensor_transmission_number++;
-// 			}
+			//Wait a few times before using data
+			if(sensor_transmission_number<4)
+			{
+				//gyro_init_value = sensor_buffer[GYRO];
+				sensor_transmission_number++;
+				return;
+			}
 // 			
 // 			if(is_turning) 
 // 			{
@@ -996,7 +997,11 @@ void turn_right_alley_front()
 	
 	stop_motors();
 	_delay_ms(250);
+<<<<<<< HEAD
 	tank_turn_left(SPEED);
+=======
+	tank_turn_right(SPEED);
+>>>>>>> 729c437c94130a577406899e587a3dd4768d7790
 	//FIXA svängfunktion!
 	
 }

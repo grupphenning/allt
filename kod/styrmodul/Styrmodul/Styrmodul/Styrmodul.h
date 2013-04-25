@@ -59,3 +59,7 @@ void send_byte_to_comm(uint8_t byte);
 
 uint8_t interpret_big_ir(uint8_t value);
 uint8_t interpret_small_ir(uint8_t value);
+
+void analyze_ir_sensors();
+void turn_right_alley_front();
+void turn_left_alley_front();
