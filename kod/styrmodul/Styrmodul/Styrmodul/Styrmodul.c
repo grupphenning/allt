@@ -71,6 +71,12 @@ uint8_t big_ir_centimeter_array[117] = {16, 16, 17, 17, 18, 18, 19, 19, 20, 20, 
 
 uint8_t follow_end_tape = 0;
 
+
+//Korsningsgrejer
+uint8_t has_detected_crossing = 0;
+char crossing_direction;
+uint8_t crossing_stop_value;
+
 int main(void)
 {
 	//don't turn!
@@ -88,11 +94,7 @@ int main(void)
 	
 	clear_pid();
 	init_pid(40, 100, -100, 100);
-<<<<<<< HEAD
-	update_k_values(20, 1, 10);
-=======
 	update_k_values(10, 0, 10);
->>>>>>> 873d25c5527e9ce523a82ed2b9e68a707e6ca185
 	
 	while(1)
 	{
@@ -761,10 +763,16 @@ void decode_sensor(uint8_t data)
 // 			}
 			
 			
-// 			if (sensor_buffer[IR_LEFT_FRONT] >= SEGMENT_LENGTH || sensor_buffer[IR_RIGHT_BACK] >= SEGMENT_LENGTH)
-// 			{
-// 				analyze_ir_sensors();
-// 			}
+			//Om ej i korsning och får sensordata som indikerar korsning. Analysera korsningstyp
+			if (!has_detected_crossing && (sensor_buffer[IR_LEFT_FRONT] >= SEGMENT_LENGTH || sensor_buffer[IR_RIGHT_BACK] >= SEGMENT_LENGTH))
+			{
+				analyze_ir_sensors();
+			}
+			//Om korsning detekterad. Utför korningstypspecifika kommandon
+			else if(has_detected_crossing)
+			{
+				crossing_turn(crossing_direction, crossing_stop_value);
+			}
 			
 			
 			decode_tape_sensor_data();
@@ -1020,23 +1028,31 @@ uint8_t interpret_big_ir(uint8_t value)
 	return big_ir_centimeter_array[i];
 }
 
+/* 
+ * ANALYZE_IR_SENSORS()
+ * Vid upptäckt av någon form av korsning anropas denna.
+ * Funktionen väljer rätt korsningstyp utifrån sensordata.
+ * Flaggor som talar om vilken korsning ddet är sätts.
+ */
 void analyze_ir_sensors()
 {
-	static uint8_t has_detected_turn_left_alley_front = 0;
 	//Turn left, alley at front
 	if(	sensor_buffer[IR_LEFT_FRONT]>=MAXIMUM_IR_DISTANCE && 
-		sensor_buffer[IR_FRONT] >= DISTANCE_TO_ALLEY_END - IR_FRONT_TO_MIDDLE_LENGTH && 
+		sensor_buffer[IR_FRONT] >= MAXIMUM_IR_DISTANCE && 
 		sensor_buffer[IR_RIGHT_FRONT] <= SEGMENT_LENGTH)
 	{
-		has_detected_turn_left_alley_front = 1;
-		turn_left_alley_front();
+		has_detected_crossing = 1;
+		crossing_direction = 'l';
+		crossing_stop_value = DISTANCE_TO_ALLEY_END - IR_FRONT_TO_MIDDLE_LENGTH;
 	}
 	//Turn Right, allay at front
 	else if(sensor_buffer[IR_LEFT_FRONT]<=SEGMENT_LENGTH &&
 		sensor_buffer[IR_FRONT] >=MAXIMUM_IR_DISTANCE &&
 		sensor_buffer[IR_RIGHT_FRONT] >=MAXIMUM_IR_DISTANCE)
 	{
-		turn_right_alley_front();
+		has_detected_crossing = 1;
+		crossing_direction = 'r';
+		crossing_stop_value = DISTANCE_TO_ALLEY_END - IR_FRONT_TO_MIDDLE_LENGTH;
 	}
 	//Turn left, alley right
 	else if(sensor_buffer[IR_LEFT_FRONT] >= MAXIMUM_IR_DISTANCE &&
@@ -1044,83 +1060,66 @@ void analyze_ir_sensors()
 		sensor_buffer[IR_RIGHT_FRONT] >= SEGMENT_LENGTH &&
 		sensor_buffer[IR_RIGHT_FRONT] <= MAXIMUM_IR_DISTANCE)
 	{
-		turn_left_alley_right();
+		has_detected_crossing = 1;
+		crossing_direction = 'l';
+		crossing_stop_value = SEGMENT_LENGTH/2-IR_FRONT_TO_MIDDLE_LENGTH;
 	}
+	//turn right alley to left
 	else if(sensor_buffer[IR_LEFT_FRONT] >= SEGMENT_LENGTH &&
 		sensor_buffer[IR_LEFT_FRONT] <= MAXIMUM_IR_DISTANCE &&
 		sensor_buffer[IR_FRONT] <= SEGMENT_LENGTH &&
 		sensor_buffer[IR_RIGHT_FRONT] >= MAXIMUM_IR_DISTANCE)
 	{
-		turn_right_alley_left();
+		has_detected_crossing = 1;
+		crossing_direction = 'r';
+		crossing_stop_value = SEGMENT_LENGTH/2-IR_FRONT_TO_MIDDLE_LENGTH;
 	}
+	//turn front alley left
 	else if(sensor_buffer[IR_LEFT_FRONT] >= SEGMENT_LENGTH &&
 		sensor_buffer[IR_LEFT_FRONT] <= MAXIMUM_IR_DISTANCE &&
 		sensor_buffer[IR_FRONT] >= MAXIMUM_IR_DISTANCE &&
 		sensor_buffer[IR_RIGHT_FRONT] <= SEGMENT_LENGTH)
 	{
-		turn_front_alley_left();
+		has_detected_crossing = 1;
+		crossing_direction = 'f';
+		crossing_stop_value = 0;
 	}
+	//turn front alley right
 	else if(sensor_buffer[IR_LEFT_FRONT] <= SEGMENT_LENGTH &&
 		sensor_buffer[IR_FRONT] >= MAXIMUM_IR_DISTANCE &&
 		sensor_buffer[IR_RIGHT_FRONT] >= SEGMENT_LENGTH &&
 		sensor_buffer[IR_RIGHT_FRONT] <= MAXIMUM_IR_DISTANCE)
 	{
-		turn_front_alley_right();
+		has_detected_crossing = 1;
+		crossing_direction = 'f';
+		crossing_stop_value = 0;
 	}
-	
 }
 
-void turn_left_alley_front()
+
+/*
+ * CROSSING_TURN(DIR,STOP_DISTANCE)
+ * Körs då korning, samt korningstyp identifierats.
+ * Utför sväng då roboten kört tillräckligt långt in i korsningen.
+ */
+void crossing_turn(char dir,uint8_t stop_distance)
 {
-	//stäng av reglering
-	//Kör till mitten på korsning(front = 120-(halva robotens längd))
-	
-	if(sensor_buffer[IR_FRONT] <= (DISTANCE_TO_ALLEY_END - IR_FRONT_TO_MIDDLE_LENGTH))
+	if (sensor_buffer[IR_FRONT] <= stop_distance)
 	{
+		has_detected_crossing = 0;
 		stop_motors();
 		_delay_ms(500);
-		tank_turn_left(SPEED);
+		
+		switch(dir)
+		{
+			case 'l': tank_turn_left(SPEED); break;
+			case 'r': tank_turn_right(SPEED); break;
+			default: break;
+		}
+		
 	}
-	//FIXA svängfunktion!
 	
 }
-
-void turn_right_alley_front()
-{
-	//stäng av reglering
-	//Kör till mitten på korsning(front = 120-(halva robotens längd))
-	
-	if(sensor_buffer[IR_FRONT] <= DISTANCE_TO_ALLEY_END - IR_FRONT_TO_MIDDLE_LENGTH)
-	{
-		stop_motors();
-		_delay_ms(500);
-		tank_turn_right(SPEED);
-		//FIXA svängfunktion!
-	}
-
-	
-}
-
-void turn_left_alley_right()
-{
-	
-}
-
-void turn_right_alley_left()
-{
-	
-}
-
-void turn_front_alley_left()
-{
-	
-}
-
-void turn_front_alley_right()
-{
-	
-}
-
 
 
 /********************************************************
