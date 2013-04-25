@@ -704,12 +704,9 @@ void decode_sensor(uint8_t data)
 // 			}
 			
 			decode_tape_sensor_data();
-<<<<<<< HEAD
 			analyze_ir_sensors();
 
-=======
-			//analyze_ir_sensors();		
->>>>>>> 84a381d9020048cd0ccd4a74afd54c729f6c4306
+
 			break;
 		} 
 		default:
