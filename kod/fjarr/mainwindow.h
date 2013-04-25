@@ -37,6 +37,8 @@ private slots:
 
     void on_pushButton_13_clicked();
 
+    void on_pushButton_5_clicked();
+
 private:
     MainWindow *w;
 };
