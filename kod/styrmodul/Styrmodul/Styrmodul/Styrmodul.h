@@ -62,6 +62,7 @@ void send_byte_to_comm(uint8_t byte);
 uint8_t interpret_big_ir(uint8_t value);
 uint8_t interpret_small_ir(uint8_t value);
 void regulate_end_tape(uint8_t* values);
+uint8_t * reflex_sensors_currently_seeing_tape(uint8_t * values);
 
 void analyze_ir_sensors();
 void crossing_turn(char dir, uint8_t stop_distance);
