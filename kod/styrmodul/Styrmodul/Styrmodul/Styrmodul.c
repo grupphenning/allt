@@ -25,7 +25,7 @@ volatile uint8_t spi_data_from_sensor[BUF_SZ];
 uint8_t spi_sensor_read;
 volatile uint16_t spi_sensor_write;
 
-#define SPEED 100
+#define SPEED 255
 uint8_t ninety_timer, turn, pid_timer;
 uint8_t left = 1;
 
@@ -904,17 +904,16 @@ void decode_sensor(uint8_t data)
 
 			//Om ej i korsning och får sensordata som indikerar korsning. Analysera korsningstyp
 			
-// 			if (!has_detected_crossing && (sensor_buffer[IR_LEFT_FRONT] >= SEGMENT_LENGTH || sensor_buffer[IR_RIGHT_FRONT] >= SEGMENT_LENGTH))
-// 			{
-// 				stop_motors();
-// 				analyze_ir_sensors();
-// 			}
-// 			
-// 			//Om korsning detekterad. Utför korningstypspecifika kommandon
-// 			else if(has_detected_crossing)
-// 			{
-// 				crossing_turn(crossing_direction, crossing_stop_value);
-// 			}
+			if (!has_detected_crossing && (sensor_buffer[IR_LEFT_FRONT] >= SEGMENT_LENGTH || sensor_buffer[IR_RIGHT_FRONT] >= SEGMENT_LENGTH))
+			{
+				analyze_ir_sensors();
+			}
+			
+			//Om korsning detekterad. Utför korningstypspecifika kommandon
+			else if(has_detected_crossing)
+			{
+				crossing_turn(crossing_direction, crossing_stop_value);
+			}
 // 			
 			
 			//decode_tape_sensor_data();
@@ -1222,7 +1221,7 @@ void analyze_ir_sensors()
 		crossing_direction = 'r';
 		crossing_stop_value = SEGMENT_LENGTH/2-IR_FRONT_TO_MIDDLE_LENGTH+OFFSET;
 	}
-	//turn front alley left
+	//turn front alley right
 	else if(sensor_buffer[IR_LEFT_FRONT] >= SEGMENT_LENGTH &&
 		sensor_buffer[IR_LEFT_FRONT] <= MAXIMUM_IR_DISTANCE &&
 		sensor_buffer[IR_FRONT] >= MAXIMUM_IR_DISTANCE &&
@@ -1252,18 +1251,23 @@ void analyze_ir_sensors()
  */
 void crossing_turn(char dir,uint8_t stop_distance)
 {
-	if (sensor_buffer[IR_FRONT] <= stop_distance)
+	if (sensor_buffer[IR_FRONT] <= stop_distance || stop_distance == 0)
 	{
 		has_detected_crossing = 0;
 		stop_motors();
+		_delay_ms(500);
 		
 		
 		switch(dir)
 		{
 			case 'l': tank_turn_left(SPEED); break;
 			case 'r': tank_turn_right(SPEED); break;
+			case 'f': drive_forwards(SPEED); break;
 			default: break;
 		}
+		_delay_ms(2000);
+		stop_motors();
+		
 	}
 	
 }
@@ -1274,7 +1278,7 @@ void turn_left90()
 	static uint8_t front;
 	static uint8_t is_turning = 0;
 	
-	if(is_turning && front == sensor_buffer[IR_RIGHT_FRONT])
+	if(is_turning && (front && sensor_buffer[IR_RIGHT_FRONT]))
 	{
 		is_turning = 0;
 		stop_motors();
@@ -1283,6 +1287,7 @@ void turn_left90()
 	else if(!is_turning) 
 	{
 		front = sensor_buffer[IR_FRONT];
+		
 		is_turning = 1;
 		tank_turn_left(SPEED);
 	}  
