@@ -9,6 +9,8 @@
 #include "Styrmodul.h"
 #include "pid.h"
 #include "../../../sensormodul/sensormodul/sensormodul.h"
+#include <stdlib.h>
+
 #define SENSOR_BUFFER_SIZE 256
 //#define INTERPOLATION_POINTS 12
 uint8_t test;
@@ -194,6 +196,7 @@ uint8_t * reflex_sensors_currently_seeing_tape(uint8_t * values)
 	return return_values;
 }
 
+
 uint8_t is_empty(uint8_t * values, uint8_t len)
 {
 	uint8_t i;
@@ -205,6 +208,7 @@ uint8_t is_empty(uint8_t * values, uint8_t len)
 	
 	return 1;
 }
+
 
 void regulate_end_tape(uint8_t* values)
 {
@@ -345,6 +349,76 @@ void regulate_end_tape_2(uint8_t* values)
 }
 
 
+void regulate_end_tape_3()
+{
+	int8_t pos_index; //-5 för längst till vänster, 5 för höger, 0 i mitten!
+	uint8_t i, n_of_reflexes_on = 0;
+	int8_t res=0;
+	int8_t old_pos=0, pos=0;
+	uint8_t reflex[9];
+	
+	for (i = 0; i < 9; i++)
+	{
+		pos_index = i-4;
+		if(sensor_buffer[i+REFLEX2] > REFLEX_SENSITIVITY)
+		{
+			reflex[i] = 1;
+			res += pos_index;
+			n_of_reflexes_on += 1;
+		}
+		else
+			reflex[i] = 0;
+		
+	}
+	
+	//div med 0
+	if(n_of_reflexes_on != 0)
+		pos = res*2/n_of_reflexes_on;	//ojojoj
+	else //utanför tejp, stopp!
+		stop_motors();			
+		
+	clear_screen();
+	//_delay_ms(100);
+	for (i=0;i < 9;i++)
+	{
+		char temp[2];
+		sprintf(temp,"%d", reflex[i]);
+		send_string(temp);
+		update();
+	}
+		
+		//update();
+		//
+		// 		send_string("POS: ");
+		// 		update();
+		// 		send_string(temp);
+		// 		update();
+	//}
+	
+	if(res > 0)
+	{
+		RIGHT_AMOUNT = SPEED + pos*10;
+		LEFT_AMOUNT = SPEED - pos*10;
+		setbit(PORT_DIR, LEFT_DIR);
+		setbit(PORT_DIR, RIGHT_DIR);
+		send_string("left");
+		update();
+	}
+	
+	else if(res < 0){
+		LEFT_AMOUNT = SPEED + abs(pos)*10;
+		RIGHT_AMOUNT = SPEED - abs(pos)*10;
+		setbit(PORT_DIR, LEFT_DIR);
+		setbit(PORT_DIR, RIGHT_DIR);
+		send_string("right");
+		update();
+	}
+	
+	else if(res == 0 && n_of_reflexes_on != 0){ // == 0
+		drive_forwards(SPEED);
+	}
+
+}
 
 
 void pid_timer_init()
@@ -880,6 +954,7 @@ void decode_sensor(uint8_t data)
 			sensor_buffer[IR_LEFT_BACK] = interpret_small_ir(sensor_buffer[IR_LEFT_BACK]);
 			sensor_buffer[IR_RIGHT_BACK] = interpret_small_ir(sensor_buffer[IR_RIGHT_BACK]);
 			
+			
 			//Wait a few times before using data
 			if(sensor_transmission_number<4)
 			{
@@ -887,7 +962,7 @@ void decode_sensor(uint8_t data)
 				sensor_transmission_number++;
 				return;
 			}
-// 			
+
 // 			if(is_turning) 
 // 			{
 // 				gyro_int += 3*abs(gyro_init_value - (int)sensor_buffer[GYRO]); //Maxhastighet 300grader/s,
@@ -915,10 +990,10 @@ void decode_sensor(uint8_t data)
 			
 			
 			//decode_tape_sensor_data();
-//  			if (follow_end_tape)
-//  			{
-//  				regulate_end_tape_2(sensor_buffer);
-//  			}
+  			if (follow_end_tape)
+  			{
+  				regulate_end_tape_3();
+  			}
 
 			break;
 		} 
@@ -940,7 +1015,7 @@ void decode_sensor(uint8_t data)
 	{
 		a=0;
 		///////////////////////////////////////////////////////////////////////////////////////////////////////////////update_display_string();
-		update_display_string();
+		//update_display_string();
 	}
 }
 
