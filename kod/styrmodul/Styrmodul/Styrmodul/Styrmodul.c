@@ -685,15 +685,18 @@ void decode_comm(uint8_t command)
 // 		sprintf(tmp, "%02X ",  pid);
 // 		send_string(tmp);
 // 		update();
-		if(pid == 3){
+		if(pid == 4){
 			constant_p = command;
 		}			
-		else if(pid == 2){
+		else if(pid == 3){
 			constant_i = command;
+		}
+		else if(pid == 2) {
+			constant_d = command << 8;
 		}
 		else // pid == 1
 		{
-			constant_d = command;
+			constant_d |= command;
 			update_k_values(constant_p, constant_i, constant_d);
 		}
 		--pid;
@@ -774,7 +777,7 @@ void decode_comm(uint8_t command)
 	}
 	else if(command == COMM_SET_PID)
 	{
-		pid = 3;
+		pid = 4;
 	}
 	else if(command == COMM_ENABLE_PID)
 	{
@@ -900,21 +903,22 @@ void decode_sensor(uint8_t data)
 			
 
 			//Om ej i korsning och får sensordata som indikerar korsning. Analysera korsningstyp
-			/*
-			if (!has_detected_crossing && (sensor_buffer[IR_LEFT_FRONT] >= SEGMENT_LENGTH || sensor_buffer[IR_RIGHT_BACK] >= SEGMENT_LENGTH))
-			{
-				analyze_ir_sensors();
-			}
 			
-			//Om korsning detekterad. Utför korningstypspecifika kommandon
-			else if(has_detected_crossing)
-			{
-				crossing_turn(crossing_direction, crossing_stop_value);
-			}
-			*/
-			
+// 			if (!has_detected_crossing && (sensor_buffer[IR_LEFT_FRONT] >= SEGMENT_LENGTH || sensor_buffer[IR_RIGHT_BACK] >= SEGMENT_LENGTH))
+// 			{
+// 				stop_motors();
+// 				analyze_ir_sensors();
+// 			}
+// 			
+// 			//Om korsning detekterad. Utför korningstypspecifika kommandon
+// 			else if(has_detected_crossing)
+// 			{
+// 				crossing_turn(crossing_direction, crossing_stop_value);
+// 			}
+// 			
 			
 			//decode_tape_sensor_data();
+
 //  			if (follow_end_tape)
 //  			{
 //  				regulate_end_tape_2(sensor_buffer);
@@ -939,7 +943,6 @@ void decode_sensor(uint8_t data)
 	if((a++ & 0b10000))
 	{
 		a=0;
-		///////////////////////////////////////////////////////////////////////////////////////////////////////////////update_display_string();
 		update_display_string();
 	}
 }
@@ -951,7 +954,7 @@ void update_display_string()
 {
 	char tmp[100];
 	clear_screen();
-	sprintf(tmp, "L:  %03d  R: %03d F: %03d ", sensor_buffer[IR_LEFT_FRONT], sensor_buffer[IR_RIGHT_FRONT], sensor_buffer[IR_FRONT]);
+	sprintf(tmp, "L: %03d   R: %03d F: %03d ", sensor_buffer[IR_LEFT_FRONT], sensor_buffer[IR_RIGHT_FRONT], sensor_buffer[IR_FRONT]);
 	send_string(tmp);
 	update();
 	return;
@@ -1185,19 +1188,19 @@ void analyze_ir_sensors()
 		sensor_buffer[IR_FRONT] >= MAXIMUM_IR_DISTANCE && 
 		sensor_buffer[IR_RIGHT_FRONT] <= SEGMENT_LENGTH)
 	{
-		stop_motors();
+		//stop_motors();
 		has_detected_crossing = 1;
 		crossing_direction = 'l';
-		crossing_stop_value = DISTANCE_TO_ALLEY_END - IR_FRONT_TO_MIDDLE_LENGTH;
+		crossing_stop_value = DISTANCE_TO_ALLEY_END - IR_FRONT_TO_MIDDLE_LENGTH + OFFSET;
 	}
 	//Turn Right, alley at front
-	else if(sensor_buffer[IR_LEFT_FRONT]<=SEGMENT_LENGTH &&
+	else if(sensor_buffer[IR_LEFT_FRONT]<=SEGMENT_LENGTH &&			
 		sensor_buffer[IR_FRONT] >=MAXIMUM_IR_DISTANCE &&
 		sensor_buffer[IR_RIGHT_FRONT] >=MAXIMUM_IR_DISTANCE)
 	{
 		has_detected_crossing = 1;
 		crossing_direction = 'r';
-		crossing_stop_value = DISTANCE_TO_ALLEY_END - IR_FRONT_TO_MIDDLE_LENGTH;
+		crossing_stop_value = DISTANCE_TO_ALLEY_END - IR_FRONT_TO_MIDDLE_LENGTH + OFFSET;
 	}
 	//Turn left, alley right															//FUNKAR!
 	else if(sensor_buffer[IR_LEFT_FRONT] >= MAXIMUM_IR_DISTANCE &&
@@ -1207,7 +1210,7 @@ void analyze_ir_sensors()
 	{
 		has_detected_crossing = 1;
 		crossing_direction = 'l';
-		crossing_stop_value = SEGMENT_LENGTH/2-IR_FRONT_TO_MIDDLE_LENGTH;
+		crossing_stop_value = SEGMENT_LENGTH/2-IR_FRONT_TO_MIDDLE_LENGTH +OFFSET;
 	}
 	//turn right alley to left															//Funkar!
 	else if(sensor_buffer[IR_LEFT_FRONT] >= SEGMENT_LENGTH &&
@@ -1217,7 +1220,7 @@ void analyze_ir_sensors()
 	{
 		has_detected_crossing = 1;
 		crossing_direction = 'r';
-		crossing_stop_value = SEGMENT_LENGTH/2-IR_FRONT_TO_MIDDLE_LENGTH;
+		crossing_stop_value = SEGMENT_LENGTH/2-IR_FRONT_TO_MIDDLE_LENGTH+OFFSET;
 	}
 	//turn front alley left
 	else if(sensor_buffer[IR_LEFT_FRONT] >= SEGMENT_LENGTH &&

@@ -72,7 +72,7 @@ int16_t regulator(int16_t input)				//Själva regulatorn
 	int16_t dinput = input - last_input;	//Derivering
 	last_input = input;
 	
-	output = k_prop*input /*+ I_term*/ - k_der*dinput/cykle_time;	//Slutsummering och begränsning för att undvika mättad utsignal.
+	output = k_prop*input /*+ I_term*/ + k_der*dinput/cykle_time;	//Slutsummering och begränsning för att undvika mättad utsignal.
 	
 	output = output/128;					//Skala ner 128
 	
