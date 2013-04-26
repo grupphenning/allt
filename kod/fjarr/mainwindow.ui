@@ -430,8 +430,11 @@
       <height>22</height>
      </rect>
     </property>
+    <property name="minimum">
+     <number>-30000</number>
+    </property>
     <property name="maximum">
-     <number>255</number>
+     <number>30000</number>
     </property>
    </widget>
    <widget class="QLabel" name="label_11">
