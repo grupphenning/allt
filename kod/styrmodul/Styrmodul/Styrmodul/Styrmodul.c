@@ -27,7 +27,7 @@ volatile uint8_t spi_data_from_sensor[BUF_SZ];
 uint8_t spi_sensor_read;
 volatile uint16_t spi_sensor_write;
 
-#define SPEED 100
+#define SPEED 255
 uint8_t ninety_timer, turn, pid_timer;
 uint8_t left = 1;
 
@@ -97,10 +97,8 @@ int main(void)
 	sei();		//aktivera global interrupts
 	
 	clear_pid();
-	init_pid(40, 100, -100, 100);
+	init_pid(100, -100);
 	update_k_values(10, 0, 10);
-	init_pid(40, 100, -100, 100);
-	update_k_values(20, 1, 10);
 	
 	//_delay_ms(2000);
 	//drive_forwards(255);
@@ -142,30 +140,8 @@ int main(void)
 		
 		if (regulator_enable && regulator_flag)
 		{
-			static int16_t signal_e = 0,signal_u = 0; 
-			signal_e = (sensor_buffer[IR_RIGHT_BACK] + sensor_buffer[IR_RIGHT_FRONT] - sensor_buffer[IR_LEFT_BACK] - sensor_buffer[IR_LEFT_FRONT])/2;
-			signal_u = regulator(signal_e); //borde skrivas om så den ger ut ett åttabitarsvärde? Ja
-			
-			if(signal_u == 0)
-			{
-				LEFT_AMOUNT = SPEED;
-				RIGHT_AMOUNT = SPEED;
-			}
-			
-			if(signal_u > 0)
-			{
-				LEFT_AMOUNT = SPEED;
-				RIGHT_AMOUNT = SPEED - (uint8_t)signal_u;
-			}
-				
-			if (signal_u < 0)
-			{
-				LEFT_AMOUNT = SPEED - (uint8_t)abs(signal_u);
-				RIGHT_AMOUNT = SPEED;
-			}
-			
-		regulator_enable = 0;
-		
+			regulator();    //Är void i nuläget, den behövde designas om.
+			regulator_enable = 0;
 		}	
 		
 		//follow_end_tape = 1;
@@ -759,15 +735,18 @@ void decode_comm(uint8_t command)
 // 		sprintf(tmp, "%02X ",  pid);
 // 		send_string(tmp);
 // 		update();
-		if(pid == 3){
+		if(pid == 4){
 			constant_p = command;
 		}			
-		else if(pid == 2){
+		else if(pid == 3){
 			constant_i = command;
+		}
+		else if(pid == 2) {
+			constant_d = command << 8;
 		}
 		else // pid == 1
 		{
-			constant_d = command;
+			constant_d |= command;
 			update_k_values(constant_p, constant_i, constant_d);
 		}
 		--pid;
@@ -848,7 +827,7 @@ void decode_comm(uint8_t command)
 	}
 	else if(command == COMM_SET_PID)
 	{
-		pid = 3;
+		pid = 4;
 	}
 	else if(command == COMM_ENABLE_PID)
 	{
@@ -975,8 +954,8 @@ void decode_sensor(uint8_t data)
 			
 
 			//Om ej i korsning och får sensordata som indikerar korsning. Analysera korsningstyp
-			/*
-			if (!has_detected_crossing && (sensor_buffer[IR_LEFT_FRONT] >= SEGMENT_LENGTH || sensor_buffer[IR_RIGHT_BACK] >= SEGMENT_LENGTH))
+			
+			if (!has_detected_crossing && (sensor_buffer[IR_LEFT_FRONT] >= SEGMENT_LENGTH || sensor_buffer[IR_RIGHT_FRONT] >= SEGMENT_LENGTH))
 			{
 				analyze_ir_sensors();
 			}
@@ -986,14 +965,18 @@ void decode_sensor(uint8_t data)
 			{
 				crossing_turn(crossing_direction, crossing_stop_value);
 			}
-			*/
-			
+// 			
 			
 			//decode_tape_sensor_data();
   			if (follow_end_tape)
   			{
   				regulate_end_tape_3();
   			}
+
+//  			if (follow_end_tape)
+//  			{
+//  				regulate_end_tape_2(sensor_buffer);
+//  			}
 
 			break;
 		} 
@@ -1014,7 +997,6 @@ void decode_sensor(uint8_t data)
 	if((a++ & 0b10000))
 	{
 		a=0;
-		///////////////////////////////////////////////////////////////////////////////////////////////////////////////update_display_string();
 		//update_display_string();
 	}
 }
@@ -1026,7 +1008,7 @@ void update_display_string()
 {
 	char tmp[100];
 	clear_screen();
-	sprintf(tmp, "L:  %03d  R: %03d F: %03d ", sensor_buffer[IR_LEFT_FRONT], sensor_buffer[IR_RIGHT_FRONT], sensor_buffer[IR_FRONT]);
+	sprintf(tmp, "L: %03d   R: %03d F: %03d ", sensor_buffer[IR_LEFT_FRONT], sensor_buffer[IR_RIGHT_FRONT], sensor_buffer[IR_FRONT]);
 	send_string(tmp);
 	update();
 	return;
@@ -1260,19 +1242,19 @@ void analyze_ir_sensors()
 		sensor_buffer[IR_FRONT] >= MAXIMUM_IR_DISTANCE && 
 		sensor_buffer[IR_RIGHT_FRONT] <= SEGMENT_LENGTH)
 	{
-		stop_motors();
+		//stop_motors();
 		has_detected_crossing = 1;
 		crossing_direction = 'l';
-		crossing_stop_value = DISTANCE_TO_ALLEY_END - IR_FRONT_TO_MIDDLE_LENGTH;
+		crossing_stop_value = DISTANCE_TO_ALLEY_END - IR_FRONT_TO_MIDDLE_LENGTH + OFFSET;
 	}
 	//Turn Right, alley at front
-	else if(sensor_buffer[IR_LEFT_FRONT]<=SEGMENT_LENGTH &&
+	else if(sensor_buffer[IR_LEFT_FRONT]<=SEGMENT_LENGTH &&			
 		sensor_buffer[IR_FRONT] >=MAXIMUM_IR_DISTANCE &&
 		sensor_buffer[IR_RIGHT_FRONT] >=MAXIMUM_IR_DISTANCE)
 	{
 		has_detected_crossing = 1;
 		crossing_direction = 'r';
-		crossing_stop_value = DISTANCE_TO_ALLEY_END - IR_FRONT_TO_MIDDLE_LENGTH;
+		crossing_stop_value = DISTANCE_TO_ALLEY_END - IR_FRONT_TO_MIDDLE_LENGTH + OFFSET;
 	}
 	//Turn left, alley right															//FUNKAR!
 	else if(sensor_buffer[IR_LEFT_FRONT] >= MAXIMUM_IR_DISTANCE &&
@@ -1282,7 +1264,7 @@ void analyze_ir_sensors()
 	{
 		has_detected_crossing = 1;
 		crossing_direction = 'l';
-		crossing_stop_value = SEGMENT_LENGTH/2-IR_FRONT_TO_MIDDLE_LENGTH;
+		crossing_stop_value = SEGMENT_LENGTH/2-IR_FRONT_TO_MIDDLE_LENGTH +OFFSET;
 	}
 	//turn right alley to left															//Funkar!
 	else if(sensor_buffer[IR_LEFT_FRONT] >= SEGMENT_LENGTH &&
@@ -1292,9 +1274,9 @@ void analyze_ir_sensors()
 	{
 		has_detected_crossing = 1;
 		crossing_direction = 'r';
-		crossing_stop_value = SEGMENT_LENGTH/2-IR_FRONT_TO_MIDDLE_LENGTH;
+		crossing_stop_value = SEGMENT_LENGTH/2-IR_FRONT_TO_MIDDLE_LENGTH+OFFSET;
 	}
-	//turn front alley left
+	//turn front alley right
 	else if(sensor_buffer[IR_LEFT_FRONT] >= SEGMENT_LENGTH &&
 		sensor_buffer[IR_LEFT_FRONT] <= MAXIMUM_IR_DISTANCE &&
 		sensor_buffer[IR_FRONT] >= MAXIMUM_IR_DISTANCE &&
@@ -1324,21 +1306,65 @@ void analyze_ir_sensors()
  */
 void crossing_turn(char dir,uint8_t stop_distance)
 {
-	if (sensor_buffer[IR_FRONT] <= stop_distance)
+	if (sensor_buffer[IR_FRONT] <= stop_distance || stop_distance == 0)
 	{
 		has_detected_crossing = 0;
 		stop_motors();
+		_delay_ms(500);
 		
 		
 		switch(dir)
 		{
 			case 'l': tank_turn_left(SPEED); break;
 			case 'r': tank_turn_right(SPEED); break;
+			case 'f': drive_forwards(SPEED); break;
 			default: break;
 		}
+		_delay_ms(2000);
+		stop_motors();
 		
-		_delay_ms(1000);
+	}
+	
+}
+
+
+void turn_left90()
+{
+	static uint8_t front;
+	static uint8_t is_turning = 0;
+	
+	if(is_turning && (front && sensor_buffer[IR_RIGHT_FRONT]))
+	{
+		is_turning = 0;
+		stop_motors();
+		//Börjja köra sen
+	}
+	else if(!is_turning) 
+	{
+		front = sensor_buffer[IR_FRONT];
 		
+		is_turning = 1;
+		tank_turn_left(SPEED);
+	}  
+	
+}
+
+void turn_right90()
+{
+	static uint8_t front;
+	static uint8_t is_turning = 0;
+	
+	if(is_turning && front == sensor_buffer[IR_LEFT_FRONT])
+	{
+		is_turning = 0;
+		stop_motors();
+		//Börjja köra sen
+	}
+	else if(!is_turning)
+	{
+		front = sensor_buffer[IR_FRONT];
+		is_turning = 1;
+		tank_turn_right(SPEED);
 	}
 	
 }

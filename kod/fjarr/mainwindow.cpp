@@ -277,7 +277,8 @@ void MainWindow::on_pushButtonPID_clicked()
     array.append('p');
     array.append(ui->spinBoxP->value());
     array.append(ui->spinBoxI->value());
-    array.append(ui->spinBoxD->value());
+    array.append((ui->spinBoxD->value() >> 8) & 0xff);
+    array.append(ui->spinBoxD->value() & 0xff);
     port->write(array);
     port->flush();
 }
