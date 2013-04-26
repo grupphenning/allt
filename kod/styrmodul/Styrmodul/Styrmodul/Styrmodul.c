@@ -98,7 +98,7 @@ int main(void)
 	init_pid(40, 100, -100, 100);
 	update_k_values(10, 0, 10);
 	init_pid(40, 100, -100, 100);
-	update_k_values(20, 1, 10);
+	update_k_values(1, 1, 1);
 	
 	//_delay_ms(2000);
 	//drive_forwards(255);
