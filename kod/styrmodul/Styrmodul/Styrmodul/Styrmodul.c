@@ -25,7 +25,7 @@ volatile uint8_t spi_data_from_sensor[BUF_SZ];
 uint8_t spi_sensor_read;
 volatile uint16_t spi_sensor_write;
 
-#define SPEED 25
+#define SPEED 100
 uint8_t ninety_timer, turn, pid_timer;
 uint8_t left = 1;
 
@@ -914,7 +914,7 @@ void decode_sensor(uint8_t data)
 			*/
 			
 			
-			decode_tape_sensor_data();
+			//decode_tape_sensor_data();
 //  			if (follow_end_tape)
 //  			{
 //  				regulate_end_tape_2(sensor_buffer);
@@ -940,7 +940,7 @@ void decode_sensor(uint8_t data)
 	{
 		a=0;
 		///////////////////////////////////////////////////////////////////////////////////////////////////////////////update_display_string();
-		//update_display_string();
+		update_display_string();
 	}
 }
 
