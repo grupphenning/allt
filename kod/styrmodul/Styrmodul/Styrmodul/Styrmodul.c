@@ -95,10 +95,8 @@ int main(void)
 	sei();		//aktivera global interrupts
 	
 	clear_pid();
-	init_pid(40, 100, -100, 100);
+	init_pid(100, -100);
 	update_k_values(10, 0, 10);
-	init_pid(40, 100, -100, 100);
-	update_k_values(1, 1, 1);
 	
 	//_delay_ms(2000);
 	//drive_forwards(255);
@@ -140,30 +138,8 @@ int main(void)
 		
 		if (regulator_enable && regulator_flag)
 		{
-			static int16_t signal_e = 0,signal_u = 0; 
-			signal_e = (sensor_buffer[IR_RIGHT_BACK] + sensor_buffer[IR_RIGHT_FRONT] - sensor_buffer[IR_LEFT_BACK] - sensor_buffer[IR_LEFT_FRONT])/2;
-			signal_u = regulator(signal_e); //borde skrivas om så den ger ut ett åttabitarsvärde? Ja
-			
-			if(signal_u == 0)
-			{
-				LEFT_AMOUNT = SPEED;
-				RIGHT_AMOUNT = SPEED;
-			}
-			
-			if(signal_u > 0)
-			{
-				LEFT_AMOUNT = SPEED;
-				RIGHT_AMOUNT = SPEED - (uint8_t)signal_u;
-			}
-				
-			if (signal_u < 0)
-			{
-				LEFT_AMOUNT = SPEED - (uint8_t)abs(signal_u);
-				RIGHT_AMOUNT = SPEED;
-			}
-			
-		regulator_enable = 0;
-		
+			regulator();    //Är void i nuläget, den behövde designas om.
+			regulator_enable = 0;
 		}	
 		
 		//follow_end_tape = 1;
