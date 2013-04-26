@@ -25,11 +25,7 @@ volatile uint8_t spi_data_from_sensor[BUF_SZ];
 uint8_t spi_sensor_read;
 volatile uint16_t spi_sensor_write;
 
-<<<<<<< HEAD
-#define SPEED 255
-=======
 #define SPEED 100
->>>>>>> 259559346cfa96eb53c17676462386a3daf78d10
 uint8_t ninety_timer, turn, pid_timer;
 uint8_t left = 1;
 
@@ -908,26 +904,21 @@ void decode_sensor(uint8_t data)
 
 			//Om ej i korsning och får sensordata som indikerar korsning. Analysera korsningstyp
 			
-			if (!has_detected_crossing && (sensor_buffer[IR_LEFT_FRONT] >= SEGMENT_LENGTH || sensor_buffer[IR_RIGHT_BACK] >= SEGMENT_LENGTH))
-			{
-				stop_motors();
-				analyze_ir_sensors();
-			}
+// 			if (!has_detected_crossing && (sensor_buffer[IR_LEFT_FRONT] >= SEGMENT_LENGTH || sensor_buffer[IR_RIGHT_BACK] >= SEGMENT_LENGTH))
+// 			{
+// 				stop_motors();
+// 				analyze_ir_sensors();
+// 			}
+// 			
+// 			//Om korsning detekterad. Utför korningstypspecifika kommandon
+// 			else if(has_detected_crossing)
+// 			{
+// 				crossing_turn(crossing_direction, crossing_stop_value);
+// 			}
+// 			
 			
-			//Om korsning detekterad. Utför korningstypspecifika kommandon
-			else if(has_detected_crossing)
-			{
-				crossing_turn(crossing_direction, crossing_stop_value);
-			}
-			
-			
-<<<<<<< HEAD
-			
-			
-			//&decode_tape_sensor_data();
-=======
 			//decode_tape_sensor_data();
->>>>>>> 259559346cfa96eb53c17676462386a3daf78d10
+
 //  			if (follow_end_tape)
 //  			{
 //  				regulate_end_tape_2(sensor_buffer);
@@ -952,10 +943,6 @@ void decode_sensor(uint8_t data)
 	if((a++ & 0b10000))
 	{
 		a=0;
-<<<<<<< HEAD
-=======
-		///////////////////////////////////////////////////////////////////////////////////////////////////////////////update_display_string();
->>>>>>> 259559346cfa96eb53c17676462386a3daf78d10
 		update_display_string();
 	}
 }
@@ -967,7 +954,7 @@ void update_display_string()
 {
 	char tmp[100];
 	clear_screen();
-	sprintf(tmp, "L:  %03d  R: %03d F: %03d ", sensor_buffer[IR_LEFT_FRONT], sensor_buffer[IR_RIGHT_FRONT], sensor_buffer[IR_FRONT]);
+	sprintf(tmp, "L: %03d   R: %03d F: %03d ", sensor_buffer[IR_LEFT_FRONT], sensor_buffer[IR_RIGHT_FRONT], sensor_buffer[IR_FRONT]);
 	send_string(tmp);
 	update();
 	return;
