@@ -904,7 +904,7 @@ void decode_sensor(uint8_t data)
 
 			//Om ej i korsning och får sensordata som indikerar korsning. Analysera korsningstyp
 			
-// 			if (!has_detected_crossing && (sensor_buffer[IR_LEFT_FRONT] >= SEGMENT_LENGTH || sensor_buffer[IR_RIGHT_BACK] >= SEGMENT_LENGTH))
+// 			if (!has_detected_crossing && (sensor_buffer[IR_LEFT_FRONT] >= SEGMENT_LENGTH || sensor_buffer[IR_RIGHT_FRONT] >= SEGMENT_LENGTH))
 // 			{
 // 				stop_motors();
 // 				analyze_ir_sensors();
@@ -1264,9 +1264,47 @@ void crossing_turn(char dir,uint8_t stop_distance)
 			case 'r': tank_turn_right(SPEED); break;
 			default: break;
 		}
-		
-		_delay_ms(1000);
-		
+	}
+	
+}
+
+
+void turn_left90()
+{
+	static uint8_t front;
+	static uint8_t is_turning = 0;
+	
+	if(is_turning && front == sensor_buffer[IR_RIGHT_FRONT])
+	{
+		is_turning = 0;
+		stop_motors();
+		//Börjja köra sen
+	}
+	else if(!is_turning) 
+	{
+		front = sensor_buffer[IR_FRONT];
+		is_turning = 1;
+		tank_turn_left(SPEED);
+	}  
+	
+}
+
+void turn_right90()
+{
+	static uint8_t front;
+	static uint8_t is_turning = 0;
+	
+	if(is_turning && front == sensor_buffer[IR_LEFT_FRONT])
+	{
+		is_turning = 0;
+		stop_motors();
+		//Börjja köra sen
+	}
+	else if(!is_turning)
+	{
+		front = sensor_buffer[IR_FRONT];
+		is_turning = 1;
+		tank_turn_right(SPEED);
 	}
 	
 }
