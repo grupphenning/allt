@@ -97,7 +97,7 @@ int main(void)
 	sei();		//aktivera global interrupts
 	
 	clear_pid();
-	init_pid(100, -100);
+	init_pid(0, 100, -100);
 	update_k_values(10, 0, 10);
 	
 	//_delay_ms(2000);
@@ -140,7 +140,7 @@ int main(void)
 		
 		if (regulator_enable && regulator_flag)
 		{
-			regulator();    //Är void i nuläget, den behövde designas om.
+			regulator(0);    //Är void i nuläget, den behövde designas om.
 			regulator_enable = 0;
 		}	
 		
@@ -567,36 +567,52 @@ void send_byte_to_comm(uint8_t byte)
 	//PORTD = test;
 }
 
+uint8_t dirbits;
 void drive_forwards(uint8_t amount)
 {
-	LEFT_AMOUNT = amount;
-	RIGHT_AMOUNT = amount;
-	
 	//sätt ettor (framåt) på DIR-pinnarna
 	setbit(PORT_DIR, LEFT_DIR);
 	setbit(PORT_DIR, RIGHT_DIR);
+	
+dirbits=3;
+	LEFT_AMOUNT = amount;
+	RIGHT_AMOUNT = amount;
 }
 
 void drive_backwards(uint8_t amount)
 {
-	LEFT_AMOUNT = amount;
-	RIGHT_AMOUNT = amount;
+	stop_motors();
+	_delay_ms(10);
 	
 	//sätt nollor (bakåt) på DIR-pinnarna
 	clearbit(PORT_DIR, LEFT_DIR);
 	clearbit(PORT_DIR, RIGHT_DIR);
+dirbits = 0;
+	
+	LEFT_AMOUNT = amount;
+	RIGHT_AMOUNT = amount;
 }
 
 //sväng vänster!
 void turn_left(uint8_t amount)
 {
-	LEFT_AMOUNT = amount;
+	setbit(PORT_DIR, LEFT_DIR);
+	setbit(PORT_DIR, RIGHT_DIR);
+	
+dirbits=3;
+	LEFT_AMOUNT = 60;
+	RIGHT_AMOUNT = amount;
 }
 
 //sväng höger!
 void turn_right(uint8_t amount)
 {
-	RIGHT_AMOUNT = amount;
+	setbit(PORT_DIR, LEFT_DIR);
+	setbit(PORT_DIR, RIGHT_DIR);
+
+dirbits=3;	
+	LEFT_AMOUNT = amount;
+	RIGHT_AMOUNT = 60;
 }
 
 //stanna allt!
@@ -608,6 +624,10 @@ void stop_motors()
 	//clearbit(TCCR2B, CS22);
 	//LEFT_PWM = 0;
 	//RIGHT_PWM = 0;
+	setbit(PORT_DIR, LEFT_DIR);
+	setbit(PORT_DIR, RIGHT_DIR);
+	
+dirbits = 3;
 	LEFT_AMOUNT = 0;
 	RIGHT_AMOUNT = 0;
 }
@@ -615,22 +635,30 @@ void stop_motors()
 //sväng vänster som en stridsvagn!
 void tank_turn_left(uint8_t amount)
 {
-	LEFT_AMOUNT = amount;
-	RIGHT_AMOUNT = amount;
+//	stop_motors();
+//	_delay_ms(10);
 	
+dirbits = 2;
 	clearbit(PORT_DIR, LEFT_DIR);
 	setbit(PORT_DIR, RIGHT_DIR);
+	
+	LEFT_AMOUNT = amount;
+	RIGHT_AMOUNT = amount;
 }
 
 
 //sväng höger som en stridsvagn!
 void tank_turn_right(uint8_t amount)
 {
-	LEFT_AMOUNT = amount;
-	RIGHT_AMOUNT = amount;
+//	stop_motors();
+//	_delay_ms(10);
+dirbits = 1;
 	
 	setbit(PORT_DIR, LEFT_DIR);
 	clearbit(PORT_DIR, RIGHT_DIR);
+	
+	LEFT_AMOUNT = amount;
+	RIGHT_AMOUNT = amount;
 }
 
 void claw_out()
@@ -699,8 +727,38 @@ ISR(TIMER1_COMPA_vect)
 		//tank_turn_left(60);
 		ninety_timer=0;
 	}
-	
-	
+
+	// Refresha motor-output. Detta får äntligen styrningen att fungera pålitligt.
+	if(dirbits & 1) {
+		clearbit(PORT_DIR, LEFT_DIR);
+		setbit(PORT_DIR, LEFT_DIR);
+	}
+	else {
+		setbit(PORT_DIR, LEFT_DIR);
+		clearbit(PORT_DIR, LEFT_DIR);
+	}
+
+	if(dirbits & 2) {
+		clearbit(PORT_DIR, RIGHT_DIR);
+		setbit(PORT_DIR, RIGHT_DIR);
+	}
+	else {
+		setbit(PORT_DIR, RIGHT_DIR);
+		clearbit(PORT_DIR, RIGHT_DIR);
+	}
+
+	uint8_t l, r;
+	l = LEFT_AMOUNT;
+	r = RIGHT_AMOUNT;
+
+	if(l) {
+		LEFT_AMOUNT = 0;
+		LEFT_AMOUNT = l;
+	}
+	if(r) {
+		RIGHT_AMOUNT = 0;
+		RIGHT_AMOUNT = r;
+	}		
 }
 
 //overflow på timer0, ställ in frekvens med
@@ -764,7 +822,8 @@ void decode_comm(uint8_t command)
 		}			
 		display = 0;
 		return;
-	} else if(drive)
+	}
+	else if(drive)
 	{
 		if(drive == COMM_DRIVE)
 		{
@@ -790,19 +849,11 @@ void decode_comm(uint8_t command)
 		} else if(drive == COMM_DRIVE_LEFT)	// Ignorera argumentet tills vidare, vet inte hur vi ska lösa det...
 		{
 			drive = 0;
-			LEFT_AMOUNT = 60;
-			RIGHT_AMOUNT = 255;
-		
-			setbit(PORT_DIR, LEFT_DIR);
-			setbit(PORT_DIR, RIGHT_DIR);
+			turn_left(command);
 		}	else if(drive == COMM_DRIVE_RIGHT)	// Ignorera argumentet även här, tills vidare...
 		{
 			drive = 0;
-			LEFT_AMOUNT = 255;
-			RIGHT_AMOUNT = 60;
-
-			setbit(PORT_DIR, LEFT_DIR);
-			setbit(PORT_DIR, RIGHT_DIR);
+			turn_right(command);
 		} else if(drive == COMM_CLAW_OUT)
 		{
 			drive = 0;
@@ -925,7 +976,7 @@ void decode_sensor(uint8_t data)
 		case GYRO_SENSOR:
 			stop_motors();
 			break;	
-		case SENSOR: {
+		case SENSOR: if(regulator_flag) {
 			//Omvandla sensorvärden från spänningar till centimeter.
 			sensor_buffer[IR_FRONT] = interpret_big_ir(sensor_buffer[IR_FRONT]);
 			sensor_buffer[IR_LEFT_FRONT] = interpret_big_ir(sensor_buffer[IR_LEFT_FRONT]);

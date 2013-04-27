@@ -10,7 +10,7 @@ uint16_t k_prop, k_, k_der;					//Regulatorkonstanter
 uint8_t regulator_flag = 0;						//Flagga som tillåter reglering
 int16_t max_out, min_out,I_term = 0;						//Maxvärde för utsignalen, undvika fel med mättad styrsignal.
 
-void init_pid(int16_t max, int16_t min)  //Initiera regulatorn
+void init_pid(uint16_t time, int16_t max, int16_t min)  //Initiera regulatorn
 {
 	if (max > min)
 	{
@@ -44,7 +44,7 @@ void disable_pid()
 	regulator_flag = 0;
 }
 
-void regulator()				//Själva regulatorn, reglerar mot närmaste vägg
+void regulator(int16_t input)				//Själva regulatorn, reglerar mot närmaste vägg
 {	
 	
 }

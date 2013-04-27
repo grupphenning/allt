@@ -98,11 +98,11 @@ public:
 
     void open_claw();
     void close_claw();
+    Ui::MainWindow *ui;
 
 private:
     QPushButton *arrow_keys[7];
     unsigned current_direction;
-    Ui::MainWindow *ui;
     KeyPressEater *eat;
     QextSerialPort *port;
     PIDDialog pid;
@@ -141,6 +141,7 @@ private slots:
     void on_pushButton_15_clicked();
     void updateDisplayExample();
     void on_pushButton_13_clicked();
+    void on_pushButton_9_toggled(bool pressed);
 };
 
 #endif // MAINWINDOW_H

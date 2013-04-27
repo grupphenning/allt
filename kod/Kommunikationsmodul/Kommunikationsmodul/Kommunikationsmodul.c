@@ -34,7 +34,8 @@ int main(void)
 	USART_init();
 	
 	sei(); //Enable global interrupts
-	clearbit(PORTC, PINC0);
+
+	clearbit(PORTC, PINC0); // Ready to receive
 
     while(1)
     {
@@ -89,7 +90,7 @@ int main(void)
 			decode_remote(usartr);
 		}
 		if(has_spir) {
-			send_usart(spir);
+		//	send_usart(spir);
 		}
 		
 //		data = USART_Receive();
