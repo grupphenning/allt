@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>775</width>
-    <height>513</height>
+    <width>945</width>
+    <height>687</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -112,78 +112,6 @@
     </property>
     <property name="text">
      <string>Toggla sensorer</string>
-    </property>
-   </widget>
-   <widget class="QLabel" name="label_6">
-    <property name="geometry">
-     <rect>
-      <x>17</x>
-      <y>430</y>
-      <width>131</width>
-      <height>21</height>
-     </rect>
-    </property>
-    <property name="font">
-     <font>
-      <pointsize>13</pointsize>
-      <weight>75</weight>
-      <bold>true</bold>
-     </font>
-    </property>
-    <property name="text">
-     <string>Skoj:</string>
-    </property>
-   </widget>
-   <widget class="QLabel" name="label_7">
-    <property name="geometry">
-     <rect>
-      <x>47</x>
-      <y>460</y>
-      <width>51</width>
-      <height>16</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Display:</string>
-    </property>
-    <property name="buddy">
-     <cstring>stringEdit</cstring>
-    </property>
-   </widget>
-   <widget class="QLineEdit" name="stringEdit">
-    <property name="geometry">
-     <rect>
-      <x>107</x>
-      <y>460</y>
-      <width>121</width>
-      <height>20</height>
-     </rect>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="pushButton">
-    <property name="geometry">
-     <rect>
-      <x>237</x>
-      <y>460</y>
-      <width>71</width>
-      <height>23</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Skicka</string>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="pushButtonClearDisplay">
-    <property name="geometry">
-     <rect>
-      <x>317</x>
-      <y>460</y>
-      <width>101</width>
-      <height>23</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Rensa displayen</string>
     </property>
    </widget>
    <widget class="QLabel" name="label_8">
@@ -359,7 +287,7 @@
       <x>520</x>
       <y>30</y>
       <width>20</width>
-      <height>451</height>
+      <height>401</height>
      </rect>
     </property>
     <property name="orientation">
@@ -370,8 +298,8 @@
     <property name="geometry">
      <rect>
       <x>550</x>
-      <y>170</y>
-      <width>211</width>
+      <y>210</y>
+      <width>301</width>
       <height>23</height>
      </rect>
     </property>
@@ -399,7 +327,7 @@
     <property name="geometry">
      <rect>
       <x>550</x>
-      <y>140</y>
+      <y>150</y>
       <width>82</width>
       <height>17</height>
      </rect>
@@ -411,9 +339,9 @@
    <widget class="QComboBox" name="comboBoxBase">
     <property name="geometry">
      <rect>
-      <x>700</x>
-      <y>140</y>
-      <width>61</width>
+      <x>800</x>
+      <y>150</y>
+      <width>51</width>
       <height>22</height>
      </rect>
     </property>
@@ -432,42 +360,92 @@
     <property name="geometry">
      <rect>
       <x>630</x>
-      <y>140</y>
-      <width>69</width>
+      <y>150</y>
+      <width>161</width>
       <height>22</height>
      </rect>
     </property>
     <item>
      <property name="text">
-      <string>sensor 1</string>
+      <string>Främre vänstra</string>
      </property>
     </item>
     <item>
      <property name="text">
-      <string>sensor 2</string>
+      <string>Främre högra</string>
      </property>
     </item>
     <item>
      <property name="text">
-      <string>sensor 3</string>
+      <string>Framåtriktade</string>
      </property>
     </item>
     <item>
      <property name="text">
-      <string>sensor 4</string>
+      <string>Bakre vänstra</string>
      </property>
     </item>
     <item>
      <property name="text">
-      <string>sensor 5</string>
+      <string>Bakre högra</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>Tejp 0</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>Tejp 1</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>Tejp 2</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>Tejp 3</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>Tejp 4</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>Tejp 5</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>Tejp 6</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>Tejp 7</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>Tejp 8</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>Tejp 9</string>
      </property>
     </item>
    </widget>
    <widget class="QLabel" name="label_16">
     <property name="geometry">
      <rect>
-      <x>550</x>
-      <y>210</y>
+      <x>590</x>
+      <y>240</y>
       <width>46</width>
       <height>13</height>
      </rect>
@@ -501,7 +479,7 @@
      <rect>
       <x>630</x>
       <y>120</y>
-      <width>131</width>
+      <width>221</width>
       <height>20</height>
      </rect>
     </property>
@@ -509,8 +487,8 @@
    <widget class="QPushButton" name="pushButton_13">
     <property name="geometry">
      <rect>
-      <x>654</x>
-      <y>290</y>
+      <x>694</x>
+      <y>320</y>
       <width>101</width>
       <height>23</height>
      </rect>
@@ -522,8 +500,8 @@
    <widget class="QPushButton" name="pushButton_15">
     <property name="geometry">
      <rect>
-      <x>540</x>
-      <y>290</y>
+      <x>590</x>
+      <y>320</y>
       <width>101</width>
       <height>23</height>
      </rect>
@@ -538,8 +516,8 @@
     </property>
     <property name="geometry">
      <rect>
-      <x>600</x>
-      <y>210</y>
+      <x>640</x>
+      <y>240</y>
       <width>161</width>
       <height>20</height>
      </rect>
@@ -557,8 +535,8 @@
    <widget class="QTextEdit" name="displayExample">
     <property name="geometry">
      <rect>
-      <x>550</x>
-      <y>230</y>
+      <x>590</x>
+      <y>260</y>
       <width>211</width>
       <height>51</height>
      </rect>
@@ -940,13 +918,92 @@ p, li { white-space: pre-wrap; }
      </property>
     </widget>
    </widget>
+   <widget class="QComboBox" name="bookmarks">
+    <property name="geometry">
+     <rect>
+      <x>630</x>
+      <y>180</y>
+      <width>161</width>
+      <height>22</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="pushButton_16">
+    <property name="geometry">
+     <rect>
+      <x>790</x>
+      <y>180</y>
+      <width>31</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>+</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="pushButton_17">
+    <property name="geometry">
+     <rect>
+      <x>820</x>
+      <y>180</y>
+      <width>31</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>-</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_18">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>440</y>
+      <width>71</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>13</pointsize>
+      <weight>75</weight>
+      <bold>true</bold>
+     </font>
+    </property>
+    <property name="text">
+     <string>Debug:</string>
+    </property>
+   </widget>
+   <widget class="QTextEdit" name="debugOutput">
+    <property name="geometry">
+     <rect>
+      <x>20</x>
+      <y>470</y>
+      <width>501</width>
+      <height>181</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QRadioButton" name="radioButtonSensorBookmark">
+    <property name="geometry">
+     <rect>
+      <x>554</x>
+      <y>180</y>
+      <width>82</width>
+      <height>17</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Bokmärke</string>
+    </property>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menuBar">
    <property name="geometry">
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>775</width>
+     <width>945</width>
      <height>21</height>
     </rect>
    </property>

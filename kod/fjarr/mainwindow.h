@@ -24,20 +24,18 @@ protected:
 
 private slots:
     void on_pushButton_9_clicked();
-    void on_pushButton_clicked();
     void on_pushButtonPID_clicked();
-    void on_pushButtonClearDisplay_clicked();
     void on_pushButtonLeft90_clicked();
     void on_pushButtonRight90_clicked();
-
     void on_pid_toggle_clicked();
-
     void on_pushButtonAddToDisplay_clicked();
     void on_pushButton_15_clicked();
-
     void on_pushButton_13_clicked();
-
     void on_pushButton_5_clicked();
+    void on_pushButton_8_clicked();
+    void on_pushButton_17_clicked();
+    void on_pushButton_16_clicked();
+    void on_bookmarks_currentIndexChanged(int index);
 
 private:
     MainWindow *w;
@@ -102,14 +100,14 @@ public:
 
 private:
     QPushButton *arrow_keys[7];
+    QVector<QByteArray> bookmarks;
     unsigned current_direction;
     KeyPressEater *eat;
     QextSerialPort *port;
     PIDDialog pid;
-    QByteArray printfString;   // Ingen riktig printf-string!
+    QByteArray printfString;   // Ingen riktig printf-sträng, Davids special!
 
 private slots:
-    void on_pushButton_clicked();
     void on_pushButton_2_clicked();
     void on_pushButton_3_clicked();
     void on_pushButton_4_clicked();
@@ -120,7 +118,8 @@ private slots:
     void on_pushButton_11_clicked();
     void on_pushButton_12_clicked();
     void on_pushButton_14_clicked();
-
+    void on_pushButton_16_clicked();
+    void on_pushButton_17_clicked();
     void on_pushButton_2_released();
     void on_pushButton_3_released();
     void on_pushButton_4_released();
@@ -129,12 +128,11 @@ private slots:
     void on_pushButton_7_released();
     void on_pushButton_10_released();
     void onDataAvailable();
-
+    void on_bookmarks_currentIndexChanged(int index);
     void on_pushButton_9_clicked();
     void on_pid();
     void on_pushButtonPID_clicked();
     void on_pid_toggle_clicked();
-    void on_pushButtonClearDisplay_clicked();
     void on_pushButtonLeft90_clicked();
     void on_pushButtonRight90_clicked();
     void on_pushButtonAddToDisplay_clicked();
@@ -142,6 +140,7 @@ private slots:
     void updateDisplayExample();
     void on_pushButton_13_clicked();
     void on_pushButton_9_toggled(bool pressed);
+    void on_pushButton_8_clicked();
 };
 
 #endif // MAINWINDOW_H

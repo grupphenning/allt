@@ -47,7 +47,14 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(&pid, SIGNAL(accepted()), this, SLOT(on_pid()));
     ui->labelWarning->setVisible(false);
 
+    bookmarks.append("V:%x\001,%x\002 F:%x\003    H:%x\004,%x\005");
+    bookmarks.append("Tejp:%x\006,%x\007,%x\010,%x\011,%x\012,%x\013,%x\014,%x\015,%x\016");
+    ui->bookmarks->addItem("Avstånd (default)", bookmarks.at(0));
+    ui->bookmarks->addItem("Tejp", bookmarks.at(1));
+
+    /* Ladda bokmärken från QSettings! */
 }
+
 
 /*
  *5  d0  aa
@@ -89,14 +96,19 @@ void MainWindow::onDataAvailable()
     old = ch;
     if(ch == 'Z') std::cout.flush();
 #else
-    qDebug() << port->readAll().constData();
+    ui->debugOutput->insertPlainText(port->readAll());
+    QScrollBar *bar = ui->debugOutput->verticalScrollBar();
+    bar->setValue(bar->maximum());
+//    qDebug() << port->readAll().constData();
 //    std::cout << port->readAll().constData();
 //    std::cout.flush();
+//    printf("%s", port->readAll().constData());
 #endif
 }
 
 MainWindow::~MainWindow()
 {
+    /* Spara bokmärken med QSettings */
     port->close();
     delete port;
     delete eat;
@@ -268,6 +280,7 @@ void MainWindow::on_pushButton_9_toggled(bool pressed)
     }
 }
 
+/*
 void KeyPressEater::on_pushButton_clicked(){}
 void MainWindow::on_pushButton_clicked()
 {
@@ -285,7 +298,7 @@ void MainWindow::on_pushButton_clicked()
         port->flush();
     }
 }
-
+*/
 
 void KeyPressEater::on_pushButtonPID_clicked(){}
 void MainWindow::on_pushButtonPID_clicked()
@@ -299,7 +312,7 @@ void MainWindow::on_pushButtonPID_clicked()
     port->write(array);
     port->flush();
 }
-
+/*
 void KeyPressEater::on_pushButtonClearDisplay_clicked(){}
 void MainWindow::on_pushButtonClearDisplay_clicked()
 {
@@ -307,7 +320,7 @@ void MainWindow::on_pushButtonClearDisplay_clicked()
     port->flush();
     ui->stringEdit->setText("");
 }
-
+*/
 void KeyPressEater::on_pushButtonLeft90_clicked(){}
 void MainWindow::on_pushButtonLeft90_clicked()
 {
@@ -334,10 +347,9 @@ void MainWindow::on_pushButtonAddToDisplay_clicked()
     if(ui->radioButtonText->isChecked())
     {
         printfString.append(ui->displayText->text());
-    }
-    else // radioButtonSensor->isChecked() == true
+    } else if(ui->radioButtonSensor->isChecked())
     {
-        int sensor = ui->comboBoxSensor->currentIndex();
+        int sensor = ui->comboBoxSensor->currentIndex() + 1;
         QString str;
         if(ui->comboBoxBase->currentText() == "decimal")
         {
@@ -347,6 +359,9 @@ void MainWindow::on_pushButtonAddToDisplay_clicked()
             str = QString("%X") +  sensor;
         }
         printfString.append(str);
+    } else // ui->radioButtonBookmark->isChecked == true
+    {
+        printfString = bookmarks.at(ui->bookmarks->currentIndex());
     }
     updateDisplayExample();
 }
@@ -430,20 +445,64 @@ void MainWindow::on_pushButton_13_clicked()
 {
     QByteArray array;
 
-    for(int i = 0; i < printfString.length(); i++)
-    {
+    if(printfString.length() == 0) {
         array.append('z');
-        array.append(printfString.at(i));
+        array.append(' ');
+    }
+    else {
+        for(int i = 0; i < printfString.length(); i++)
+        {
+            array.append('z');
+            array.append(printfString.at(i));
+        }
     }
     for(int i = 0; i < array.length(); i++)
         std::cout << array.at(i);
     std::cout.flush();
+    array.append('z');
     array.append('\0');
     port->write(array);
     port->flush();
 }
 
-void KeyPressEater::on_pushButton_5_clicked()
+void MainWindow::on_pushButton_8_clicked()
 {
+    port->write("1");
+    port->flush();
+}
 
+void KeyPressEater::on_pushButton_5_clicked() {}
+void KeyPressEater::on_pushButton_8_clicked() {}
+
+void KeyPressEater::on_pushButton_17_clicked(){}
+void MainWindow::on_pushButton_17_clicked()
+{
+    if(ui->bookmarks->currentIndex() < 2)
+    {
+        ui->debugOutput->append("Kan inte ta bort de två första bokmärkena!");
+        return;
+    }
+    ui->debugOutput->append("Removed: "  + ui->bookmarks->currentText());
+    ui->bookmarks->removeItem(ui->bookmarks->currentIndex());
+    bookmarks.remove(ui->bookmarks->currentIndex());
+}
+
+
+void KeyPressEater::on_pushButton_16_clicked(){}
+void MainWindow::on_pushButton_16_clicked()
+{
+    ui->debugOutput->append("Added!");
+    QString name = QInputDialog::getText(this, "Lägg till bokmärke", "Namn på bokmärke", QLineEdit::Normal);
+    ui->bookmarks->addItem(name, printfString);
+    bookmarks.append(printfString);
+    ui->debugOutput->append("Added: "  + name);
+}
+
+void KeyPressEater::on_bookmarks_currentIndexChanged(int index) {(void) index;}
+void MainWindow::on_bookmarks_currentIndexChanged(int index)
+{
+    if(index < 2)
+        ui->pushButton_17->setEnabled(false);
+    else
+        ui->pushButton_17->setEnabled(true);
 }
