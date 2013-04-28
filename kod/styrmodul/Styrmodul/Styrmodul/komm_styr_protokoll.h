@@ -12,6 +12,7 @@
 #define COMM_TURN_90_DEGREES_LEFT 0x10
 #define COMM_TURN_90_DEGREES_RIGHT 0x11
 //-----------KALIBRERING AV SENSORER---------
+#define COMM_CALIBRATE_SENSORS	0x6C
 
 //-------------GRIPKLOKOMMANDON--------------
 #define COMM_CLAW_IN			0x0B

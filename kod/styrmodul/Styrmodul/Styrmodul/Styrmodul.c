@@ -10,6 +10,7 @@
 #include "pid.h"
 #include "../../../sensormodul/sensormodul/sensormodul.h"
 #include <stdlib.h>
+#include <string.h>
 
 #define SENSOR_BUFFER_SIZE 256
 //#define INTERPOLATION_POINTS 12
@@ -90,6 +91,7 @@ int main(void)
 //	DDRA = 0xFF;
 
 	init_display();
+	init_default_printf_string();
 	clear_screen();
 	update();
 	spi_init();
@@ -814,8 +816,7 @@ void decode_comm(uint8_t command)
 		/* Slutet på printf-strängen? */
 		if(command == 0x00)
 		{
-			clear_screen();
-			send_character('F');
+			update_display_string();
 			display_printf_p = 0;
 		} else
 		{
@@ -905,7 +906,10 @@ void decode_comm(uint8_t command)
 	else if(command == COMM_TOGGLE_SENSORS)
 	{
 		if(bitset(EIMSK, INT0))
+		{
+			update_display_string();
 			clearbit(EIMSK, INT0);	// Avaktivera avbrottsförfrågan från sensorenheten
+		}			
 		else
 			setbit(EIMSK, INT0);	// Akvitera avbrottsförfrågan från sensorenheten
 	}
@@ -918,7 +922,11 @@ void decode_comm(uint8_t command)
 	{
 		send_string("PERPENDICULAR RIGHT");
 		update();
-	}				
+	}
+	else if(command == COMM_CALIBRATE_SENSORS)
+	{
+		send_string_remote("abcdefghijklmnopqrstuvwxyz");
+	}
 	else	
 	{
 		char tmp[30];
@@ -1051,10 +1059,16 @@ void decode_sensor(uint8_t data)
 	if((a++ & 0b10000))
 	{
 		a=0;
-		//update_display_string();
+		update_display_string();
 	}
 }
 
+init_default_printf_string()
+{
+	char default_string[] = {"V:%x\001,%x\002 F:%x\003    H:%x\004,%x\005" };
+	strcpy(display_printf_string, default_string);
+	
+}
 
 #define BUFFER_SIZE 100
 #define MAX_SENSORS 15

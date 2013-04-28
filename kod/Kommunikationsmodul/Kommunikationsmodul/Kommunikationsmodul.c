@@ -87,6 +87,18 @@ int main(void)
 		
 		if(has_usartr) {
 			send_usart(usartr);
+			send_usart('\n');
+/*			
+if(usartr == '1')
+{
+send_usart_string("a0123456781234568123456778123215\n");
+send_usart_string("b0123456781234568123456778123215\n");
+send_usart_string("c0123456781234568123456778123215\n");
+send_usart_string("d0123456781234568123456778123215\n");
+send_usart_string("e0123456781234568123456778123215\n");
+send_usart_string("f0123456781234568123456778123215\n");
+}
+*/
 			decode_remote(usartr);
 		}
 		if(has_spir) {
@@ -103,6 +115,12 @@ int main(void)
 //		USART_Transmit(tmp[0]);
 //		USART_Transmit(tmp[1]);
     }
+}
+
+void send_usart_string(uint8_t *str)
+{
+	while(*str)
+		send_usart(*str++);
 }
 
 
@@ -226,6 +244,7 @@ void decode_remote(uint8_t ch)
 		case 't': send_spi(COMM_TOGGLE_SENSORS); break;						// Aktivera/deaktivera sensorer
 		case 'w': send_spi(COMM_TURN_90_DEGREES_LEFT); break;				// Vrid 90 grader vänster
 		case 'e': send_spi(COMM_TURN_90_DEGREES_RIGHT); break;				// Vrid 90 grader höger
+		case '1': send_spi(COMM_CALIBRATE_SENSORS); break;					// Kalibrera sensorer
 	}
 }
 

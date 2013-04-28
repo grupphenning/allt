@@ -66,6 +66,6 @@ void regulate_end_tape(uint8_t* values);
 void regulate_end_tape_2(uint8_t* values);
 void regulate_end_tape_3();
 uint8_t * reflex_sensors_currently_seeing_tape(uint8_t * values);
-
+void init_default_printf_string();
 void analyze_ir_sensors();
 void crossing_turn(char dir, uint8_t stop_distance);
