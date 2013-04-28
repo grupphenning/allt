@@ -46,6 +46,26 @@
 #define REFLEX10		15
 #define REFLEX11		16
 
-#define REFLEX_SENSITIVITY 0x50 
+#define REFLEX_SENSITIVITY 0x70
+
+
+
+//KORNINGSLÄNGDDATA
+#define IR_FRONT_TO_MIDDLE_LENGTH		11
+#define OFFSET							10	 
+#define DISTANCE_TO_ALLEY_END			120
+#define MAXIMUM_IR_DISTANCE				150
+#define SEGMENT_LENGTH					80	
+#define IR_SIDE_TO_MIDDLE_LENGTH		7	
 
 void send_byte_to_comm(uint8_t byte);
+
+uint8_t interpret_big_ir(uint8_t value);
+uint8_t interpret_small_ir(uint8_t value);
+void regulate_end_tape(uint8_t* values);
+void regulate_end_tape_2(uint8_t* values);
+void regulate_end_tape_3();
+uint8_t * reflex_sensors_currently_seeing_tape(uint8_t * values);
+
+void analyze_ir_sensors();
+void crossing_turn(char dir, uint8_t stop_distance);

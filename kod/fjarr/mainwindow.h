@@ -6,6 +6,9 @@
 #include "qextserialport.h"
 #include "qextserialenumerator.h"
 
+#define MAX_SENSORS 17
+#define BUFFER_SIZE 100
+
 namespace Ui {
 class MainWindow;
 }
@@ -28,6 +31,13 @@ private slots:
     void on_pushButtonRight90_clicked();
 
     void on_pid_toggle_clicked();
+
+    void on_pushButtonAddToDisplay_clicked();
+    void on_pushButton_15_clicked();
+
+    void on_pushButton_13_clicked();
+
+    void on_pushButton_5_clicked();
 
 private:
     MainWindow *w;
@@ -88,14 +98,15 @@ public:
 
     void open_claw();
     void close_claw();
+    Ui::MainWindow *ui;
 
 private:
     QPushButton *arrow_keys[7];
     unsigned current_direction;
-    Ui::MainWindow *ui;
     KeyPressEater *eat;
     QextSerialPort *port;
     PIDDialog pid;
+    QByteArray printfString;   // Ingen riktig printf-string!
 
 private slots:
     void on_pushButton_clicked();
@@ -126,6 +137,11 @@ private slots:
     void on_pushButtonClearDisplay_clicked();
     void on_pushButtonLeft90_clicked();
     void on_pushButtonRight90_clicked();
+    void on_pushButtonAddToDisplay_clicked();
+    void on_pushButton_15_clicked();
+    void updateDisplayExample();
+    void on_pushButton_13_clicked();
+    void on_pushButton_9_toggled(bool pressed);
 };
 
 #endif // MAINWINDOW_H

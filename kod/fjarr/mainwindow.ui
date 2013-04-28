@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>775</width>
-    <height>497</height>
+    <height>513</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -20,46 +20,11 @@
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralWidget">
-   <widget class="QPushButton" name="pushButton_2">
-    <property name="geometry">
-     <rect>
-      <x>40</x>
-      <y>150</y>
-      <width>91</width>
-      <height>25</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Rotera Vänster</string>
-    </property>
-    <property name="checkable">
-     <bool>true</bool>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="pushButton_3">
-    <property name="geometry">
-     <rect>
-      <x>40</x>
-      <y>110</y>
-      <width>91</width>
-      <height>25</height>
-     </rect>
-    </property>
-    <property name="mouseTracking">
-     <bool>false</bool>
-    </property>
-    <property name="text">
-     <string>Framåt Vänster</string>
-    </property>
-    <property name="checkable">
-     <bool>true</bool>
-    </property>
-   </widget>
    <widget class="QPushButton" name="pushButton_8">
     <property name="geometry">
      <rect>
-      <x>180</x>
-      <y>310</y>
+      <x>177</x>
+      <y>330</y>
       <width>111</width>
       <height>25</height>
      </rect>
@@ -71,78 +36,14 @@
    <widget class="QPushButton" name="pushButton_9">
     <property name="geometry">
      <rect>
-      <x>310</x>
-      <y>310</y>
+      <x>307</x>
+      <y>330</y>
       <width>111</width>
       <height>25</height>
      </rect>
     </property>
     <property name="text">
-     <string>Sätt PID-konstanter</string>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="pushButton_5">
-    <property name="geometry">
-     <rect>
-      <x>190</x>
-      <y>144</y>
-      <width>181</width>
-      <height>41</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Stopp</string>
-    </property>
-    <property name="checkable">
-     <bool>true</bool>
-    </property>
-    <property name="checked">
-     <bool>false</bool>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="pushButton_6">
-    <property name="geometry">
-     <rect>
-      <x>380</x>
-      <y>110</y>
-      <width>81</width>
-      <height>25</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Framåt Höger</string>
-    </property>
-    <property name="checkable">
-     <bool>true</bool>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="pushButton_7">
-    <property name="geometry">
-     <rect>
-      <x>380</x>
-      <y>150</y>
-      <width>81</width>
-      <height>25</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Rotera Höger</string>
-    </property>
-    <property name="checkable">
-     <bool>true</bool>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="pushButton_10">
-    <property name="geometry">
-     <rect>
-      <x>210</x>
-      <y>190</y>
-      <width>71</width>
-      <height>25</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Backa</string>
+     <string>Autonomt läge</string>
     </property>
     <property name="checkable">
      <bool>true</bool>
@@ -200,62 +101,11 @@
      <string>TextLabel</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="pushButton_11">
-    <property name="geometry">
-     <rect>
-      <x>40</x>
-      <y>190</y>
-      <width>91</width>
-      <height>25</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Öppna klo</string>
-    </property>
-    <property name="checkable">
-     <bool>false</bool>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="pushButton_12">
-    <property name="geometry">
-     <rect>
-      <x>380</x>
-      <y>190</y>
-      <width>81</width>
-      <height>25</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Stäng klo</string>
-    </property>
-    <property name="checkable">
-     <bool>false</bool>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="pushButton_4">
-    <property name="geometry">
-     <rect>
-      <x>210</x>
-      <y>110</y>
-      <width>81</width>
-      <height>25</height>
-     </rect>
-    </property>
-    <property name="mouseTracking">
-     <bool>false</bool>
-    </property>
-    <property name="text">
-     <string>Kör Framåt</string>
-    </property>
-    <property name="checkable">
-     <bool>true</bool>
-    </property>
-   </widget>
    <widget class="QPushButton" name="pushButton_14">
     <property name="geometry">
      <rect>
-      <x>50</x>
-      <y>310</y>
+      <x>47</x>
+      <y>330</y>
       <width>111</width>
       <height>23</height>
      </rect>
@@ -267,8 +117,8 @@
    <widget class="QLabel" name="label_6">
     <property name="geometry">
      <rect>
-      <x>20</x>
-      <y>410</y>
+      <x>17</x>
+      <y>430</y>
       <width>131</width>
       <height>21</height>
      </rect>
@@ -287,8 +137,8 @@
    <widget class="QLabel" name="label_7">
     <property name="geometry">
      <rect>
-      <x>50</x>
-      <y>440</y>
+      <x>47</x>
+      <y>460</y>
       <width>51</width>
       <height>16</height>
      </rect>
@@ -303,8 +153,8 @@
    <widget class="QLineEdit" name="stringEdit">
     <property name="geometry">
      <rect>
-      <x>110</x>
-      <y>440</y>
+      <x>107</x>
+      <y>460</y>
       <width>121</width>
       <height>20</height>
      </rect>
@@ -313,8 +163,8 @@
    <widget class="QPushButton" name="pushButton">
     <property name="geometry">
      <rect>
-      <x>240</x>
-      <y>440</y>
+      <x>237</x>
+      <y>460</y>
       <width>71</width>
       <height>23</height>
      </rect>
@@ -326,8 +176,8 @@
    <widget class="QPushButton" name="pushButtonClearDisplay">
     <property name="geometry">
      <rect>
-      <x>320</x>
-      <y>440</y>
+      <x>317</x>
+      <y>460</y>
       <width>101</width>
       <height>23</height>
      </rect>
@@ -339,8 +189,8 @@
    <widget class="QLabel" name="label_8">
     <property name="geometry">
      <rect>
-      <x>20</x>
-      <y>345</y>
+      <x>17</x>
+      <y>365</y>
       <width>161</width>
       <height>21</height>
      </rect>
@@ -359,8 +209,8 @@
    <widget class="QLabel" name="label_5">
     <property name="geometry">
      <rect>
-      <x>40</x>
-      <y>370</y>
+      <x>37</x>
+      <y>390</y>
       <width>21</width>
       <height>16</height>
      </rect>
@@ -372,8 +222,8 @@
    <widget class="QSpinBox" name="spinBoxP">
     <property name="geometry">
      <rect>
-      <x>70</x>
-      <y>370</y>
+      <x>67</x>
+      <y>390</y>
       <width>51</width>
       <height>22</height>
      </rect>
@@ -385,8 +235,8 @@
    <widget class="QLabel" name="label_9">
     <property name="geometry">
      <rect>
-      <x>140</x>
-      <y>370</y>
+      <x>137</x>
+      <y>390</y>
       <width>21</width>
       <height>16</height>
      </rect>
@@ -398,8 +248,8 @@
    <widget class="QSpinBox" name="spinBoxI">
     <property name="geometry">
      <rect>
-      <x>170</x>
-      <y>370</y>
+      <x>167</x>
+      <y>390</y>
       <width>51</width>
       <height>22</height>
      </rect>
@@ -411,8 +261,8 @@
    <widget class="QLabel" name="label_10">
     <property name="geometry">
      <rect>
-      <x>240</x>
-      <y>370</y>
+      <x>237</x>
+      <y>390</y>
       <width>21</width>
       <height>16</height>
      </rect>
@@ -424,20 +274,23 @@
    <widget class="QSpinBox" name="spinBoxD">
     <property name="geometry">
      <rect>
-      <x>270</x>
-      <y>370</y>
+      <x>267</x>
+      <y>390</y>
       <width>51</width>
       <height>22</height>
      </rect>
     </property>
+    <property name="minimum">
+     <number>-30000</number>
+    </property>
     <property name="maximum">
-     <number>255</number>
+     <number>30000</number>
     </property>
    </widget>
    <widget class="QLabel" name="label_11">
     <property name="geometry">
      <rect>
-      <x>10</x>
+      <x>20</x>
       <y>80</y>
       <width>51</width>
       <height>21</height>
@@ -457,8 +310,8 @@
    <widget class="QPushButton" name="pushButtonPID">
     <property name="geometry">
      <rect>
-      <x>330</x>
-      <y>370</y>
+      <x>327</x>
+      <y>390</y>
       <width>91</width>
       <height>25</height>
      </rect>
@@ -470,8 +323,8 @@
    <widget class="QLabel" name="label_12">
     <property name="geometry">
      <rect>
-      <x>20</x>
-      <y>280</y>
+      <x>17</x>
+      <y>300</y>
       <width>71</width>
       <height>21</height>
      </rect>
@@ -490,7 +343,7 @@
    <widget class="QLabel" name="label_13">
     <property name="geometry">
      <rect>
-      <x>50</x>
+      <x>60</x>
       <y>80</y>
       <width>211</width>
       <height>16</height>
@@ -500,183 +353,11 @@
      <string>(Kan även använda piltangenterna)</string>
     </property>
    </widget>
-   <widget class="QSpinBox" name="speedDriveLeft">
-    <property name="geometry">
-     <rect>
-      <x>140</x>
-      <y>110</y>
-      <width>42</width>
-      <height>22</height>
-     </rect>
-    </property>
-    <property name="maximum">
-     <number>255</number>
-    </property>
-   </widget>
-   <widget class="QSpinBox" name="speedLeft">
-    <property name="geometry">
-     <rect>
-      <x>140</x>
-      <y>150</y>
-      <width>42</width>
-      <height>22</height>
-     </rect>
-    </property>
-    <property name="maximum">
-     <number>255</number>
-    </property>
-   </widget>
-   <widget class="QSpinBox" name="speedClawOut">
-    <property name="geometry">
-     <rect>
-      <x>140</x>
-      <y>190</y>
-      <width>42</width>
-      <height>22</height>
-     </rect>
-    </property>
-    <property name="maximum">
-     <number>255</number>
-    </property>
-   </widget>
-   <widget class="QSpinBox" name="speedDrive">
-    <property name="geometry">
-     <rect>
-      <x>300</x>
-      <y>110</y>
-      <width>42</width>
-      <height>22</height>
-     </rect>
-    </property>
-    <property name="maximum">
-     <number>255</number>
-    </property>
-   </widget>
-   <widget class="QSpinBox" name="speedBack">
-    <property name="geometry">
-     <rect>
-      <x>300</x>
-      <y>190</y>
-      <width>42</width>
-      <height>22</height>
-     </rect>
-    </property>
-    <property name="maximum">
-     <number>255</number>
-    </property>
-   </widget>
-   <widget class="QSpinBox" name="speedDriveRight">
-    <property name="geometry">
-     <rect>
-      <x>470</x>
-      <y>110</y>
-      <width>42</width>
-      <height>22</height>
-     </rect>
-    </property>
-    <property name="maximum">
-     <number>255</number>
-    </property>
-   </widget>
-   <widget class="QSpinBox" name="speedRight">
-    <property name="geometry">
-     <rect>
-      <x>470</x>
-      <y>150</y>
-      <width>42</width>
-      <height>22</height>
-     </rect>
-    </property>
-    <property name="maximum">
-     <number>255</number>
-    </property>
-   </widget>
-   <widget class="QSpinBox" name="speedClawIn">
-    <property name="geometry">
-     <rect>
-      <x>470</x>
-      <y>190</y>
-      <width>42</width>
-      <height>22</height>
-     </rect>
-    </property>
-    <property name="maximum">
-     <number>255</number>
-    </property>
-   </widget>
-   <widget class="QSpinBox" name="speed">
-    <property name="geometry">
-     <rect>
-      <x>470</x>
-      <y>230</y>
-      <width>41</width>
-      <height>22</height>
-     </rect>
-    </property>
-    <property name="maximum">
-     <number>255</number>
-    </property>
-    <property name="value">
-     <number>255</number>
-    </property>
-   </widget>
-   <widget class="QLabel" name="label_14">
-    <property name="geometry">
-     <rect>
-      <x>370</x>
-      <y>230</y>
-      <width>91</width>
-      <height>20</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Hastighet för alla:</string>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="pushButtonLeft90">
-    <property name="geometry">
-     <rect>
-      <x>40</x>
-      <y>230</y>
-      <width>141</width>
-      <height>23</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Vänster 90 grader</string>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="pushButtonRight90">
-    <property name="geometry">
-     <rect>
-      <x>210</x>
-      <y>230</y>
-      <width>141</width>
-      <height>23</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Höger 90 grader</string>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="pid_toggle">
-    <property name="geometry">
-     <rect>
-      <x>430</x>
-      <y>370</y>
-      <width>91</width>
-      <height>25</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Enable</string>
-    </property>
-   </widget>
    <widget class="Line" name="line">
     <property name="geometry">
      <rect>
-      <x>523</x>
-      <y>10</y>
+      <x>520</x>
+      <y>30</y>
       <width>20</width>
       <height>451</height>
      </rect>
@@ -685,12 +366,122 @@
      <enum>Qt::Vertical</enum>
     </property>
    </widget>
-   <widget class="QLabel" name="label_15">
+   <widget class="QPushButton" name="pushButtonAddToDisplay">
     <property name="geometry">
      <rect>
-      <x>560</x>
-      <y>20</y>
-      <width>181</width>
+      <x>550</x>
+      <y>170</y>
+      <width>211</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Lägg till</string>
+    </property>
+   </widget>
+   <widget class="QRadioButton" name="radioButtonText">
+    <property name="geometry">
+     <rect>
+      <x>550</x>
+      <y>120</y>
+      <width>82</width>
+      <height>17</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Text</string>
+    </property>
+    <property name="checked">
+     <bool>true</bool>
+    </property>
+   </widget>
+   <widget class="QRadioButton" name="radioButtonSensor">
+    <property name="geometry">
+     <rect>
+      <x>550</x>
+      <y>140</y>
+      <width>82</width>
+      <height>17</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Sensordata</string>
+    </property>
+   </widget>
+   <widget class="QComboBox" name="comboBoxBase">
+    <property name="geometry">
+     <rect>
+      <x>700</x>
+      <y>140</y>
+      <width>61</width>
+      <height>22</height>
+     </rect>
+    </property>
+    <item>
+     <property name="text">
+      <string>hex</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>decimal</string>
+     </property>
+    </item>
+   </widget>
+   <widget class="QComboBox" name="comboBoxSensor">
+    <property name="geometry">
+     <rect>
+      <x>630</x>
+      <y>140</y>
+      <width>69</width>
+      <height>22</height>
+     </rect>
+    </property>
+    <item>
+     <property name="text">
+      <string>sensor 1</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>sensor 2</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>sensor 3</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>sensor 4</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>sensor 5</string>
+     </property>
+    </item>
+   </widget>
+   <widget class="QLabel" name="label_16">
+    <property name="geometry">
+     <rect>
+      <x>550</x>
+      <y>210</y>
+      <width>46</width>
+      <height>13</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Exempel:</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_17">
+    <property name="geometry">
+     <rect>
+      <x>550</x>
+      <y>90</y>
+      <width>81</width>
       <height>21</height>
      </rect>
     </property>
@@ -702,78 +493,452 @@
      </font>
     </property>
     <property name="text">
-     <string>Visade sensordata:</string>
+     <string>Display:</string>
     </property>
    </widget>
-   <widget class="QComboBox" name="comboBox">
+   <widget class="QLineEdit" name="displayText">
     <property name="geometry">
      <rect>
-      <x>560</x>
-      <y>60</y>
-      <width>111</width>
-      <height>22</height>
+      <x>630</x>
+      <y>120</y>
+      <width>131</width>
+      <height>20</height>
      </rect>
     </property>
-    <item>
-     <property name="text">
-      <string>Ir: Vänster fram</string>
-     </property>
-    </item>
-    <item>
-     <property name="text">
-      <string>Ir: Höger fram</string>
-     </property>
-    </item>
-    <item>
-     <property name="text">
-      <string>Ir: Vänster bak</string>
-     </property>
-    </item>
-    <item>
-     <property name="text">
-      <string>Ir: Höger bak</string>
-     </property>
-    </item>
-    <item>
-     <property name="text">
-      <string>Ir: Fram</string>
-     </property>
-    </item>
    </widget>
-   <widget class="QComboBox" name="comboBox_2">
+   <widget class="QPushButton" name="pushButton_13">
     <property name="geometry">
      <rect>
-      <x>560</x>
-      <y>90</y>
-      <width>111</width>
-      <height>22</height>
+      <x>654</x>
+      <y>290</y>
+      <width>101</width>
+      <height>23</height>
      </rect>
     </property>
-    <item>
-     <property name="text">
-      <string>Ir: Vänster fram</string>
+    <property name="text">
+     <string>Uppdatera</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="pushButton_15">
+    <property name="geometry">
+     <rect>
+      <x>540</x>
+      <y>290</y>
+      <width>101</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Rensa</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="labelWarning">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
+    <property name="geometry">
+     <rect>
+      <x>600</x>
+      <y>210</y>
+      <width>161</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <weight>75</weight>
+      <bold>true</bold>
+     </font>
+    </property>
+    <property name="text">
+     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; color:#ff0000;&quot;&gt;VARNING: max 32 tecken!&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+    </property>
+   </widget>
+   <widget class="QTextEdit" name="displayExample">
+    <property name="geometry">
+     <rect>
+      <x>550</x>
+      <y>230</y>
+      <width>211</width>
+      <height>51</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>System</family>
+      <pointsize>8</pointsize>
+      <weight>75</weight>
+      <bold>true</bold>
+     </font>
+    </property>
+    <property name="lineWrapMode">
+     <enum>QTextEdit::FixedColumnWidth</enum>
+    </property>
+    <property name="lineWrapColumnOrWidth">
+     <number>16</number>
+    </property>
+    <property name="readOnly">
+     <bool>true</bool>
+    </property>
+    <property name="html">
+     <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'System'; font-size:8pt; font-weight:600; font-style:normal;&quot;&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:'MS Shell Dlg 2'; font-size:14pt;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+    </property>
+   </widget>
+   <widget class="QFrame" name="frame">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>110</y>
+      <width>501</width>
+      <height>181</height>
+     </rect>
+    </property>
+    <property name="frameShape">
+     <enum>QFrame::StyledPanel</enum>
+    </property>
+    <property name="frameShadow">
+     <enum>QFrame::Raised</enum>
+    </property>
+    <widget class="QPushButton" name="pushButton_6">
+     <property name="geometry">
+      <rect>
+       <x>350</x>
+       <y>20</y>
+       <width>81</width>
+       <height>25</height>
+      </rect>
      </property>
-    </item>
-    <item>
      <property name="text">
-      <string>Ir: Höger fram</string>
+      <string>Framåt Höger</string>
      </property>
-    </item>
-    <item>
+     <property name="checkable">
+      <bool>true</bool>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="pushButton_2">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>60</y>
+       <width>91</width>
+       <height>25</height>
+      </rect>
+     </property>
      <property name="text">
-      <string>Ir: Vänster bak</string>
+      <string>Rotera Vänster</string>
      </property>
-    </item>
-    <item>
+     <property name="checkable">
+      <bool>true</bool>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="pushButton_11">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>100</y>
+       <width>91</width>
+       <height>25</height>
+      </rect>
+     </property>
      <property name="text">
-      <string>Ir: Höger bak</string>
+      <string>Öppna klo</string>
      </property>
-    </item>
-    <item>
+     <property name="checkable">
+      <bool>false</bool>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="pushButton_10">
+     <property name="geometry">
+      <rect>
+       <x>180</x>
+       <y>100</y>
+       <width>71</width>
+       <height>25</height>
+      </rect>
+     </property>
      <property name="text">
-      <string>Ir: Fram</string>
+      <string>Backa</string>
      </property>
-    </item>
+     <property name="checkable">
+      <bool>true</bool>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="pushButton_5">
+     <property name="geometry">
+      <rect>
+       <x>160</x>
+       <y>54</y>
+       <width>181</width>
+       <height>41</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Stopp</string>
+     </property>
+     <property name="checkable">
+      <bool>true</bool>
+     </property>
+     <property name="checked">
+      <bool>false</bool>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="pushButton_7">
+     <property name="geometry">
+      <rect>
+       <x>350</x>
+       <y>60</y>
+       <width>81</width>
+       <height>25</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Rotera Höger</string>
+     </property>
+     <property name="checkable">
+      <bool>true</bool>
+     </property>
+    </widget>
+    <widget class="QSpinBox" name="speed">
+     <property name="geometry">
+      <rect>
+       <x>440</x>
+       <y>140</y>
+       <width>41</width>
+       <height>22</height>
+      </rect>
+     </property>
+     <property name="maximum">
+      <number>255</number>
+     </property>
+     <property name="value">
+      <number>255</number>
+     </property>
+    </widget>
+    <widget class="QSpinBox" name="speedRight">
+     <property name="geometry">
+      <rect>
+       <x>440</x>
+       <y>60</y>
+       <width>42</width>
+       <height>22</height>
+      </rect>
+     </property>
+     <property name="maximum">
+      <number>255</number>
+     </property>
+     <property name="value">
+      <number>255</number>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="pushButton_3">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>20</y>
+       <width>91</width>
+       <height>25</height>
+      </rect>
+     </property>
+     <property name="mouseTracking">
+      <bool>false</bool>
+     </property>
+     <property name="text">
+      <string>Framåt Vänster</string>
+     </property>
+     <property name="checkable">
+      <bool>true</bool>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="pushButtonRight90">
+     <property name="geometry">
+      <rect>
+       <x>180</x>
+       <y>140</y>
+       <width>141</width>
+       <height>23</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Höger 90 grader</string>
+     </property>
+    </widget>
+    <widget class="QSpinBox" name="speedClawOut">
+     <property name="geometry">
+      <rect>
+       <x>110</x>
+       <y>100</y>
+       <width>42</width>
+       <height>22</height>
+      </rect>
+     </property>
+     <property name="maximum">
+      <number>255</number>
+     </property>
+     <property name="value">
+      <number>255</number>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="pushButtonLeft90">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>140</y>
+       <width>141</width>
+       <height>23</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Vänster 90 grader</string>
+     </property>
+    </widget>
+    <widget class="QSpinBox" name="speedDriveLeft">
+     <property name="geometry">
+      <rect>
+       <x>110</x>
+       <y>20</y>
+       <width>42</width>
+       <height>22</height>
+      </rect>
+     </property>
+     <property name="maximum">
+      <number>255</number>
+     </property>
+     <property name="value">
+      <number>255</number>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="pushButton_12">
+     <property name="geometry">
+      <rect>
+       <x>350</x>
+       <y>100</y>
+       <width>81</width>
+       <height>25</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Stäng klo</string>
+     </property>
+     <property name="checkable">
+      <bool>false</bool>
+     </property>
+    </widget>
+    <widget class="QSpinBox" name="speedDriveRight">
+     <property name="geometry">
+      <rect>
+       <x>440</x>
+       <y>20</y>
+       <width>42</width>
+       <height>22</height>
+      </rect>
+     </property>
+     <property name="maximum">
+      <number>255</number>
+     </property>
+     <property name="value">
+      <number>255</number>
+     </property>
+    </widget>
+    <widget class="QSpinBox" name="speedBack">
+     <property name="geometry">
+      <rect>
+       <x>270</x>
+       <y>100</y>
+       <width>42</width>
+       <height>22</height>
+      </rect>
+     </property>
+     <property name="maximum">
+      <number>255</number>
+     </property>
+     <property name="value">
+      <number>255</number>
+     </property>
+    </widget>
+    <widget class="QSpinBox" name="speedClawIn">
+     <property name="geometry">
+      <rect>
+       <x>440</x>
+       <y>100</y>
+       <width>42</width>
+       <height>22</height>
+      </rect>
+     </property>
+     <property name="maximum">
+      <number>255</number>
+     </property>
+     <property name="value">
+      <number>255</number>
+     </property>
+    </widget>
+    <widget class="QSpinBox" name="speedLeft">
+     <property name="geometry">
+      <rect>
+       <x>110</x>
+       <y>60</y>
+       <width>42</width>
+       <height>22</height>
+      </rect>
+     </property>
+     <property name="maximum">
+      <number>255</number>
+     </property>
+     <property name="value">
+      <number>255</number>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_14">
+     <property name="geometry">
+      <rect>
+       <x>340</x>
+       <y>140</y>
+       <width>91</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Hastighet för alla:</string>
+     </property>
+    </widget>
+    <widget class="QSpinBox" name="speedDrive">
+     <property name="geometry">
+      <rect>
+       <x>270</x>
+       <y>20</y>
+       <width>42</width>
+       <height>22</height>
+      </rect>
+     </property>
+     <property name="maximum">
+      <number>255</number>
+     </property>
+     <property name="value">
+      <number>255</number>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="pushButton_4">
+     <property name="geometry">
+      <rect>
+       <x>180</x>
+       <y>20</y>
+       <width>81</width>
+       <height>25</height>
+      </rect>
+     </property>
+     <property name="mouseTracking">
+      <bool>false</bool>
+     </property>
+     <property name="text">
+      <string>Kör Framåt</string>
+     </property>
+     <property name="checkable">
+      <bool>true</bool>
+     </property>
+    </widget>
    </widget>
   </widget>
   <widget class="QMenuBar" name="menuBar">
@@ -789,134 +954,5 @@
  </widget>
  <layoutdefault spacing="6" margin="11"/>
  <resources/>
- <connections>
-  <connection>
-   <sender>speed</sender>
-   <signal>valueChanged(int)</signal>
-   <receiver>speedClawOut</receiver>
-   <slot>setValue(int)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>159</x>
-     <y>268</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>145</x>
-     <y>218</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>speed</sender>
-   <signal>valueChanged(int)</signal>
-   <receiver>speedLeft</receiver>
-   <slot>setValue(int)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>165</x>
-     <y>273</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>152</x>
-     <y>185</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>speed</sender>
-   <signal>valueChanged(int)</signal>
-   <receiver>speedDriveLeft</receiver>
-   <slot>setValue(int)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>171</x>
-     <y>272</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>174</x>
-     <y>145</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>speed</sender>
-   <signal>valueChanged(int)</signal>
-   <receiver>speedDrive</receiver>
-   <slot>setValue(int)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>166</x>
-     <y>270</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>314</x>
-     <y>145</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>speed</sender>
-   <signal>valueChanged(int)</signal>
-   <receiver>speedBack</receiver>
-   <slot>setValue(int)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>248</x>
-     <y>276</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>309</x>
-     <y>224</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>speed</sender>
-   <signal>valueChanged(int)</signal>
-   <receiver>speedDriveRight</receiver>
-   <slot>setValue(int)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>364</x>
-     <y>273</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>474</x>
-     <y>150</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>speed</sender>
-   <signal>valueChanged(int)</signal>
-   <receiver>speedRight</receiver>
-   <slot>setValue(int)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>396</x>
-     <y>272</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>477</x>
-     <y>185</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>speed</sender>
-   <signal>valueChanged(int)</signal>
-   <receiver>speedClawIn</receiver>
-   <slot>setValue(int)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>415</x>
-     <y>270</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>482</x>
-     <y>221</y>
-    </hint>
-   </hints>
-  </connection>
- </connections>
+ <connections/>
 </ui>

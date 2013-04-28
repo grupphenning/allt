@@ -9,8 +9,6 @@
 #include "Styrmodul.h"
 #include "pid.h"
 #include "../../../sensormodul/sensormodul/sensormodul.h"
-#include <stdlib.h>
-
 #define SENSOR_BUFFER_SIZE 256
 //#define INTERPOLATION_POINTS 12
 uint8_t test;
@@ -27,7 +25,7 @@ volatile uint8_t spi_data_from_sensor[BUF_SZ];
 uint8_t spi_sensor_read;
 volatile uint16_t spi_sensor_write;
 
-#define SPEED 255
+#define SPEED 200
 uint8_t ninety_timer, turn, pid_timer;
 uint8_t left = 1;
 
@@ -71,18 +69,10 @@ uint8_t big_ir_centimeter_array[117] = {16, 16, 17, 17, 18, 18, 19, 19, 20, 20, 
 // Innehåller de centimetervärden som ses i grafen på https://docs.isy.liu.se/twiki/pub/VanHeden/DataSheets/gp2y0a21.pdf, sid. 4.
 
 
-uint8_t follow_end_tape = 1;
-
-
-//Korsningsgrejer
-uint8_t has_detected_crossing = 0;
-char crossing_direction;
-uint8_t crossing_stop_value;
-uint8_t counter = 0;
+uint8_t follow_end_tape = 0;
 
 int main(void)
 {
-	
 	//don't turn!
 	turn = 0;
 	//OSCCAL = 0x70;
@@ -94,33 +84,20 @@ int main(void)
 	update();
 	spi_init();
 	pwm_init();
+	//pid_timer_init(); //detta kanske ej behövs!
+	//drive_forwards(SPEED);	
 	sei();		//aktivera global interrupts
 	
 	clear_pid();
-	init_pid(0, 100, -100);
-	update_k_values(10, 0, 10);
-	
-	//_delay_ms(2000);
-	//drive_forwards(255);
+	init_pid(40, 255, -255);
+	update_k_values(1, 1, 1);
 	
 	while(1)
 	{
-		
 		if (follow_end_tape)
 		{
-			//regulate_end_tape_2(spi_data_from_sensor);
-			//regulate_end_tape(reflex_sensors_currently_seeing_tape(spi_data_from_sensor));
-// 			char temp[32];
-// 			sprintf(temp,"%03d ", spi_data_from_sensor[1]);
-// 			send_string(temp);
-// 			update();
-// 			
-			//reflex_sensors_currently_seeing_tape(spi_data_from_sensor);
+			//regulate_end_tape(spi_data_from_sensor[]);
 		}
-// 		if (follow_end_tape)
-// 		{
-// 			regulate_end_tape(spi_data_from_sensor);
-// 		}
 		
 		if(spi_comm_write != spi_comm_read)
 		{
@@ -140,11 +117,32 @@ int main(void)
 		
 		if (regulator_enable && regulator_flag)
 		{
-			regulator(0);    //Är void i nuläget, den behövde designas om.
-			regulator_enable = 0;
-		}	
+			static int16_t temp_input = 0,temp_output = 0;
+			static int16_t old_temp_output;
+			temp_input = (sensor_buffer[IR_RIGHT_BACK] + sensor_buffer[IR_RIGHT_FRONT] - sensor_buffer[IR_LEFT_BACK] - sensor_buffer[IR_LEFT_FRONT])/2;
+			temp_output = regulator(temp_input); //borde skrivas om så den ger ut ett åttabitarsvärde?
+			
+			if(temp_output == 0)
+			{
+				LEFT_AMOUNT = SPEED;
+				RIGHT_AMOUNT = SPEED;
+			}
+			
+			if(temp_output > 0)
+			{
+				RIGHT_AMOUNT = RIGHT_AMOUNT - (uint8_t)temp_output;
+				LEFT_AMOUNT = SPEED;
+			}
+				
+			if (temp_output < 0)
+			{
+				LEFT_AMOUNT = LEFT_AMOUNT + (uint8_t)temp_output;
+				RIGHT_AMOUNT = SPEED;
+			}
+			
+		regulator_enable = 0;
 		
-		//follow_end_tape = 1;
+		}	
 	}
 }
 
@@ -155,247 +153,7 @@ void send_string_remote(char *str)
 {
 	while(*str)
 		send_byte_to_comm(*str++);
-}
-
-uint8_t * reflex_sensors_currently_seeing_tape(uint8_t * values)
-{
-	uint8_t i, offset=5;
-	uint8_t return_values[11];
-	for (i = 0;i < 11;i++)
-	{
-		if(values[i+offset] > REFLEX_SENSITIVITY)
-			return_values[i] = 1;
-		else
-			return_values[i] = 0;
-	}
-	
-	return return_values;
-}
-
-
-uint8_t is_empty(uint8_t * values, uint8_t len)
-{
-	uint8_t i;
-	for (i = 0;i<len;i++)
-	{
-		if(values[i + 5] != 0)
-			return 0;
-	}
-	
-	return 1;
-}
-
-
-void regulate_end_tape(uint8_t* values)
-{
-	//loopa igenom de elva sista
-	static uint8_t offset = 5; //de fem första värdena är IR-skräp, vi vill bara läsa reflexerna
-	int8_t pos_index; //-5 för längst till vänster, 5 för höger, 0 i mitten!
-	uint8_t i;
-	int8_t average=0, res=0;
-	int8_t old_pos=0, pos=0;
-	
-	for (i = 0; i < 11; i++)
-	{
-		pos_index = i-5;
-		res += pos_index*values[i];
-		average += values[i];
-		
-	}
-	
-	pos = res/average;	//ojojoj
-	
-	char temp[32];
-	sprintf(temp,"%03d ", pos);
-	send_string(temp);
-	update();
-	
-	static uint8_t a=0;
-	if(a++ > 250)
-	{
-		
-// 	  clear_screen();
-// 	  update();
-// 	  send_string("POS: ");
-// 	  update();
-// 	  send_string(temp);
-// 	  update();
-	}
-	
-	if(is_empty(values,11))
-	{
-		LEFT_AMOUNT = 0;
-		RIGHT_AMOUNT = 0;
-	}
-	
-	else if(pos > 0)
-	{
-		RIGHT_AMOUNT = pos*SPEED;
-		LEFT_AMOUNT = SPEED;
-		
-	}
-	else if(pos < 0){
-		LEFT_AMOUNT = abs(pos)*SPEED;
-		RIGHT_AMOUNT = SPEED;
-	}
-	else{ // == 0
-		LEFT_AMOUNT = SPEED;
-		RIGHT_AMOUNT = SPEED;
-	}
-	
-}
-
-
-
-void regulate_end_tape_2(uint8_t* values)
-{
-	//loopa igenom de elva sista
-	send_string("hej");
-	update();
-	static uint8_t offset = 6; //de fem första värdena är IR-skräp, vi vill bara läsa reflexerna
-	int8_t pos_index; //-5 för längst till vänster, 5 för höger, 0 i mitten!
-	uint8_t i;
-	int8_t average=0, res=0;
-	int8_t old_pos=0, pos=0;
-	//uint8_t _1 = 0, _2 = 0, _3 = 0, _4 = 0, _5 = 0, _6 = 0, _7 = 0, _8 = 0, _9 = 0, _10 = 0, _11 = 0;
-	uint8_t reflex[11];
-	
-	for (i = 0; i < 11; i++)
-	{
-		pos_index = i-5;
-		if(values[i+offset] > REFLEX_SENSITIVITY)
-		{
-			reflex[i] = 1;
-			res += pos_index;
-			average += 1;
-		}
-		else
-		reflex[i] = 0;
-		
-	}
-	
-	pos = res/average;	//ojojoj
-// 	
- 	
-// 	send_string(temp);
-// 	update();
-	
-	static uint16_t a=0;
-	if(a++ > 65000)
-	{
-		clear_screen();
-		_delay_ms(100);
-		for (i=0;i < 11;i++)
-		{
-			char temp[2];
-			sprintf(temp,"%d", reflex[i]);
-			send_string(temp);
-			update();
-		}
-		
-		//update();
-// 		
-// 		send_string("POS: ");
-// 		update();
-// 		send_string(temp);
-// 		update();
-	}
-	
-	if(is_empty(values,11))
-	{
-		LEFT_AMOUNT = 0;
-		RIGHT_AMOUNT = 0;
-	}
-	
-	else if(res > 0)
-	{
-// 		RIGHT_AMOUNT = pos*SPEED;
-// 		LEFT_AMOUNT = SPEED;
-// 		
-	}
-	else if(res < 0){
-// 		LEFT_AMOUNT = abs(pos)*SPEED;
-// 		RIGHT_AMOUNT = SPEED;
- 	}
-	else{ // == 0
-// 	LEFT_AMOUNT = SPEED;
-// 	RIGHT_AMOUNT = SPEED;
-}
-
-}
-
-
-void regulate_end_tape_3()
-{
-	int8_t pos_index; //-5 för längst till vänster, 5 för höger, 0 i mitten!
-	uint8_t i, n_of_reflexes_on = 0;
-	int8_t res=0;
-	int8_t old_pos=0, pos=0;
-	uint8_t reflex[9];
-	
-	for (i = 0; i < 9; i++)
-	{
-		pos_index = i-4;
-		if(sensor_buffer[i+REFLEX2] > REFLEX_SENSITIVITY)
-		{
-			reflex[i] = 1;
-			res += pos_index;
-			n_of_reflexes_on += 1;
-		}
-		else
-			reflex[i] = 0;
-		
-	}
-	
-	//div med 0
-	if(n_of_reflexes_on != 0)
-		pos = res*2/n_of_reflexes_on;	//ojojoj
-	else //utanför tejp, stopp!
-		stop_motors();			
-		
-	clear_screen();
-	//_delay_ms(100);
-	for (i=0;i < 9;i++)
-	{
-		char temp[2];
-		sprintf(temp,"%d", reflex[i]);
-		send_string(temp);
-		update();
-	}
-		
-		//update();
-		//
-		// 		send_string("POS: ");
-		// 		update();
-		// 		send_string(temp);
-		// 		update();
-	//}
-	
-	if(res > 0)
-	{
-		RIGHT_AMOUNT = SPEED + pos*10;
-		LEFT_AMOUNT = SPEED - pos*10;
-		setbit(PORT_DIR, LEFT_DIR);
-		setbit(PORT_DIR, RIGHT_DIR);
-		send_string("left");
-		update();
-	}
-	
-	else if(res < 0){
-		LEFT_AMOUNT = SPEED + abs(pos)*10;
-		RIGHT_AMOUNT = SPEED - abs(pos)*10;
-		setbit(PORT_DIR, LEFT_DIR);
-		setbit(PORT_DIR, RIGHT_DIR);
-		send_string("right");
-		update();
-	}
-	
-	else if(res == 0 && n_of_reflexes_on != 0){ // == 0
-		drive_forwards(SPEED);
-	}
-
-}
-
+}	
 
 void pid_timer_init()
 {
@@ -567,52 +325,36 @@ void send_byte_to_comm(uint8_t byte)
 	//PORTD = test;
 }
 
-uint8_t dirbits;
 void drive_forwards(uint8_t amount)
 {
+	LEFT_AMOUNT = amount;
+	RIGHT_AMOUNT = amount;
+	
 	//sätt ettor (framåt) på DIR-pinnarna
 	setbit(PORT_DIR, LEFT_DIR);
 	setbit(PORT_DIR, RIGHT_DIR);
-	
-dirbits=3;
-	LEFT_AMOUNT = amount;
-	RIGHT_AMOUNT = amount;
 }
 
 void drive_backwards(uint8_t amount)
 {
-	stop_motors();
-	_delay_ms(10);
+	LEFT_AMOUNT = amount;
+	RIGHT_AMOUNT = amount;
 	
 	//sätt nollor (bakåt) på DIR-pinnarna
 	clearbit(PORT_DIR, LEFT_DIR);
 	clearbit(PORT_DIR, RIGHT_DIR);
-dirbits = 0;
-	
-	LEFT_AMOUNT = amount;
-	RIGHT_AMOUNT = amount;
 }
 
 //sväng vänster!
 void turn_left(uint8_t amount)
 {
-	setbit(PORT_DIR, LEFT_DIR);
-	setbit(PORT_DIR, RIGHT_DIR);
-	
-dirbits=3;
-	LEFT_AMOUNT = 60;
-	RIGHT_AMOUNT = amount;
+	LEFT_AMOUNT = amount;
 }
 
 //sväng höger!
 void turn_right(uint8_t amount)
 {
-	setbit(PORT_DIR, LEFT_DIR);
-	setbit(PORT_DIR, RIGHT_DIR);
-
-dirbits=3;	
-	LEFT_AMOUNT = amount;
-	RIGHT_AMOUNT = 60;
+	RIGHT_AMOUNT = amount;
 }
 
 //stanna allt!
@@ -624,10 +366,6 @@ void stop_motors()
 	//clearbit(TCCR2B, CS22);
 	//LEFT_PWM = 0;
 	//RIGHT_PWM = 0;
-	setbit(PORT_DIR, LEFT_DIR);
-	setbit(PORT_DIR, RIGHT_DIR);
-	
-dirbits = 3;
 	LEFT_AMOUNT = 0;
 	RIGHT_AMOUNT = 0;
 }
@@ -635,30 +373,22 @@ dirbits = 3;
 //sväng vänster som en stridsvagn!
 void tank_turn_left(uint8_t amount)
 {
-//	stop_motors();
-//	_delay_ms(10);
-	
-dirbits = 2;
-	clearbit(PORT_DIR, LEFT_DIR);
-	setbit(PORT_DIR, RIGHT_DIR);
-	
 	LEFT_AMOUNT = amount;
 	RIGHT_AMOUNT = amount;
+	
+	clearbit(PORT_DIR, LEFT_DIR);
+	setbit(PORT_DIR, RIGHT_DIR);
 }
 
 
 //sväng höger som en stridsvagn!
 void tank_turn_right(uint8_t amount)
 {
-//	stop_motors();
-//	_delay_ms(10);
-dirbits = 1;
+	LEFT_AMOUNT = amount;
+	RIGHT_AMOUNT = amount;
 	
 	setbit(PORT_DIR, LEFT_DIR);
 	clearbit(PORT_DIR, RIGHT_DIR);
-	
-	LEFT_AMOUNT = amount;
-	RIGHT_AMOUNT = amount;
 }
 
 void claw_out()
@@ -727,38 +457,8 @@ ISR(TIMER1_COMPA_vect)
 		//tank_turn_left(60);
 		ninety_timer=0;
 	}
-
-	// Refresha motor-output. Detta får äntligen styrningen att fungera pålitligt.
-	if(dirbits & 1) {
-		clearbit(PORT_DIR, LEFT_DIR);
-		setbit(PORT_DIR, LEFT_DIR);
-	}
-	else {
-		setbit(PORT_DIR, LEFT_DIR);
-		clearbit(PORT_DIR, LEFT_DIR);
-	}
-
-	if(dirbits & 2) {
-		clearbit(PORT_DIR, RIGHT_DIR);
-		setbit(PORT_DIR, RIGHT_DIR);
-	}
-	else {
-		setbit(PORT_DIR, RIGHT_DIR);
-		clearbit(PORT_DIR, RIGHT_DIR);
-	}
-
-	uint8_t l, r;
-	l = LEFT_AMOUNT;
-	r = RIGHT_AMOUNT;
-
-	if(l) {
-		LEFT_AMOUNT = 0;
-		LEFT_AMOUNT = l;
-	}
-	if(r) {
-		RIGHT_AMOUNT = 0;
-		RIGHT_AMOUNT = r;
-	}		
+	
+	
 }
 
 //overflow på timer0, ställ in frekvens med
@@ -793,18 +493,15 @@ void decode_comm(uint8_t command)
 // 		sprintf(tmp, "%02X ",  pid);
 // 		send_string(tmp);
 // 		update();
-		if(pid == 4){
+		if(pid == 3){
 			constant_p = command;
 		}			
-		else if(pid == 3){
+		else if(pid == 2){
 			constant_i = command;
-		}
-		else if(pid == 2) {
-			constant_d = command << 8;
 		}
 		else // pid == 1
 		{
-			constant_d |= command;
+			constant_d = command;
 			update_k_values(constant_p, constant_i, constant_d);
 		}
 		--pid;
@@ -815,18 +512,14 @@ void decode_comm(uint8_t command)
 		if(command == 0x00)
 		{
 			clear_screen();
-			send_character('F');
 			display_printf_p = 0;
 		} else
 		{
-			if(display_printf_p == 0)
-				memset(display_printf_string, 0, 100);
 			display_printf_string[display_printf_p++] = command;
 		}			
 		display = 0;
 		return;
-	}
-	else if(drive)
+	} else if(drive)
 	{
 		if(drive == COMM_DRIVE)
 		{
@@ -839,7 +532,6 @@ void decode_comm(uint8_t command)
 		} else if(drive == COMM_STOP)
 		{
 			drive = 0;
-			disable_pid();
 			stop_motors();
 		} else if(drive == COMM_LEFT)
 		{
@@ -852,11 +544,19 @@ void decode_comm(uint8_t command)
 		} else if(drive == COMM_DRIVE_LEFT)	// Ignorera argumentet tills vidare, vet inte hur vi ska lösa det...
 		{
 			drive = 0;
-			turn_left(command);
+			LEFT_AMOUNT = 60;
+			RIGHT_AMOUNT = 255;
+		
+			setbit(PORT_DIR, LEFT_DIR);
+			setbit(PORT_DIR, RIGHT_DIR);
 		}	else if(drive == COMM_DRIVE_RIGHT)	// Ignorera argumentet även här, tills vidare...
 		{
 			drive = 0;
-			turn_right(command);
+			LEFT_AMOUNT = 255;
+			RIGHT_AMOUNT = 60;
+
+			setbit(PORT_DIR, LEFT_DIR);
+			setbit(PORT_DIR, RIGHT_DIR);
 		} else if(drive == COMM_CLAW_OUT)
 		{
 			drive = 0;
@@ -876,18 +576,15 @@ void decode_comm(uint8_t command)
 	}
 	else if(command == COMM_STOP)
 	{
-		disable_pid();
 		stop_motors();
 	}
 	else if(command == COMM_SET_PID)
 	{
-		pid = 4;
+		pid = 3;
 	}
 	else if(command == COMM_ENABLE_PID)
 	{
 		enable_pid();
-		setbit(PORT_DIR, LEFT_DIR);		//Kör framåt under regleringen.
-		setbit(PORT_DIR, RIGHT_DIR);	
 	}
 	else if(command == COMM_DISABLE_PID)
 	{
@@ -971,31 +668,23 @@ void decode_sensor(uint8_t data)
  **********************************************************************/
 	switch(sensor_buffer[0]) {
 		case SENSOR_DEBUG:
-			//sensor_debug_message();
+			sensor_debug_message();
 			break;
 		case SENSOR_HEX:
-			//sensor_debug_hex();
+			sensor_debug_hex();
 			break;
 		case GYRO_SENSOR:
 			stop_motors();
 			break;	
-		case SENSOR: if(regulator_flag) {
-			//Omvandla sensorvärden från spänningar till centimeter.
-			sensor_buffer[IR_FRONT] = interpret_big_ir(sensor_buffer[IR_FRONT]);
-			sensor_buffer[IR_LEFT_FRONT] = interpret_big_ir(sensor_buffer[IR_LEFT_FRONT]);
-			sensor_buffer[IR_RIGHT_FRONT] = interpret_big_ir(sensor_buffer[IR_RIGHT_FRONT]);
-			sensor_buffer[IR_LEFT_BACK] = interpret_small_ir(sensor_buffer[IR_LEFT_BACK]);
-			sensor_buffer[IR_RIGHT_BACK] = interpret_small_ir(sensor_buffer[IR_RIGHT_BACK]);
+		case SENSOR: {
 			
-			
-			//Wait a few times before using data
-			if(sensor_transmission_number<4)
-			{
-				//gyro_init_value = sensor_buffer[GYRO];
-				sensor_transmission_number++;
-				return;
-			}
-
+// 			//First time? Calibrate gyro
+// 			if(sensor_transmission_number<5)
+// 			{
+// 				gyro_init_value = sensor_buffer[GYRO];
+// 				sensor_transmission_number++;
+// 			}
+// 			
 // 			if(is_turning) 
 // 			{
 // 				gyro_int += 3*abs(gyro_init_value - (int)sensor_buffer[GYRO]); //Maxhastighet 300grader/s,
@@ -1006,32 +695,21 @@ void decode_sensor(uint8_t data)
 // 				}
 // 			}
 			
+			decode_tape_sensor_data();
 
-			//Om ej i korsning och får sensordata som indikerar korsning. Analysera korsningstyp
-			
-			if (!has_detected_crossing && (sensor_buffer[IR_LEFT_FRONT] >= SEGMENT_LENGTH || sensor_buffer[IR_RIGHT_FRONT] >= SEGMENT_LENGTH))
+			static uint8_t a=0;
+			if((a++ & 0b10000))
 			{
-				analyze_ir_sensors();
+				a=0;
+				update_display_string();
 			}
+			// 			if(sensor_buffer[IR_FRONT] > 0x20) 
+			// 			{
+			// 				stop_motors();
+			// 			}				
+				//else drive_forwards(SPEED);
 			
-			//Om korsning detekterad. Utför korningstypspecifika kommandon
-			else if(has_detected_crossing)
-			{
-				crossing_turn(crossing_direction, crossing_stop_value);
-			}
-// 			
 			
-			//decode_tape_sensor_data();
-  			if (follow_end_tape)
-  			{
-  				regulate_end_tape_3();
-  			}
-
-//  			if (follow_end_tape)
-//  			{
-//  				regulate_end_tape_2(sensor_buffer);
-//  			}
-
 			break;
 		} 
 		default:
@@ -1044,6 +722,18 @@ void decode_sensor(uint8_t data)
 	sensor_buffer_pointer = 0x00;
 	sensor_packet_length = 0;
 	sensor_start = 1;
+
+	//Omvandla sensorvärden från spänningar till centimeter.
+// 	interpret_big_ir(sensor_buffer[IR_FRONT]);
+/*	interpret_big_ir(sensor_buffer[IR_LEFT_FRONT]);*/
+// 	interpret_big_ir(sensor_buffer[IR_RIGHT_FRONT]);
+// 	interpret_small_ir(sensor_buffer[IR_LEFT_BACK]);
+// 	interpret_small_ir(sensor_buffer[IR_RIGHT_BACK]);
+	sensor_buffer[IR_FRONT] = interpret_big_ir(sensor_buffer[IR_FRONT]);
+	sensor_buffer[IR_LEFT_FRONT] = interpret_big_ir(sensor_buffer[IR_LEFT_FRONT]);
+	sensor_buffer[IR_RIGHT_FRONT] = interpret_big_ir(sensor_buffer[IR_RIGHT_FRONT]);
+	sensor_buffer[IR_LEFT_BACK] = interpret_small_ir(sensor_buffer[IR_LEFT_BACK]);
+	sensor_buffer[IR_RIGHT_BACK] = interpret_small_ir(sensor_buffer[IR_RIGHT_BACK]);
 	
 	regulator_enable = 1;		//Här har det gått ~40 ms dvs starta regleringen.
 	
@@ -1051,7 +741,7 @@ void decode_sensor(uint8_t data)
 	if((a++ & 0b10000))
 	{
 		a=0;
-		//update_display_string();
+		update_display_string();
 	}
 }
 
@@ -1060,20 +750,19 @@ void decode_sensor(uint8_t data)
 #define MAX_SENSORS 15
 void update_display_string()
 {
-	/*
 	char tmp[100];
 	clear_screen();
-	sprintf(tmp, "L: %03d   R: %03d F: %03d ", sensor_buffer[IR_LEFT_FRONT], sensor_buffer[IR_RIGHT_FRONT], sensor_buffer[IR_FRONT]);
+	sprintf(tmp, "Left: %02X        Right: %02X ", sensor_buffer[IR_LEFT_FRONT], sensor_buffer[IR_RIGHT_FRONT]);
+	sprintf(tmp, "Left:  %03d      Right: %03d ", sensor_buffer[IR_LEFT_FRONT], sensor_buffer[IR_RIGHT_FRONT]);
 	send_string(tmp);
 	update();
 	return;
-	*/
-/*
-	clear_screen();
-	send_string(display_printf_string);
-	update();
-	return;
-*/
+
+
+// 	clear_screen();
+// 	send_string(display_printf_string);
+// 	update();
+// 	return;
     uint8_t *inp = display_printf_string;
 
     char tmpStr[BUFFER_SIZE];
@@ -1099,7 +788,7 @@ void update_display_string()
 		    inp++;
 		    uint8_t sensor = *inp; // Nästa är sensor-index
 		    inp++;
-		    if(sensor > MAX_SENSORS - 1)
+		    if(sensor > MAX_SENSORS)
 		    continue;
 		    if(base == 10)
 		    {
@@ -1136,8 +825,6 @@ void decode_tape_sensor_data()
 		is_over_tape = 1;
 		no_tape_count = 0;
 		tape_count++;
-		//send_string("tejp");
-		//update();
 	}
 	
 	else if (is_over_tape && sensor_buffer[REFLEX1]<REFLEX_SENSITIVITY) //Tejpbit avslutad
@@ -1206,14 +893,14 @@ void decode_tape_segment(char first, char second)
 	{
 		follow_end_tape = 1;
 		
-// 		uint8_t i = 0;
-// 		for (i=0;i<10;i++)
-// 		{
-// 			tank_turn_right(SPEED);
-// 			_delay_ms(500);
-// 			tank_turn_left(SPEED);
-// 			_delay_ms(500);
-// 		}
+		uint8_t i = 0;
+		for (i=0;i<10;i++)
+		{
+			tank_turn_right(SPEED);
+			_delay_ms(500);
+			tank_turn_left(SPEED);
+			_delay_ms(500);
+		}
 	}
 	
 	else
@@ -1221,6 +908,7 @@ void decode_tape_segment(char first, char second)
 		
 		//ERROR nu, kanske hantering av målgång här senare ?
 	}
+
 
 }
 
@@ -1284,147 +972,6 @@ uint8_t interpret_big_ir(uint8_t value)
 	value = big_ir_centimeter_array[i];
 	return big_ir_centimeter_array[i];
 }
-
-/* 
- * ANALYZE_IR_SENSORS()
- * Vid upptäckt av någon form av korsning anropas denna.
- * Funktionen väljer rätt korsningstyp utifrån sensordata.
- * Flaggor som talar om vilken korsning ddet är sätts.
- */
-void analyze_ir_sensors()
-{
-	//Turn left, alley at front
-	if(	sensor_buffer[IR_LEFT_FRONT]>=MAXIMUM_IR_DISTANCE && 
-		sensor_buffer[IR_FRONT] >= MAXIMUM_IR_DISTANCE && 
-		sensor_buffer[IR_RIGHT_FRONT] <= SEGMENT_LENGTH)
-	{
-		//stop_motors();
-		has_detected_crossing = 1;
-		crossing_direction = 'l';
-		crossing_stop_value = DISTANCE_TO_ALLEY_END - IR_FRONT_TO_MIDDLE_LENGTH + OFFSET;
-	}
-	//Turn Right, alley at front
-	else if(sensor_buffer[IR_LEFT_FRONT]<=SEGMENT_LENGTH &&			
-		sensor_buffer[IR_FRONT] >=MAXIMUM_IR_DISTANCE &&
-		sensor_buffer[IR_RIGHT_FRONT] >=MAXIMUM_IR_DISTANCE)
-	{
-		has_detected_crossing = 1;
-		crossing_direction = 'r';
-		crossing_stop_value = DISTANCE_TO_ALLEY_END - IR_FRONT_TO_MIDDLE_LENGTH + OFFSET;
-	}
-	//Turn left, alley right															//FUNKAR!
-	else if(sensor_buffer[IR_LEFT_FRONT] >= MAXIMUM_IR_DISTANCE &&
-		sensor_buffer[IR_FRONT] <= SEGMENT_LENGTH &&
-		sensor_buffer[IR_RIGHT_FRONT] >= SEGMENT_LENGTH &&
-		sensor_buffer[IR_RIGHT_FRONT] <= MAXIMUM_IR_DISTANCE)
-	{
-		has_detected_crossing = 1;
-		crossing_direction = 'l';
-		crossing_stop_value = SEGMENT_LENGTH/2-IR_FRONT_TO_MIDDLE_LENGTH +OFFSET;
-	}
-	//turn right alley to left															//Funkar!
-	else if(sensor_buffer[IR_LEFT_FRONT] >= SEGMENT_LENGTH &&
-		sensor_buffer[IR_LEFT_FRONT] <= MAXIMUM_IR_DISTANCE &&
-		sensor_buffer[IR_FRONT] <= SEGMENT_LENGTH &&
-		sensor_buffer[IR_RIGHT_FRONT] >= MAXIMUM_IR_DISTANCE)
-	{
-		has_detected_crossing = 1;
-		crossing_direction = 'r';
-		crossing_stop_value = SEGMENT_LENGTH/2-IR_FRONT_TO_MIDDLE_LENGTH+OFFSET;
-	}
-	//turn front alley right
-	else if(sensor_buffer[IR_LEFT_FRONT] >= SEGMENT_LENGTH &&
-		sensor_buffer[IR_LEFT_FRONT] <= MAXIMUM_IR_DISTANCE &&
-		sensor_buffer[IR_FRONT] >= MAXIMUM_IR_DISTANCE &&
-		sensor_buffer[IR_RIGHT_FRONT] <= SEGMENT_LENGTH)
-	{
-		has_detected_crossing = 1;
-		crossing_direction = 'f';
-		crossing_stop_value = 0;
-	}
-	//turn front alley right
-	else if(sensor_buffer[IR_LEFT_FRONT] <= SEGMENT_LENGTH &&
-		sensor_buffer[IR_FRONT] >= MAXIMUM_IR_DISTANCE &&
-		sensor_buffer[IR_RIGHT_FRONT] >= SEGMENT_LENGTH &&
-		sensor_buffer[IR_RIGHT_FRONT] <= MAXIMUM_IR_DISTANCE)
-	{
-		has_detected_crossing = 1;
-		crossing_direction = 'f';
-		crossing_stop_value = 0;
-	}
-}
-
-
-/*
- * CROSSING_TURN(DIR,STOP_DISTANCE)
- * Körs då korning, samt korningstyp identifierats.
- * Utför sväng då roboten kört tillräckligt långt in i korsningen.
- */
-void crossing_turn(char dir,uint8_t stop_distance)
-{
-	if (sensor_buffer[IR_FRONT] <= stop_distance || stop_distance == 0)
-	{
-		has_detected_crossing = 0;
-		stop_motors();
-		_delay_ms(500);
-		
-		
-		switch(dir)
-		{
-			case 'l': tank_turn_left(SPEED); break;
-			case 'r': tank_turn_right(SPEED); break;
-			case 'f': drive_forwards(SPEED); break;
-			default: break;
-		}
-		_delay_ms(2000);
-		stop_motors();
-		
-	}
-	
-}
-
-
-void turn_left90()
-{
-	static uint8_t front;
-	static uint8_t is_turning = 0;
-	
-	if(is_turning && (front && sensor_buffer[IR_RIGHT_FRONT]))
-	{
-		is_turning = 0;
-		stop_motors();
-		//Börjja köra sen
-	}
-	else if(!is_turning) 
-	{
-		front = sensor_buffer[IR_FRONT];
-		
-		is_turning = 1;
-		tank_turn_left(SPEED);
-	}  
-	
-}
-
-void turn_right90()
-{
-	static uint8_t front;
-	static uint8_t is_turning = 0;
-	
-	if(is_turning && front == sensor_buffer[IR_LEFT_FRONT])
-	{
-		is_turning = 0;
-		stop_motors();
-		//Börjja köra sen
-	}
-	else if(!is_turning)
-	{
-		front = sensor_buffer[IR_FRONT];
-		is_turning = 1;
-		tank_turn_right(SPEED);
-	}
-	
-}
-
 
 /********************************************************
 				Linjeföljning test

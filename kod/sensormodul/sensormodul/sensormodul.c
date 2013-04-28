@@ -29,7 +29,7 @@ int main(void)
 	setbit(DDRA,PINA1); //Sätter reflex-enable som output
 	clearbit(DDRA,PINA2); // Gyro som input
 	
-	DDRD = 0xFF;
+	DDRD = 0xFF; //A,B,C,D till muxarna
 	setbit(DDRC, PINC0);
 	init_spi();
 	init_adc();
@@ -59,8 +59,17 @@ int main(void)
     }
 }
 
+/* VAFAN ÄR DETTA??
+<<<<<<< HEAD
+void init_gyro_timer()
+{
+	
+}
 
 
+void read_all_sensors()
+=======
+*/
 
 /* =======================================GYRO=======================================*/
 
@@ -70,6 +79,7 @@ uint16_t full_turn, gyro_int;
 
 // Börja snurra. positiv degrees = medurs. Har slutat då is_turning blir 0.
 void begin_turning(int16_t degrees)
+//>>>>>>> f840052e7a203feb98207f4cf649ee4656753730 //wtf??
 {
 	full_turn = 55*abs(degrees);	//Sväng x antal grader
 	gyro_int = 0;
@@ -144,11 +154,13 @@ void read_all_sensors()
 	setbit(PORTC, PINC0);		// For debug!
 	data_index = 1;
 	test_data[0] = SENSOR;
+	
 	read_ir(0);
 	read_ir(1);
 	read_ir(2);
 	read_ir(3);
 	read_ir(4);
+	
 	read_tape(0);
 	read_tape(1);
 	read_tape(2);
@@ -164,6 +176,22 @@ void read_all_sensors()
 	send_to_master(16, test_data);
 	setbit(PORTC, PINC0);		// For debug!!
 	clearbit(PORTC, PINC0);		// For debug!!
+}
+
+/* 
+ * Läser bara av tejpsensorer, skicka rådata eller beräkna mittpunkt här?!
+ */
+void read_and_send_tape()
+{
+	data_index = 1;
+	test_data[0] = SENSOR;
+	uint8_t i;
+	for(i = 0; i < 11; i++)
+	{
+		read_tape(i);
+	}
+	
+	send_to_master(11, test_data);
 }
 
 /*
@@ -202,7 +230,6 @@ void read_ir(uint8_t sensor_no)
 	clearbit(ADMUX,MUX4);
 	PORTD = ((11+sensor_no)<<4); //Tell mux where to read from
 	read_adc();
-	
 	
 	/*MJUKVARUFILTER*/
 	second_to_last[sensor_no] = last[sensor_no];
@@ -400,7 +427,3 @@ void send_to_master(uint8_t len, uint8_t *data)
 		send_to_master_real(data[i++]);
 	}
 }
-
-
-	
-

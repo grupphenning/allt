@@ -34,7 +34,8 @@ int main(void)
 	USART_init();
 	
 	sei(); //Enable global interrupts
-	clearbit(PORTC, PINC0);
+
+	clearbit(PORTC, PINC0); // Ready to receive
 
     while(1)
     {
@@ -89,7 +90,7 @@ int main(void)
 			decode_remote(usartr);
 		}
 		if(has_spir) {
-			send_usart(spir);
+		//	send_usart(spir);
 		}
 		
 //		data = USART_Receive();
@@ -176,18 +177,20 @@ void decode_remote(uint8_t ch)
 	static uint8_t pid = 0;	// Flagga som anger att sist mottagna kommando från fjärrenheten var just pid!
 	static uint8_t display = 0; // Indikerar att nästa byte är en byte som ska vidare till styr
 	static uint8_t speed = 0;	// Nästa byte är en hastighet
-	static uint8_t p, i, d;	// Argumenten till PID!
+	static uint8_t p, i, dh, dl;	// Argumenten till PID!
 
 	/* Om PID är aktiverat (dvs. icke-noll), behandla den aktuella byten som ett argument till PID */
 	if(pid) {
-		if(pid == 3) p = ch;
-		else if(pid == 2) i = ch;
+		if(pid == 4) p = ch;
+		else if(pid == 3) i = ch;
+		else if(pid == 2) dh = ch;
 		else if(pid == 1) {
-			d = ch;
+			dl = ch;
 			send_spi(COMM_SET_PID);
 			send_spi(p);
 			send_spi(i);
-			send_spi(d);
+			send_spi(dh);
+			send_spi(dl);
 			--pid;
 			return;			// This ought to be needed, shound't it?
 		}
@@ -217,7 +220,7 @@ void decode_remote(uint8_t ch)
 		case 'h': send_spi(COMM_DRIVE_RIGHT); speed = 1; break;				// framåt och höger
 		case 'q': send_spi(COMM_CLEAR_DISPLAY); break;						// Rensa displayen
 		case 'z': send_spi(COMM_DISPLAY); display = 1; break;				// tecken till displayen
-		case 'p': pid = 3; break;											// PID-konstanter
+		case 'p': pid = 4; break;											// PID-konstanter
 		case 'n': send_spi(COMM_ENABLE_PID); break;							// Slå på reglering
 		case 'm': send_spi(COMM_DISABLE_PID); break;						// Slå av reglering
 		case 't': send_spi(COMM_TOGGLE_SENSORS); break;						// Aktivera/deaktivera sensorer
