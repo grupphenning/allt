@@ -502,9 +502,12 @@ void decode_comm(uint8_t command)
 		if(command == 0x00)
 		{
 			clear_screen();
+			send_character('F');
 			display_printf_p = 0;
 		} else
 		{
+			if(display_printf_p == 0)
+				memset(display_printf_string, 0, 100);
 			display_printf_string[display_printf_p++] = command;
 		}			
 		display = 0;
@@ -723,18 +726,20 @@ void decode_sensor(uint8_t data)
 #define MAX_SENSORS 15
 void update_display_string()
 {
+	/*
 	char tmp[100];
 	clear_screen();
 	sprintf(tmp, "Left: %02X        Right: %02X ", sensor_buffer[IR_LEFT_BACK], sensor_buffer[IR_RIGHT_BACK]);
 	send_string(tmp);
 	update();
 	return;
-
-
-// 	clear_screen();
-// 	send_string(display_printf_string);
-// 	update();
-// 	return;
+	*/
+/*
+	clear_screen();
+	send_string(display_printf_string);
+	update();
+	return;
+*/
     uint8_t *inp = display_printf_string;
 
     char tmpStr[BUFFER_SIZE];
@@ -760,7 +765,7 @@ void update_display_string()
 		    inp++;
 		    uint8_t sensor = *inp; // Nästa är sensor-index
 		    inp++;
-		    if(sensor > MAX_SENSORS)
+		    if(sensor > MAX_SENSORS - 1)
 		    continue;
 		    if(base == 10)
 		    {

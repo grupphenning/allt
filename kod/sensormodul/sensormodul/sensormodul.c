@@ -16,7 +16,7 @@
 
 uint8_t spi_data_from_master;
 uint8_t spi_data_to_master;
-volatile uint8_t test_data[18];
+volatile uint8_t test_data[18];9
 volatile uint8_t data_index=1;
 volatile uint8_t adc_interrupt = 0;
 volatile uint8_t has_data_from_spi = 0;
