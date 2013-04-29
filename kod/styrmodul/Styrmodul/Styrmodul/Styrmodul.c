@@ -108,6 +108,11 @@ int main(void)
 // 	_delay_ms(5000);
 // 	drive_forwards(255);
 	
+	send_string("Linjefoljning!  ");
+	update();
+	send_string("Funkar asbra! :)");
+	update();
+	
 	while(1)
 	{
 		
