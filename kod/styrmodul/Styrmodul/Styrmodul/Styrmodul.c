@@ -71,9 +71,10 @@ uint8_t big_ir_centimeter_array[117] = {16, 16, 17, 17, 18, 18, 19, 19, 20, 20, 
 										100, 105, 110, 113, 117, 120, 125, 130, 135, 140, 145, 150};
 // Innehåller de centimetervärden som ses i grafen på https://docs.isy.liu.se/twiki/pub/VanHeden/DataSheets/gp2y0a21.pdf, sid. 4.
 
-
+// Linjeföljning
 uint8_t follow_end_tape = 1;
-
+volatile uint8_t catch_target = 0;
+volatile uint8_t stop_and_catch_target = 0;
 
 //Korsningsgrejer
 uint8_t has_detected_crossing = 0;
@@ -99,6 +100,7 @@ int main(void)
 	update();
 	spi_init();
 	pwm_init();
+	catch_target_timer_init();
 	sei();		//aktivera global interrupts
 	
 	clear_pid();
@@ -392,9 +394,23 @@ void regulate_end_tape_3()
 	else if(res == 0 && n_of_reflexes_on != 0){ // == 0
 		drive_forwards(SPEED);
 	}
-
 }
 
+void check_for_final_end_tape()
+{
+	if (is_on_tape(REFLEX2) && is_on_tape(REFLEX7) ||
+		is_on_tape(REFLEX3) && is_on_tape(REFLEX8) || 
+		is_on_tape(REFLEX4) && is_on_tape(REFLEX9))
+	{
+		follow_end_tape = 0;
+		catch_target = 1;
+	}
+}
+
+uint8_t is_on_tape(uint8_t tape_number)
+{
+	return sensor_buffer[tape_number] > REFLEX_SENSITIVITY;
+}
 
 void pid_timer_init()
 {
@@ -457,7 +473,7 @@ void pwm_init()
 	
 	//TCCR1A = (1 << COM1A1) | (1 << WGM11);
 	//TCCR1B = (1 << WGM11) | (1 << WGM13) | (1 << WGM12) | (1 << CS12) | (1 << CS10);
-	TIMSK1 = (1 << OCIE1A);  // Enable Interrupt TimerCounter1 Compare Match A (TIMER1_COMPA_vect)
+	setbit(TIMSK1, OCIE1A);  // Enable Interrupt TimerCounter1 Compare Match A (TIMER1_COMPA_vect)
 	//ICR1 = 390;
 	//ICR1 = 625;
 	//ICR1 = 313;
@@ -494,6 +510,29 @@ void pwm_init()
 	
 }
 
+void catch_target_timer_init()
+{
+		
+	TCCR3A = 0;
+	setbit(TCCR3A, COM3A1);
+	setbit(TCCR3A, WGM31);
+	
+	TCCR3B = 0;
+	setbit(TCCR3B, WGM32);
+	setbit(TCCR3B, WGM33);
+	setbit(TCCR3B, CS30);
+	setbit(TCCR3B, CS32); //f = fck/1024
+	
+	//setbit(TIMSK3, OCIE3A);  // Enable Interrupt TimerCounter1 Compare Match A (TIMER3_COMPA_vect)
+	//ICR1 = 390;
+	//ICR1 = 625;
+	//ICR1 = 313;
+	ICR3 = 15625; //0,5 Hz
+	
+}
+
+
+
 void spi_init()
 {
 	clearbit(DDRD, PIND3);		// Avbrott från kommunikationsenheten är input
@@ -514,8 +553,7 @@ void spi_init()
 	setbit(PORTB, PINB4);
 	
 	test = SPSR;
-	
-	
+		
 	//Sätt SPCR-registret, inställningar om master/slave, spi enable, data order, klockdelning
 	SPCR = 0;
 	//setbit(SPCR, SPIE);
@@ -759,6 +797,16 @@ ISR(TIMER1_COMPA_vect)
 		RIGHT_AMOUNT = r;
 	}		
 }
+
+
+//0,5 Hz
+ISR(TIMER3_COMPA_vect)
+{
+	stop_and_catch_target++;
+	catch_target = 0;
+}
+	
+
 
 //overflow på timer0, ställ in frekvens med
 //OCR0A, och CSxx-flaggorna i TCCR0B
@@ -1040,8 +1088,23 @@ void decode_sensor(uint8_t data)
 
   			if (follow_end_tape)
   			{
-  				regulate_end_tape_3();
-  			}
+				check_for_final_end_tape();
+				regulate_end_tape_3();
+			}
+			
+			if(catch_target)
+			{
+				drive_forwards(SPEED);
+				//sätt på timer för avståndet till målet (muggen)
+				setbit(TIMSK3, OCIE3A);
+			}
+			
+			if(stop_and_catch_target > 1)
+			{
+				//_delay_ms(2000);
+				stop_motors();
+				tank_turn_left(70);
+			}
 
 			break;
 		default:
