@@ -13,7 +13,7 @@ void update_k_values(uint8_t kp, uint8_t ki, uint8_t kd);
 void clear_pid();
 void enable_pid();
 void disable_pid();
-void regulator(int16_t input);
+void regulator();
 
 extern uint8_t regulator_flag;
 
