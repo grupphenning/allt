@@ -818,12 +818,13 @@ void decode_comm(uint8_t command)
 		{
 			update_display_string();
 			display_printf_p = 0;
-		} else
+		} 
+		else
 		{
 			if(display_printf_p == 0)
 				memset(display_printf_string, 0, 100);
 			display_printf_string[display_printf_p++] = command;
-		}			
+		}		
 		display = 0;
 		return;
 	}
@@ -987,7 +988,7 @@ void decode_sensor(uint8_t data)
 		case GYRO_SENSOR:
 			stop_motors();
 			break;	
-		case SENSOR: if(regulator_flag) {
+		case SENSOR:
 			//Omvandla sensorvärden från spänningar till centimeter.
 			sensor_buffer[IR_FRONT] = interpret_big_ir(sensor_buffer[IR_FRONT]);
 			sensor_buffer[IR_LEFT_FRONT] = interpret_big_ir(sensor_buffer[IR_LEFT_FRONT]);
@@ -1032,16 +1033,10 @@ void decode_sensor(uint8_t data)
 			//decode_tape_sensor_data();
   			if (follow_end_tape)
   			{
-  				regulate_end_tape_3();
+  				//regulate_end_tape_3();
   			}
 
-//  			if (follow_end_tape)
-//  			{
-//  				regulate_end_tape_2(sensor_buffer);
-//  			}
-
 			break;
-		} 
 		default:
 				// Unimplemented command
 			break;
@@ -1063,9 +1058,9 @@ void decode_sensor(uint8_t data)
 	}
 }
 
-init_default_printf_string()
+void init_default_printf_string()
 {
-	char default_string[] = {"V:%x\001,%x\002 F:%x\003    H:%x\004,%x\005" };
+	char default_string[] = {"V:%d\001,%d\004 F:%d\003    H:%d\002,%d\005" };
 	strcpy(display_printf_string, default_string);
 	
 }
@@ -1074,14 +1069,14 @@ init_default_printf_string()
 #define MAX_SENSORS 15
 void update_display_string()
 {
-	/*
-	char tmp[100];
-	clear_screen();
-	sprintf(tmp, "L: %03d   R: %03d F: %03d ", sensor_buffer[IR_LEFT_FRONT], sensor_buffer[IR_RIGHT_FRONT], sensor_buffer[IR_FRONT]);
-	send_string(tmp);
-	update();
-	return;
-	*/
+	
+// 	char tmp[100];
+// 	clear_screen();
+// 	sprintf(tmp, "L: %03d   R: %03d F: %03d ", sensor_buffer[IR_LEFT_FRONT], sensor_buffer[IR_RIGHT_FRONT], sensor_buffer[IR_FRONT]);
+// 	send_string(tmp);
+// 	update();
+// 	return;
+// 	
 /*
 	clear_screen();
 	send_string(display_printf_string);
@@ -1385,13 +1380,11 @@ void crossing_turn(char dir,uint8_t stop_distance)
 		
 		switch(dir)
 		{
-			case 'l': tank_turn_left(SPEED); break;
+			case 'l': turn_left90(SPEED); break;
 			case 'r': tank_turn_right(SPEED); break;
 			case 'f': drive_forwards(SPEED); break;
 			default: break;
 		}
-		_delay_ms(2000);
-		stop_motors();
 		
 	}
 	
@@ -1400,10 +1393,10 @@ void crossing_turn(char dir,uint8_t stop_distance)
 
 void turn_left90()
 {
-	static uint8_t front;
+	static uint8_t front = 0;
 	static uint8_t is_turning = 0;
 	
-	if(is_turning && (front && sensor_buffer[IR_RIGHT_FRONT]))
+	if(is_turning && front == sensor_buffer[IR_RIGHT_FRONT] && sensor_buffer[IR_FRONT] >=150)
 	{
 		is_turning = 0;
 		stop_motors();
@@ -1421,10 +1414,10 @@ void turn_left90()
 
 void turn_right90()
 {
-	static uint8_t front;
+	static uint8_t front = 0;
 	static uint8_t is_turning = 0;
 	
-	if(is_turning && front == sensor_buffer[IR_LEFT_FRONT])
+	if(is_turning && front == sensor_buffer[IR_LEFT_FRONT] && sensor_buffer[IR_FRONT] >=150)
 	{
 		is_turning = 0;
 		stop_motors();
