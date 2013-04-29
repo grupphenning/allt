@@ -72,9 +72,6 @@ void regulator()
 	if (((IR_LEFT_FRONT <= 20) && (IR_LEFT_BACK <= 20)) || IR_LEFT_FRONT > 80) targetwall = 1;
 	else if (((IR_RIGHT_FRONT <= 20) && (IR_RIGHT_BACK <= 20)) || IR_RIGHT_FRONT > 80) targetwall = 0;
 	
-<<<<<<< HEAD
-	if (targetwall == 1) //Reglera mot höger
-=======
 	if (targetwall == 1)		//Reglera mot höger vägg
 	{
 		output_u = k_prop*diff_right;						//P-del
@@ -93,16 +90,16 @@ void regulator()
 	{
 		output_u += 0;			//Om nära en vägg, dra på lite extra.
 	}
-	if else ((IR_RIGHT_FRONT <= 20) && (IR_RIGHT_BACK <= 20))
->>>>>>> 5108763d23eb052a8be0c26f8586b24c8a236d12
+	else if ((IR_RIGHT_FRONT <= 20) && (IR_RIGHT_BACK <= 20))
 	{
 		output_u -= 0;
 	}
-<<<<<<< HEAD
-	else if (targetwall == 0) //Reglera mot vänster
-=======
+	else if (targetwall == 0)
+	{
+		
+	} //Reglera mot vänster
+
 	else						//Styr mot mitten.
->>>>>>> 5108763d23eb052a8be0c26f8586b24c8a236d12
 	{
 		output_u += (diff_front+diff_back)/2;
 	}
