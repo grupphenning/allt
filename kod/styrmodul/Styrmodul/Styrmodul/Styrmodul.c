@@ -28,7 +28,7 @@ volatile uint8_t spi_data_from_sensor[BUF_SZ];
 uint8_t spi_sensor_read;
 volatile uint16_t spi_sensor_write;
 
-#define SPEED 100
+#define SPEED 255
 uint8_t ninety_timer, turn, pid_timer;
 uint8_t left = 1;
 
@@ -110,6 +110,12 @@ int main(void)
 	
 	while(1)
 	{
+		
+		//if(turn)
+		//	tank_turn_left(SPEED);
+		//else
+			//stop_motors();
+			//drive_forwards(SPEED);
 		
 //		if (follow_end_tape)
 //		{
@@ -720,10 +726,10 @@ ISR(TIMER1_COMPA_vect)
 	ninety_timer++;
 	
 	//en sekund har gått
-	if(ninety_timer == 20)
+	if(ninety_timer == 17)
 	{
 		turn ^= 0xff;
-		//tank_turn_left(60);
+		//tank_turn_left(255);
 		ninety_timer=0;
 	}
 
