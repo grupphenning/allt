@@ -28,7 +28,7 @@ volatile uint8_t spi_data_from_sensor[BUF_SZ];
 uint8_t spi_sensor_read;
 volatile uint16_t spi_sensor_write;
 
-#define SPEED 100
+#define SPEED 50
 uint8_t ninety_timer, turn, pid_timer;
 uint8_t left = 1;
 
@@ -105,8 +105,8 @@ int main(void)
 	init_pid(0, 100, -100);
 	update_k_values(10, 0, 10);
 	
-	//_delay_ms(2000);
-	//drive_forwards(255);
+// 	_delay_ms(5000);
+// 	drive_forwards(255);
 	
 	while(1)
 	{
@@ -366,14 +366,20 @@ void regulate_end_tape_3()
 	if(res > 0)
 	{
 		RIGHT_AMOUNT = SPEED + 30 + pos*5;
-		LEFT_AMOUNT = SPEED;
+		if(pos < 7)
+			LEFT_AMOUNT = SPEED - 20 - pos*5;
+		else
+			LEFT_AMOUNT = 0;
 		setbit(PORT_DIR, LEFT_DIR);
 		setbit(PORT_DIR, RIGHT_DIR);
 	}
 	
 	else if(res < 0){
 		LEFT_AMOUNT = SPEED + 30 + abs(pos)*5;
-		RIGHT_AMOUNT = SPEED;
+		if(abs(pos) < 7)
+			RIGHT_AMOUNT = SPEED - 20 - abs(pos)*5;
+		else
+			RIGHT_AMOUNT = 0;
 		setbit(PORT_DIR, LEFT_DIR);
 		setbit(PORT_DIR, RIGHT_DIR);
 	}
