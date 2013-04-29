@@ -111,21 +111,6 @@ int main(void)
 	while(1)
 	{
 		
-//		if (follow_end_tape)
-//		{
-			//regulate_end_tape_2(spi_data_from_sensor);
-			//regulate_end_tape(reflex_sensors_currently_seeing_tape(spi_data_from_sensor));
-// 			char temp[32];
-// 			sprintf(temp,"%03d ", spi_data_from_sensor[1]);
-// 			send_string(temp);
-// 			update();
-// 			
-			//reflex_sensors_currently_seeing_tape(spi_data_from_sensor);
-//		}
-// 		if (follow_end_tape)
-// 		{
-// 			regulate_end_tape(spi_data_from_sensor);
-// 		}
 		if(spi_comm_write != spi_comm_read)
 		{
 			decode_comm(spi_data_from_comm[spi_comm_read]);
@@ -142,11 +127,13 @@ int main(void)
 			spi_sensor_read %= BUF_SZ;
 		}
 		
+		/*
 		if (regulator_enable && regulator_flag)
 		{
 			regulator(0);    //Är void i nuläget, den behövde designas om.
 			regulator_enable = 0;
-		}	
+		}
+		*/	
 		
 	}
 }
@@ -355,7 +342,8 @@ void regulate_end_tape_3()
 		pos = res*2/n_of_reflexes_on;	//ojojoj
 	else //utanför tejp, stopp!
 		stop_motors();			
-		
+	
+	/*
 	clear_screen();
 	//_delay_ms(100);
 	for (i=0;i < 9;i++)
@@ -365,6 +353,7 @@ void regulate_end_tape_3()
 		send_string(temp);
 		update();
 	}
+	*/
 		
 		//update();
 		//
@@ -1040,7 +1029,7 @@ void decode_sensor(uint8_t data)
 
   			if (follow_end_tape)
   			{
-  				//regulate_end_tape_3();
+  				regulate_end_tape_3();
   			}
 
 			break;
@@ -1061,7 +1050,7 @@ void decode_sensor(uint8_t data)
 	if((a++ & 0b10000))
 	{
 		a=0;
-		update_display_string();
+		//update_display_string();
 	}
 }
 
