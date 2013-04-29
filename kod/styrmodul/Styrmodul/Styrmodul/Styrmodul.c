@@ -28,7 +28,7 @@ volatile uint8_t spi_data_from_sensor[BUF_SZ];
 uint8_t spi_sensor_read;
 volatile uint16_t spi_sensor_write;
 
-#define SPEED 255
+#define SPEED 100
 uint8_t ninety_timer, turn, pid_timer;
 uint8_t left = 1;
 
@@ -108,8 +108,8 @@ int main(void)
 	while(1)
 	{
 		
-		if (follow_end_tape)
-		{
+//		if (follow_end_tape)
+//		{
 			//regulate_end_tape_2(spi_data_from_sensor);
 			//regulate_end_tape(reflex_sensors_currently_seeing_tape(spi_data_from_sensor));
 // 			char temp[32];
@@ -118,12 +118,11 @@ int main(void)
 // 			update();
 // 			
 			//reflex_sensors_currently_seeing_tape(spi_data_from_sensor);
-		}
+//		}
 // 		if (follow_end_tape)
 // 		{
 // 			regulate_end_tape(spi_data_from_sensor);
 // 		}
-		
 		if(spi_comm_write != spi_comm_read)
 		{
 			decode_comm(spi_data_from_comm[spi_comm_read]);
@@ -146,7 +145,6 @@ int main(void)
 			regulator_enable = 0;
 		}	
 		
-		//follow_end_tape = 1;
 	}
 }
 
@@ -375,21 +373,17 @@ void regulate_end_tape_3()
 	
 	if(res > 0)
 	{
-		RIGHT_AMOUNT = SPEED + pos*10;
-		LEFT_AMOUNT = SPEED - pos*10;
+		RIGHT_AMOUNT = SPEED + 30 + pos*5;
+		LEFT_AMOUNT = SPEED;
 		setbit(PORT_DIR, LEFT_DIR);
 		setbit(PORT_DIR, RIGHT_DIR);
-		send_string("left");
-		update();
 	}
 	
 	else if(res < 0){
-		LEFT_AMOUNT = SPEED + abs(pos)*10;
-		RIGHT_AMOUNT = SPEED - abs(pos)*10;
+		LEFT_AMOUNT = SPEED + 30 + abs(pos)*5;
+		RIGHT_AMOUNT = SPEED;
 		setbit(PORT_DIR, LEFT_DIR);
 		setbit(PORT_DIR, RIGHT_DIR);
-		send_string("right");
-		update();
 	}
 	
 	else if(res == 0 && n_of_reflexes_on != 0){ // == 0
@@ -1017,23 +1011,23 @@ void decode_sensor(uint8_t data)
 
 			//Om ej i korsning och får sensordata som indikerar korsning. Analysera korsningstyp
 			
-			if (!has_detected_crossing && (sensor_buffer[IR_LEFT_FRONT] >= SEGMENT_LENGTH || sensor_buffer[IR_RIGHT_FRONT] >= SEGMENT_LENGTH))
-			{
-				analyze_ir_sensors();
-			}
-			
-			//Om korsning detekterad. Utför korningstypspecifika kommandon
-			else if(has_detected_crossing)
-			{
-				crossing_turn(crossing_direction, crossing_stop_value);
-			}
+// 			if (!has_detected_crossing && (sensor_buffer[IR_LEFT_FRONT] >= SEGMENT_LENGTH || sensor_buffer[IR_RIGHT_FRONT] >= SEGMENT_LENGTH))
+// 			{
+// 				analyze_ir_sensors();
+// 			}
+// 			
+// 			//Om korsning detekterad. Utför korningstypspecifika kommandon
+// 			else if(has_detected_crossing)
+// 			{
+// 				crossing_turn(crossing_direction, crossing_stop_value);
+// 			}
 // 			
 			
 			//decode_tape_sensor_data();
-  			if (follow_end_tape)
-  			{
-  				regulate_end_tape_3();
-  			}
+//   			if (follow_end_tape)
+//   			{
+   				regulate_end_tape_3();
+//   			}
 
 //  			if (follow_end_tape)
 //  			{

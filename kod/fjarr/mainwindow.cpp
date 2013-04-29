@@ -40,7 +40,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     // Serieport
     PortSettings settings = {BAUD115200, DATA_8, PAR_NONE, STOP_1, FLOW_OFF, 10};
-    port = new QextSerialPort("COM17", settings);
+    port = new QextSerialPort("COM12", settings);
     connect(port, SIGNAL(readyRead()), this, SLOT(onDataAvailable()));
     port->open(QIODevice::ReadWrite);
 
