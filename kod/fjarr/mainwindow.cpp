@@ -7,6 +7,10 @@
 
 #include <stdio.h>  // We need sprintf()
 
+/*
+ * TODO: bara en hastighetsspinbox, som sätter SPEED i styr istället.
+ * förmåga att trycka stopp även när den är intryckt
+ */
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),

@@ -4,6 +4,7 @@
  Regulatorn ska köras med intervall på ~40ms
  */ 
 #include "pid.h"
+#include "Styrmodul.h"
 
 int16_t input, output, last_input;
 uint16_t k_prop, k_, k_der;					//Regulatorkonstanter
@@ -66,12 +67,12 @@ void regulator()
 	if (((IR_LEFT_FRONT <= 20) && (IR_LEFT_BACK <= 20)) || IR_LEFT_FRONT > 80) targetwall = 1;
 	else if (((IR_RIGHT_FRONT <= 20) && (IR_RIGHT_BACK <= 20)) || IR_RIGHT_FRONT > 80) targetwall = 0;
 	
-	if (wall == 1) //Reglera mot höger
+	if (targetwall == 1) //Reglera mot höger
 	{
 					//P-del
 					//D-del
 	}
-	else if (wall == 0) //Reglera mot vänster
+	else if (targetwall == 0) //Reglera mot vänster
 	{
 					//P-del
 					//D-del
