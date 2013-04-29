@@ -111,10 +111,10 @@ int main(void)
 	while(1)
 	{
 		
-		//if(turn)
-		//	tank_turn_left(SPEED);
-		//else
-			//stop_motors();
+		if(turn)
+			tank_turn_left(SPEED);
+		else
+			stop_motors();
 			//drive_forwards(SPEED);
 		
 //		if (follow_end_tape)
