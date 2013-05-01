@@ -1000,24 +1000,24 @@ void decode_sensor(uint8_t data)
 
 			//Om ej i korsning och får sensordata som indikerar korsning. Analysera korsningstyp
 			//KOMMENTERA IN DENNA FÖR KORSNINGAR
-// 			if (!has_detected_crossing && (sensor_buffer[IR_LEFT_FRONT] >= SEGMENT_LENGTH || sensor_buffer[IR_RIGHT_FRONT] >= SEGMENT_LENGTH))
-// 			{
-// 				analyze_ir_sensors();
-// 			}
-// 			
-// 			//Om korsning detekterad. Utför korningstypspecifika kommandon
-// 			else if(has_detected_crossing)
-// 			{
-// 				crossing_turn(crossing_direction, crossing_stop_value);
-// 			}
-// 			else if(drive_from_crossing)
-// 			{
-// 				if (sensor_buffer[IR_LEFT_FRONT] <= SEGMENT_LENGTH && sensor_buffer[IR_RIGHT_FRONT] <= SEGMENT_LENGTH)
-// 				{
-// 					stop_motors();
-// 					drive_from_crossing = 0;
-// 				}
-// 			}
+			if (!has_detected_crossing && (sensor_buffer[IR_LEFT_FRONT] >= SEGMENT_LENGTH || sensor_buffer[IR_RIGHT_FRONT] >= SEGMENT_LENGTH))
+			{
+				analyze_ir_sensors();
+			}
+			
+			//Om korsning detekterad. Utför korningstypspecifika kommandon
+			else if(has_detected_crossing)
+			{
+				crossing_turn(crossing_direction, crossing_stop_value);
+			}
+			else if(drive_from_crossing)
+			{
+				if (sensor_buffer[IR_LEFT_FRONT] <= SEGMENT_LENGTH && sensor_buffer[IR_RIGHT_FRONT] <= SEGMENT_LENGTH)
+				{
+					stop_motors();
+					drive_from_crossing = 0;
+				}
+			}
 				
 			
 			//decode_tape_sensor_data();
@@ -1051,7 +1051,7 @@ void decode_sensor(uint8_t data)
 
 void init_default_printf_string()
 {
-	char default_string[] = {"V:%d\001,%d\004 F:%d\003    H:%d\002,%d\005" };
+	char default_string[] = {"V:%d\001,%d\004 F:%d\003 H:%d\002,%d\005" };
 	strcpy(display_printf_string, default_string);
 	
 }
@@ -1371,9 +1371,9 @@ void crossing_turn(char dir,uint8_t stop_distance)
 
 		switch(dir)
 		{
-			case 'l': turn_left90(SPEED); break;
-			case 'r': tank_turn_right(SPEED); break;
-			//case 'f': drive_forwards(SPEED); break;
+			case 'l': /*turn_left90(SPEED)*/stop_motors(); break;
+			case 'r': /*turn_right90(SPEED)*/stop_motors(); break;
+			case 'f': /*drive_forwards(SPEED)*/stop_motors(); break;
 			default: break;
 		}
 		

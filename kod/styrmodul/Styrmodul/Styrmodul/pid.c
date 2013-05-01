@@ -59,7 +59,6 @@ Reglera mot målvägg.
 1 höger.
 0 vänster.
 */
-int16_t reg_out;
 void regulator(int8_t diff_right, int8_t diff_left, int8_t diff_front, int8_t diff_back)
 {	
 	dirbits = 3;
@@ -83,7 +82,6 @@ void regulator(int8_t diff_right, int8_t diff_left, int8_t diff_front, int8_t di
 		output_u = -k_prop*diff_left;						//P-del
 		output_u -= k_der*(diff_left - last_diff_left);		//D-del
 	}
-	reg_out = (uint8_t)abs(output_u);
 	last_diff_right = diff_right;
 	last_diff_left = diff_left;
 	
@@ -95,11 +93,6 @@ void regulator(int8_t diff_right, int8_t diff_left, int8_t diff_front, int8_t di
 	{
 		output_u -= 0;
 	}
-	else if (targetwall == 0)
-	{
-		
-	} //Reglera mot vänster
-
 	else						//Styr mot mitten.
 	{
 		output_u += (diff_front+diff_back)*2;
@@ -128,5 +121,4 @@ void regulator(int8_t diff_right, int8_t diff_left, int8_t diff_front, int8_t di
 		RIGHT_AMOUNT = SPEED;
 		LEFT_AMOUNT = SPEED;
 	}
-	
 }
