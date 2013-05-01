@@ -116,7 +116,14 @@ MainWindow::~MainWindow()
 
 void MainWindow::setDirection(unsigned dir)
 {
-    if(dir == current_direction) return;
+    if(dir == current_direction) {
+        if(dir == 4) {
+            // Så att man alltid kan trycka på stopp
+            port->write("s", 1);
+            port->flush();
+        }
+        return;
+    }
 
     arrow_keys[current_direction]->setChecked(false);
     arrow_keys[dir]->setChecked(true);
@@ -271,7 +278,7 @@ void MainWindow::on_pushButtonPID_clicked()
     QByteArray array;
     array.append('p');
     array.append(ui->spinBoxP->value());
-    array.append(ui->spinBoxI->value());
+    array.append(ui->spinBoxP->value());
     array.append((ui->spinBoxD->value() >> 8) & 0xff);
     array.append(ui->spinBoxD->value() & 0xff);
     port->write(array);
@@ -302,9 +309,6 @@ void MainWindow::on_pushButtonRight90_clicked()
 }
 
 void KeyPressEater::on_pid_toggle_clicked(){}
-void MainWindow::on_pid_toggle_clicked()
-{
-}
 
 void KeyPressEater::on_pushButtonAddToDisplay_clicked(){}
 void MainWindow::on_pushButtonAddToDisplay_clicked()
@@ -472,7 +476,7 @@ void MainWindow::on_bookmarks_currentIndexChanged(int index)
         ui->pushButton_17->setEnabled(true);
 }
 
-void KeyPressEater::on_speed_valueChanged(int arg1) {}
+void KeyPressEater::on_speed_valueChanged(int arg1) { (void)arg1; }
 void MainWindow::on_speed_valueChanged(int arg1) {
     unsigned char spd;
     port->write("#", 1);

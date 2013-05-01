@@ -108,6 +108,7 @@ private:
     QextSerialPort *port;
     PIDDialog pid;
     QByteArray printfString;   // Ingen riktig printf-sträng, Davids special!
+    void on_pid();
 
 private slots:
     void on_pushButton_2_clicked();
@@ -132,9 +133,7 @@ private slots:
     void onDataAvailable();
     void on_bookmarks_currentIndexChanged(int index);
     void on_pushButton_9_clicked();
-    void on_pid();
     void on_pushButtonPID_clicked();
-    void on_pid_toggle_clicked();
     void on_pushButtonLeft90_clicked();
     void on_pushButtonRight90_clicked();
     void on_pushButtonAddToDisplay_clicked();

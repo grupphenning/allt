@@ -447,7 +447,6 @@ void pwm_init()
 	setbit(DDRD, PD6);
 	setbit(DDRD, PD5);
 	
-	
 	//pwm-styrning för gripklon, pin OC1A, register OCR1A
 	TCCR1A = 0;
 	setbit(TCCR1A, COM1A1);
