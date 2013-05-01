@@ -48,7 +48,10 @@
 
 #define REFLEX_SENSITIVITY 0x70
 
+//#define SPEED 200
+extern uint8_t SPEED;
 
+#define SENSOR_BUFFER_SIZE 256
 
 //KORNINGSLÄNGDDATA
 #define IR_FRONT_TO_MIDDLE_LENGTH		11
@@ -70,3 +73,4 @@ void init_default_printf_string();
 void analyze_ir_sensors();
 void crossing_turn(char dir, uint8_t stop_distance);
 extern uint8_t dirbits;
+extern uint8_t sensor_buffer[SENSOR_BUFFER_SIZE];

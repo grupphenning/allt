@@ -37,6 +37,8 @@ private slots:
     void on_pushButton_16_clicked();
     void on_bookmarks_currentIndexChanged(int index);
 
+    void on_speed_valueChanged(int arg1);
+
 private:
     MainWindow *w;
 };
@@ -141,6 +143,7 @@ private slots:
     void on_pushButton_13_clicked();
     void on_pushButton_9_toggled(bool pressed);
     void on_pushButton_8_clicked();
+    void on_speed_valueChanged(int arg1);
 };
 
 #endif // MAINWINDOW_H

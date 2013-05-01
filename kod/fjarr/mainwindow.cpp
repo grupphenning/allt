@@ -7,11 +7,6 @@
 
 #include <stdio.h>  // We need sprintf()
 
-/*
- * TODO: bara en hastighetsspinbox, som sätter SPEED i styr istället.
- * förmåga att trycka stopp även när den är intryckt
- */
-
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
@@ -128,38 +123,6 @@ void MainWindow::setDirection(unsigned dir)
     current_direction = dir;
 
     port->write(QByteArray(1, "vdhlsrb"[dir]));
-
-    /* Eventuellt ändra hastigheten */
-    unsigned char speed = ui->speed->value(); // Standardhastighet
-    switch("vdhlsrb"[dir])
-    {
-    case 'v':
-        speed = ui->speedDriveLeft->value();
-        break;
-    case 'd':
-        speed = ui->speedDrive->value();
-        break;
-    case 'h':
-        speed = ui->speedDriveRight->value();
-        break;
-    case 'l':
-        speed = ui->speedLeft->value();
-        break;
-    case 'r':
-        speed = ui->speedRight->value();
-        break;
-    case 'b':
-        speed = ui->speedBack->value();
-        break;
-    default:
-        break;
-    }
-
-    // Behöver ingen hastighet för "stop"!
-    if("vdhlsrb"[dir] != 's')
-    {
-        port->write(QByteArray(1, speed));
-    }
     port->flush();
 }
 
@@ -243,14 +206,12 @@ void MainWindow::on_pushButton_14_clicked()
 void MainWindow::open_claw()
 {
     port->write("o");
-    port->write(QByteArray(1, ui->speedClawIn->value()));
     port->flush();
 }
 
 void MainWindow::close_claw()
 {
     port->write("c");
-    port->write(QByteArray(1, ui->speedClawOut->value()));
     port->flush();
 }
 
@@ -509,4 +470,13 @@ void MainWindow::on_bookmarks_currentIndexChanged(int index)
         ui->pushButton_17->setEnabled(false);
     else
         ui->pushButton_17->setEnabled(true);
+}
+
+void KeyPressEater::on_speed_valueChanged(int arg1) {}
+void MainWindow::on_speed_valueChanged(int arg1) {
+    unsigned char spd;
+    port->write("#", 1);
+    spd = arg1;
+    port->write((const char *)&spd, 1);
+    port->flush();
 }

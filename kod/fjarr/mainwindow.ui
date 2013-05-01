@@ -23,7 +23,7 @@
    <widget class="QPushButton" name="pushButton_8">
     <property name="geometry">
      <rect>
-      <x>177</x>
+      <x>157</x>
       <y>330</y>
       <width>111</width>
       <height>25</height>
@@ -36,7 +36,7 @@
    <widget class="QPushButton" name="pushButton_9">
     <property name="geometry">
      <rect>
-      <x>307</x>
+      <x>287</x>
       <y>330</y>
       <width>111</width>
       <height>25</height>
@@ -104,7 +104,7 @@
    <widget class="QPushButton" name="pushButton_14">
     <property name="geometry">
      <rect>
-      <x>47</x>
+      <x>27</x>
       <y>330</y>
       <width>111</width>
       <height>23</height>
@@ -680,38 +680,6 @@ p, li { white-space: pre-wrap; }
       <bool>true</bool>
      </property>
     </widget>
-    <widget class="QSpinBox" name="speed">
-     <property name="geometry">
-      <rect>
-       <x>440</x>
-       <y>140</y>
-       <width>41</width>
-       <height>22</height>
-      </rect>
-     </property>
-     <property name="maximum">
-      <number>255</number>
-     </property>
-     <property name="value">
-      <number>255</number>
-     </property>
-    </widget>
-    <widget class="QSpinBox" name="speedRight">
-     <property name="geometry">
-      <rect>
-       <x>440</x>
-       <y>60</y>
-       <width>42</width>
-       <height>22</height>
-      </rect>
-     </property>
-     <property name="maximum">
-      <number>255</number>
-     </property>
-     <property name="value">
-      <number>255</number>
-     </property>
-    </widget>
     <widget class="QPushButton" name="pushButton_3">
      <property name="geometry">
       <rect>
@@ -744,22 +712,6 @@ p, li { white-space: pre-wrap; }
       <string>Höger 90 grader</string>
      </property>
     </widget>
-    <widget class="QSpinBox" name="speedClawOut">
-     <property name="geometry">
-      <rect>
-       <x>110</x>
-       <y>100</y>
-       <width>42</width>
-       <height>22</height>
-      </rect>
-     </property>
-     <property name="maximum">
-      <number>255</number>
-     </property>
-     <property name="value">
-      <number>255</number>
-     </property>
-    </widget>
     <widget class="QPushButton" name="pushButtonLeft90">
      <property name="geometry">
       <rect>
@@ -771,22 +723,6 @@ p, li { white-space: pre-wrap; }
      </property>
      <property name="text">
       <string>Vänster 90 grader</string>
-     </property>
-    </widget>
-    <widget class="QSpinBox" name="speedDriveLeft">
-     <property name="geometry">
-      <rect>
-       <x>110</x>
-       <y>20</y>
-       <width>42</width>
-       <height>22</height>
-      </rect>
-     </property>
-     <property name="maximum">
-      <number>255</number>
-     </property>
-     <property name="value">
-      <number>255</number>
      </property>
     </widget>
     <widget class="QPushButton" name="pushButton_12">
@@ -803,99 +739,6 @@ p, li { white-space: pre-wrap; }
      </property>
      <property name="checkable">
       <bool>false</bool>
-     </property>
-    </widget>
-    <widget class="QSpinBox" name="speedDriveRight">
-     <property name="geometry">
-      <rect>
-       <x>440</x>
-       <y>20</y>
-       <width>42</width>
-       <height>22</height>
-      </rect>
-     </property>
-     <property name="maximum">
-      <number>255</number>
-     </property>
-     <property name="value">
-      <number>255</number>
-     </property>
-    </widget>
-    <widget class="QSpinBox" name="speedBack">
-     <property name="geometry">
-      <rect>
-       <x>270</x>
-       <y>100</y>
-       <width>42</width>
-       <height>22</height>
-      </rect>
-     </property>
-     <property name="maximum">
-      <number>255</number>
-     </property>
-     <property name="value">
-      <number>255</number>
-     </property>
-    </widget>
-    <widget class="QSpinBox" name="speedClawIn">
-     <property name="geometry">
-      <rect>
-       <x>440</x>
-       <y>100</y>
-       <width>42</width>
-       <height>22</height>
-      </rect>
-     </property>
-     <property name="maximum">
-      <number>255</number>
-     </property>
-     <property name="value">
-      <number>255</number>
-     </property>
-    </widget>
-    <widget class="QSpinBox" name="speedLeft">
-     <property name="geometry">
-      <rect>
-       <x>110</x>
-       <y>60</y>
-       <width>42</width>
-       <height>22</height>
-      </rect>
-     </property>
-     <property name="maximum">
-      <number>255</number>
-     </property>
-     <property name="value">
-      <number>255</number>
-     </property>
-    </widget>
-    <widget class="QLabel" name="label_14">
-     <property name="geometry">
-      <rect>
-       <x>340</x>
-       <y>140</y>
-       <width>91</width>
-       <height>20</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>Hastighet för alla:</string>
-     </property>
-    </widget>
-    <widget class="QSpinBox" name="speedDrive">
-     <property name="geometry">
-      <rect>
-       <x>270</x>
-       <y>20</y>
-       <width>42</width>
-       <height>22</height>
-      </rect>
-     </property>
-     <property name="maximum">
-      <number>255</number>
-     </property>
-     <property name="value">
-      <number>255</number>
      </property>
     </widget>
     <widget class="QPushButton" name="pushButton_4">
@@ -995,6 +838,35 @@ p, li { white-space: pre-wrap; }
     </property>
     <property name="text">
      <string>Bokmärke</string>
+    </property>
+   </widget>
+   <widget class="QSpinBox" name="speed">
+    <property name="geometry">
+     <rect>
+      <x>470</x>
+      <y>330</y>
+      <width>41</width>
+      <height>22</height>
+     </rect>
+    </property>
+    <property name="maximum">
+     <number>255</number>
+    </property>
+    <property name="value">
+     <number>255</number>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_14">
+    <property name="geometry">
+     <rect>
+      <x>410</x>
+      <y>330</y>
+      <width>51</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Hastighet:</string>
     </property>
    </widget>
   </widget>

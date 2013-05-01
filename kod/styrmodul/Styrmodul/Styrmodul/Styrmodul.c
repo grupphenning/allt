@@ -12,7 +12,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define SENSOR_BUFFER_SIZE 256
+uint8_t SPEED = 255;
+
 //#define INTERPOLATION_POINTS 12
 uint8_t test;
 
@@ -28,7 +29,6 @@ volatile uint8_t spi_data_from_sensor[BUF_SZ];
 uint8_t spi_sensor_read;
 volatile uint16_t spi_sensor_write;
 
-#define SPEED 255
 uint8_t ninety_timer, turn, pid_timer;
 uint8_t left = 1;
 
@@ -102,8 +102,8 @@ int main(void)
 	sei();		//aktivera global interrupts
 	
 	clear_pid();
-	init_pid(0, 100, -100);
-	update_k_values(10, 0, 10);
+	init_pid(0, 50, -50);
+	update_k_values(1, 0, 1);
 	
 	//_delay_ms(2000);
 	//drive_forwards(255);
@@ -150,7 +150,10 @@ int main(void)
 		
 		if (regulator_enable && regulator_flag)
 		{
-			regulator(0);    //Är void i nuläget, den behövde designas om.
+			regulator(sensor_buffer[IR_RIGHT_FRONT] - sensor_buffer[IR_RIGHT_BACK], 
+					  sensor_buffer[IR_LEFT_FRONT] - sensor_buffer[IR_LEFT_BACK], 
+					  sensor_buffer[IR_RIGHT_FRONT] - sensor_buffer[IR_LEFT_FRONT], 
+					  sensor_buffer[IR_RIGHT_BACK] - sensor_buffer[IR_LEFT_BACK]);
 			regulator_enable = 0;
 		}	
 		
@@ -786,6 +789,7 @@ void decode_comm(uint8_t command)
 	static uint8_t display_printf_p = 0; // Används vid uppdatering av printf-strängen
 	static uint8_t display = 0;	// Dislayen uppdateras!
 	static uint8_t drive = 0;	// Förra kommandot väntar på ett hastighetsargument
+	static uint8_t set_speed = 0;
 
 // 	char temp[32];
 // 	sprintf(temp,"%02X ", command);
@@ -814,6 +818,10 @@ void decode_comm(uint8_t command)
 		}
 		--pid;
 	} 
+	else if(set_speed) {
+		SPEED = command;
+		set_speed = 0;
+	}
 	else if(display)
 	{
 		/* Slutet på printf-strängen? */
@@ -831,53 +839,34 @@ void decode_comm(uint8_t command)
 		display = 0;
 		return;
 	}
-	else if(drive)
+	else if(command == COMM_DRIVE)
 	{
-		if(drive == COMM_DRIVE)
-		{
-			drive = 0;
-			drive_forwards(command);
-		} else if(drive == COMM_BACK)
-		{
-			drive = 0;
-			drive_backwards(command);
-		} else if(drive == COMM_STOP)
-		{
-			drive = 0;
-			disable_pid();
-			stop_motors();
-		} else if(drive == COMM_LEFT)
-		{
-			drive = 0;
-			tank_turn_left(command);
-		} else if(drive == COMM_RIGHT)
-		{
-			drive = 0;
-			tank_turn_right(command);
-		} else if(drive == COMM_DRIVE_LEFT)	// Ignorera argumentet tills vidare, vet inte hur vi ska lösa det...
-		{
-			drive = 0;
-			turn_left(command);
-		}	else if(drive == COMM_DRIVE_RIGHT)	// Ignorera argumentet även här, tills vidare...
-		{
-			drive = 0;
-			turn_right(command);
-		} else if(drive == COMM_CLAW_OUT)
-		{
-			drive = 0;
-			claw_out();
-		} else if(drive == COMM_CLAW_IN)
-		{
-			drive = 0;
-			claw_in();
-		}
-		return;
-	} // if(drive)
-	else if(command == COMM_DRIVE || command == COMM_BACK || command == COMM_LEFT || command == COMM_RIGHT ||
-	command == COMM_DRIVE_LEFT || command == COMM_DRIVE_RIGHT || command == COMM_CLAW_OUT || command == COMM_CLAW_IN)
+		drive_forwards(SPEED);
+	} else if(command == COMM_BACK)
 	{
-		drive = command;
-		return;
+		drive_backwards(SPEED);
+	} else if(command == COMM_STOP)
+	{
+		disable_pid();
+		stop_motors();
+	} else if(command == COMM_LEFT)
+	{
+		tank_turn_left(SPEED);
+	} else if(command == COMM_RIGHT)
+	{
+		tank_turn_right(SPEED);
+	} else if(command == COMM_DRIVE_LEFT)	// Ignorera argumentet tills vidare, vet inte hur vi ska lösa det...
+	{
+		turn_left(SPEED);
+	}	else if(command == COMM_DRIVE_RIGHT)	// Ignorera argumentet även här, tills vidare...
+	{
+		turn_right(SPEED);
+	} else if(command == COMM_CLAW_OUT)
+	{
+		claw_out();
+	} else if(command == COMM_CLAW_IN)
+	{
+		claw_in();
 	}
 	else if(command == COMM_STOP)
 	{
@@ -931,6 +920,9 @@ void decode_comm(uint8_t command)
 	{
 		send_string_remote("abcdefghijklmnopqrstuvwxyz");
 	}
+	else if(command == COMM_SET_SPEED) {
+		set_speed = 1;
+	}		
 	else	
 	{
 		char tmp[30];
@@ -1125,13 +1117,13 @@ void update_display_string()
 		    continue;
 		    if(base == 10)
 		    {
-			    sprintf(tmpp, "%3d", sensor_buffer[sensor]);
+			    sprintf(tmpp, "%3d", sensor==6?reg_out:sensor_buffer[sensor]);
 			    tmpp++; // Decimal-strängen är tre tecken
 			    tmpp++;
 			    tmpp++;
 		    } else
 		    {
-			    sprintf(tmpp, "%02X", sensor_buffer[sensor]);
+			    sprintf(tmpp, "%02X", sensor==6?reg_out:sensor_buffer[sensor]);
 			    tmpp++; // Hex-strängen är två tecken
 			    tmpp++;
 		    }

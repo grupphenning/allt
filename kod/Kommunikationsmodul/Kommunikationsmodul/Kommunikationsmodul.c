@@ -194,7 +194,7 @@ void decode_remote(uint8_t ch)
 	/* Hanterar kommando 'p', som tar tre argument: de tre PID-värden som används till regleringen */
 	static uint8_t pid = 0;	// Flagga som anger att sist mottagna kommando från fjärrenheten var just pid!
 	static uint8_t display = 0; // Indikerar att nästa byte är en byte som ska vidare till styr
-	static uint8_t speed = 0;	// Nästa byte är en hastighet
+	static uint8_t speed_all = 0;
 	static uint8_t p, i, dh, dl;	// Argumenten till PID!
 
 	/* Om PID är aktiverat (dvs. icke-noll), behandla den aktuella byten som ett argument till PID */
@@ -218,33 +218,37 @@ void decode_remote(uint8_t ch)
 		display = 0;
 		send_spi(ch);
 		return;
-	} else if(speed)	/* Nästa byte är ett hastighetsargument till styrfunktionerna på styrenheten */
-	{
-		speed = 0;
+	}	
+	else if(speed_all) {
+		send_spi(COMM_SET_SPEED);
 		send_spi(ch);
+		speed_all = 0;
 		return;
-	}		
+	}
+	else {
 	
-	// Konverterar från Blåtand till styr-komm-protokollet!
-	switch(ch) {
-		case 'l': send_spi(COMM_LEFT); speed = 1; break;					// vänster
-		case 'd': send_spi(COMM_DRIVE); speed = 1; break;					// fram
-		case 'r': send_spi(COMM_RIGHT); speed = 1; break;					// höger
-		case 's': send_spi(COMM_STOP); break;								// stop
-		case 'b': send_spi(COMM_BACK); speed = 1; break;					// bakåt
-		case 'c': send_spi(COMM_CLAW_IN); speed = 1; break;					// claw in
-		case 'o': send_spi(COMM_CLAW_OUT); speed = 1; break;				// claw out
-		case 'v': send_spi(COMM_DRIVE_LEFT); speed = 1; break;				// kör framåt och vänster
-		case 'h': send_spi(COMM_DRIVE_RIGHT); speed = 1; break;				// framåt och höger
-		case 'q': send_spi(COMM_CLEAR_DISPLAY); break;						// Rensa displayen
-		case 'z': send_spi(COMM_DISPLAY); display = 1; break;				// tecken till displayen
-		case 'p': pid = 4; break;											// PID-konstanter
-		case 'n': send_spi(COMM_ENABLE_PID); break;							// Slå på reglering
-		case 'm': send_spi(COMM_DISABLE_PID); break;						// Slå av reglering
-		case 't': send_spi(COMM_TOGGLE_SENSORS); break;						// Aktivera/deaktivera sensorer
-		case 'w': send_spi(COMM_TURN_90_DEGREES_LEFT); break;				// Vrid 90 grader vänster
-		case 'e': send_spi(COMM_TURN_90_DEGREES_RIGHT); break;				// Vrid 90 grader höger
-		case '1': send_spi(COMM_CALIBRATE_SENSORS); break;					// Kalibrera sensorer
+		// Konverterar från Blåtand till styr-komm-protokollet!
+		switch(ch) {
+			case 'l': send_spi(COMM_LEFT); break;					// vänster
+			case 'd': send_spi(COMM_DRIVE); break;					// fram
+			case 'r': send_spi(COMM_RIGHT); break;					// höger
+			case 's': send_spi(COMM_STOP); break;								// stop
+			case 'b': send_spi(COMM_BACK); break;					// bakåt
+			case 'c': send_spi(COMM_CLAW_IN); break;					// claw in
+			case 'o': send_spi(COMM_CLAW_OUT); break;				// claw out
+			case 'v': send_spi(COMM_DRIVE_LEFT); break;				// kör framåt och vänster
+			case 'h': send_spi(COMM_DRIVE_RIGHT); break;				// framåt och höger
+			case 'q': send_spi(COMM_CLEAR_DISPLAY); break;						// Rensa displayen
+			case 'z': send_spi(COMM_DISPLAY); display = 1; break;				// tecken till displayen
+			case 'p': pid = 4; break;											// PID-konstanter
+			case 'n': send_spi(COMM_ENABLE_PID); break;							// Slå på reglering
+			case 'm': send_spi(COMM_DISABLE_PID); break;						// Slå av reglering
+			case 't': send_spi(COMM_TOGGLE_SENSORS); break;						// Aktivera/deaktivera sensorer
+			case 'w': send_spi(COMM_TURN_90_DEGREES_LEFT); break;				// Vrid 90 grader vänster
+			case 'e': send_spi(COMM_TURN_90_DEGREES_RIGHT); break;				// Vrid 90 grader höger
+			case '1': send_spi(COMM_CALIBRATE_SENSORS); break;					// Kalibrera sensorer
+			case '#': speed_all = 1; break;
+		}			
 	}
 }
 
