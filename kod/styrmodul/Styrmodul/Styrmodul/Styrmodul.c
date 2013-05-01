@@ -995,24 +995,12 @@ void decode_sensor(uint8_t data)
 			//Wait a few times before using data
 			if(sensor_transmission_number<4)
 			{
-				//gyro_init_value = sensor_buffer[GYRO];
 				sensor_transmission_number++;
 				return;
 			}
 
-// 			if(is_turning) 
-// 			{
-// 				gyro_int += 3*abs(gyro_init_value - (int)sensor_buffer[GYRO]); //Maxhastighet 300grader/s,
-// 				if(gyro_int >= full_turn)									   //maxvärde-nollnivå ung 100.
-// 				{
-// 					stop_motors();
-// 					is_turning = 0;
-// 				}
-// 			}
-			
-
 			//Om ej i korsning och får sensordata som indikerar korsning. Analysera korsningstyp
-			//KOMMENTERA IN DEnNA FÖR KORSNINGAR
+			//KOMMENTERA IN DENNA FÖR KORSNINGAR
 // 			if (!has_detected_crossing && (sensor_buffer[IR_LEFT_FRONT] >= SEGMENT_LENGTH || sensor_buffer[IR_RIGHT_FRONT] >= SEGMENT_LENGTH))
 // 			{
 // 				analyze_ir_sensors();
@@ -1031,8 +1019,7 @@ void decode_sensor(uint8_t data)
 // 					drive_from_crossing = 0;
 // 				}
 // 			}
-			
-// 			
+				
 			
 			//decode_tape_sensor_data();
 
@@ -1332,8 +1319,7 @@ void analyze_ir_sensors()
 	}
 	//Turn left, alley at front
 	else if(sensor_buffer[IR_LEFT_FRONT]>=MAXIMUM_IR_DISTANCE &&
-		sensor_buffer[IR_FRONT] <= MAXIMUM_IR_DISTANCE &&
-		sensor_buffer[IR_FRONT] >= SEGMENT_LENGTH &&
+		sensor_buffer[IR_FRONT] >= MAXIMUM_IR_DISTANCE &&
 		sensor_buffer[IR_RIGHT_FRONT] <= SEGMENT_LENGTH)
 	{
 		has_detected_crossing = 1;
