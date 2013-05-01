@@ -79,6 +79,7 @@ uint8_t follow_end_tape = 1;
 uint8_t has_detected_crossing = 0;
 char crossing_direction;
 uint8_t crossing_stop_value;
+uint8_t begin_turn = 0;
 uint8_t is_turning = 0;
 uint8_t drive_from_crossing = 0;
 
@@ -103,7 +104,7 @@ int main(void)
 	
 	clear_pid();
 	init_pid(0, 50, -50);
-	update_k_values(1, 0, 1);
+	update_k_values(5, 0, 10);
 	
 	//_delay_ms(2000);
 	//drive_forwards(255);
@@ -998,28 +999,10 @@ void decode_sensor(uint8_t data)
 				return;
 			}
 
-			//Om ej i korsning och får sensordata som indikerar korsning. Analysera korsningstyp
-			//KOMMENTERA IN DENNA FÖR KORSNINGAR
-			if (!has_detected_crossing && (sensor_buffer[IR_LEFT_FRONT] >= SEGMENT_LENGTH || sensor_buffer[IR_RIGHT_FRONT] >= SEGMENT_LENGTH))
-			{
-				analyze_ir_sensors();
-			}
+			/*Hantera korsningar*/
+			handle_crossing();	
 			
-			//Om korsning detekterad. Utför korningstypspecifika kommandon
-			else if(has_detected_crossing)
-			{
-				crossing_turn(crossing_direction, crossing_stop_value);
-			}
-			else if(drive_from_crossing)
-			{
-				if (sensor_buffer[IR_LEFT_FRONT] <= SEGMENT_LENGTH && sensor_buffer[IR_RIGHT_FRONT] <= SEGMENT_LENGTH)
-				{
-					stop_motors();
-					drive_from_crossing = 0;
-				}
-			}
-				
-			
+			/*Hantera tejp-korsningar*/
 			//decode_tape_sensor_data();
 
   			if (follow_end_tape)
@@ -1103,13 +1086,13 @@ void update_display_string()
 		    continue;
 		    if(base == 10)
 		    {
-			    sprintf(tmpp, "%3d", sensor==6?reg_out:sensor_buffer[sensor]);
+			    sprintf(tmpp, "%3d", sensor_buffer[sensor]);
 			    tmpp++; // Decimal-strängen är tre tecken
 			    tmpp++;
 			    tmpp++;
 		    } else
 		    {
-			    sprintf(tmpp, "%02X", sensor==6?reg_out:sensor_buffer[sensor]);
+			    sprintf(tmpp, "%02X", sensor_buffer[sensor]);
 			    tmpp++; // Hex-strängen är två tecken
 			    tmpp++;
 		    }
@@ -1285,6 +1268,38 @@ uint8_t interpret_big_ir(uint8_t value)
 	return big_ir_centimeter_array[i];
 }
 
+void handle_crossing()
+{
+	//Om ej i korsning och får sensordata som indikerar korsning. Analysera korsningstyp, sätt direction och has_detected_crossing_flagga
+	//KOMMENTERA IN DENNA FÖR KORSNINGAR
+	if (!has_detected_crossing && !begin_turn && !is_turning && !drive_from_crossing && 
+		(sensor_buffer[IR_LEFT_FRONT] >= SEGMENT_LENGTH || sensor_buffer[IR_RIGHT_FRONT] >= SEGMENT_LENGTH))
+	{
+
+		analyze_ir_sensors();
+	}
+			
+	//Om korsning detekterad. Kör till korsningens rotationscentrum, och sätt is_turning flagga
+	else if(has_detected_crossing)
+	{
+		drive_to_crossing_end(crossing_stop_value);
+	}
+	//Sväng tills vilkor för svängning uppfyllt, sätt  is_turning flagga, nollställ begin turning
+	else if (begin_turn || is_turning)
+	{
+		stop_motors();
+		make_turn(crossing_direction);
+	}
+	//Kör ut från korsningen till regleringen är redo att slås på igen, nollställ drive_from_crossing flagga
+	else if(drive_from_crossing)
+	{
+		if (sensor_buffer[IR_LEFT_FRONT] <= SEGMENT_LENGTH && sensor_buffer[IR_RIGHT_FRONT] <= SEGMENT_LENGTH)
+		{
+			stop_motors();
+			drive_from_crossing = 0;
+		}
+	}
+}
 /* 
  * ANALYZE_IR_SENSORS()
  * Vid upptäckt av någon form av korsning anropas denna.
@@ -1293,10 +1308,9 @@ uint8_t interpret_big_ir(uint8_t value)
  */
 void analyze_ir_sensors()
 {
-	//stop_motors();
 	
 	
-	//Turn left, alley right															//FUNKAR!
+	//Turn left, alley right												
 	if(sensor_buffer[IR_LEFT_FRONT] >= MAXIMUM_IR_DISTANCE &&
 		sensor_buffer[IR_FRONT] <= SEGMENT_LENGTH &&
 		sensor_buffer[IR_RIGHT_FRONT] >= SEGMENT_LENGTH &&
@@ -1306,7 +1320,7 @@ void analyze_ir_sensors()
 		crossing_direction = 'l';
 		crossing_stop_value = SEGMENT_LENGTH/2-IR_FRONT_TO_MIDDLE_LENGTH +OFFSET;
 	}	
-	//turn right alley to left															//Funkar!
+	//turn right alley to left															
 	else if(sensor_buffer[IR_LEFT_FRONT] >= SEGMENT_LENGTH &&
 		sensor_buffer[IR_LEFT_FRONT] <= MAXIMUM_IR_DISTANCE &&
 		sensor_buffer[IR_FRONT] <= SEGMENT_LENGTH &&
@@ -1358,27 +1372,31 @@ void analyze_ir_sensors()
 
 
 /*
- * CROSSING_TURN(DIR,STOP_DISTANCE)
+ * CROSSING_TURN(STOP_DISTANCE)
  * Körs då korning, samt korningstyp identifierats.
  * Utför sväng då roboten kört tillräckligt långt in i korsningen.
  */
-void crossing_turn(char dir,uint8_t stop_distance)
+void drive_to_crossing_end(uint8_t stop_distance)
 {
 
 	if (sensor_buffer[IR_FRONT] <= stop_distance || stop_distance == 0 || is_turning)
 	{
-		
-
-		switch(dir)
-		{
-			case 'l': /*turn_left90(SPEED)*/stop_motors(); break;
-			case 'r': /*turn_right90(SPEED)*/stop_motors(); break;
-			case 'f': /*drive_forwards(SPEED)*/stop_motors(); break;
-			default: break;
-		}
-		
+		begin_turn = 1;
+		has_detected_crossing = 0;
 	}
 	
+}
+
+void make_turn(char dir)
+{
+	begin_turn = 0;
+	switch(dir)
+	{
+		case 'l': turn_left90(SPEED); break;
+		case 'r': /*turn_right90(SPEED)*/stop_motors(); break;
+		case 'f': /*drive_forwards(SPEED)*/stop_motors(); break;
+		default: break;
+	}
 }
 
 
@@ -1386,14 +1404,14 @@ void turn_left90()
 {
 	static uint8_t front = 0;
 	
-	if(is_turning && abs(front - sensor_buffer[IR_RIGHT_FRONT]) <= 5  && sensor_buffer[IR_FRONT] >=150)
+	if(is_turning && abs(front - sensor_buffer[IR_RIGHT_FRONT]) <= 1  && sensor_buffer[IR_FRONT] >=150)
 	{
 		is_turning = 0;
-		has_detected_crossing = 0;
+		drive_from_crossing = 1;
+		
 		stop_motors();
 		_delay_ms(250);
 		drive_forwards(SPEED);
-		drive_from_crossing = 1;
 	}
 	else if(!is_turning) 
 	{

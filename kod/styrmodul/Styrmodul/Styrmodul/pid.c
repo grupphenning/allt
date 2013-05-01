@@ -87,11 +87,11 @@ void regulator(int8_t diff_right, int8_t diff_left, int8_t diff_front, int8_t di
 	
 	if ((IR_LEFT_FRONT <= 20) && (IR_LEFT_BACK <= 20))
 	{
-		output_u += 0;			//Om nära en vägg, dra på lite extra.
+		output_u += 20;			//Om nära en vägg, dra på lite extra.
 	}
 	else if ((IR_RIGHT_FRONT <= 20) && (IR_RIGHT_BACK <= 20))
 	{
-		output_u -= 0;
+		output_u -= 20;
 	}
 	else						//Styr mot mitten.
 	{

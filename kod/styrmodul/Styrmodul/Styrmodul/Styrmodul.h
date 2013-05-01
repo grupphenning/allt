@@ -70,7 +70,16 @@ void regulate_end_tape_2(uint8_t* values);
 void regulate_end_tape_3();
 uint8_t * reflex_sensors_currently_seeing_tape(uint8_t * values);
 void init_default_printf_string();
+
+
+//Korsning
+void handle_crossing();
 void analyze_ir_sensors();
-void crossing_turn(char dir, uint8_t stop_distance);
+void make_turn(char dir);
+void drive_to_crossing_end(uint8_t stop_distance);
+//void drive_from_crossing();
+void turn_right90();
+void turn_left90();
+
 extern uint8_t dirbits;
 extern uint8_t sensor_buffer[SENSOR_BUFFER_SIZE];
