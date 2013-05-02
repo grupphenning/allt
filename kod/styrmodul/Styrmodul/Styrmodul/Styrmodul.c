@@ -103,7 +103,7 @@ int main(void)
 	sei();		//aktivera global interrupts
 	
 	clear_pid();
-	init_pid(0, 50, -50);
+	init_pid(50, -50);
 	update_k_values(5, 0, 10);
 	
 	//_delay_ms(2000);
@@ -1000,7 +1000,7 @@ void decode_sensor(uint8_t data)
 			}
 
 			/*Hantera korsningar*/
-			handle_crossing();	
+			//handle_crossing();	
 			
 			/*Hantera tejp-korsningar*/
 			//decode_tape_sensor_data();

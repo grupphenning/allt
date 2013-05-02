@@ -7,11 +7,11 @@
 #include "Styrmodul.h"
 
 int8_t last_diff_right, last_diff_left, diff_right, diff_left, diff_front, diff_back;
-uint16_t k_prop, k_, k_der;																//Regulatorkonstanter
+uint16_t k_prop, k_a, k_der;																//Regulatorkonstanter
 uint8_t regulator_flag = 0;																//Flagga som tillåter reglering
 int16_t max_out, min_out;																//Maxvärde för utsignalen, undvika fel med mättad styrsignal.
 
-void init_pid(uint16_t time, int16_t max, int16_t min)  //Initiera regulatorn
+void init_pid(int16_t max, int16_t min)  //Initiera regulatorn
 {
 	if (max > min)
 	{
@@ -27,7 +27,7 @@ void init_pid(uint16_t time, int16_t max, int16_t min)  //Initiera regulatorn
 void update_k_values(uint8_t kp, uint8_t ki, uint8_t kd)		//Uppdatera konstanter. Skala upp 128 för högre noggrannhet. 3/128 = ~1/40
 {
 	k_prop = 128*kp;
-	k_ = ki;
+	k_a = ki;
 	k_der = 3*kd;	
 }
 
@@ -85,17 +85,17 @@ void regulator(int8_t diff_right, int8_t diff_left, int8_t diff_front, int8_t di
 	last_diff_right = diff_right;
 	last_diff_left = diff_left;
 	
-	if ((IR_LEFT_FRONT <= 20) && (IR_LEFT_BACK <= 20))
+	if ((sensor_buffer[IR_LEFT_FRONT] <= 20) && (sensor_buffer[IR_LEFT_BACK] <= 20))
 	{
-		output_u += 20;			//Om nära en vägg, dra på lite extra.
+		output_u += 0;			//Om nära en vägg, dra på lite extra.
 	}
-	else if ((IR_RIGHT_FRONT <= 20) && (IR_RIGHT_BACK <= 20))
+	else if ((sensor_buffer[IR_RIGHT_FRONT] <= 20) && (sensor_buffer[IR_RIGHT_BACK] <= 20))
 	{
-		output_u -= 20;
+		output_u -= 0;
 	}
 	else						//Styr mot mitten.
 	{
-		output_u += (diff_front+diff_back)*2;
+		/*output_u += (diff_front+diff_back)*2*/;
 	}
 	
 	output_u = output_u/128;	//Skala ner igen;
