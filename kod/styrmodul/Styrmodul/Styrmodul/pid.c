@@ -69,10 +69,19 @@ void regulator(int8_t diff_right, int8_t diff_left, int8_t diff_front, int8_t di
 	targetwall = (sensor_buffer[IR_LEFT_BACK]+sensor_buffer[IR_LEFT_FRONT]) > (sensor_buffer[IR_RIGHT_BACK] + sensor_buffer[IR_RIGHT_FRONT])? 1 : 0;
 	
 	//Dubbelkolla om för nära en vägg, eller för långt ifrån.
-	if (((sensor_buffer[IR_LEFT_FRONT] <= 20) && (sensor_buffer[IR_LEFT_BACK] <= 20)) || sensor_buffer[IR_LEFT_FRONT] > 80) targetwall = 1;
-	else if (((sensor_buffer[IR_RIGHT_FRONT] <= 20) && (sensor_buffer[IR_RIGHT_BACK] <= 20)) || sensor_buffer[IR_RIGHT_FRONT] > 80) targetwall = 0;
+// 	if (((sensor_buffer[IR_LEFT_FRONT] <= 20) && (sensor_buffer[IR_LEFT_BACK] <= 20)) || sensor_buffer[IR_LEFT_FRONT] > 80) targetwall = 1;
+// 	else if (((sensor_buffer[IR_RIGHT_FRONT] <= 20) && (sensor_buffer[IR_RIGHT_BACK] <= 20)) || sensor_buffer[IR_RIGHT_FRONT] > 80) targetwall = 0;
 	
-	if (targetwall == 1)		//Reglera mot höger vägg
+	
+	if ((sensor_buffer[IR_LEFT_FRONT] <= 30) || (sensor_buffer[IR_LEFT_BACK] <= 30))
+	{
+		output_u += 128*50;			//Om nära en vägg, dra på lite extra.
+	}
+	else if ((sensor_buffer[IR_RIGHT_FRONT] <= 30) || (sensor_buffer[IR_RIGHT_BACK] <= 30))
+	{
+		output_u -= 128*50;
+	}
+	else if (targetwall == 1)		//Reglera mot höger vägg
 	{
 		output_u = k_prop*diff_right;						//P-del
 		output_u += k_der*(diff_right - last_diff_right);	//D-del
@@ -82,21 +91,13 @@ void regulator(int8_t diff_right, int8_t diff_left, int8_t diff_front, int8_t di
 		output_u = -k_prop*diff_left;						//P-del
 		output_u -= k_der*(diff_left - last_diff_left);		//D-del
 	}
-	last_diff_right = diff_right;
-	last_diff_left = diff_left;
-	
-	if ((sensor_buffer[IR_LEFT_FRONT] <= 20) && (sensor_buffer[IR_LEFT_BACK] <= 20))
-	{
-		output_u += 0;			//Om nära en vägg, dra på lite extra.
-	}
-	else if ((sensor_buffer[IR_RIGHT_FRONT] <= 20) && (sensor_buffer[IR_RIGHT_BACK] <= 20))
-	{
-		output_u -= 0;
-	}
 	else						//Styr mot mitten.
 	{
 		/*output_u += (diff_front+diff_back)*2*/;
 	}
+	
+	last_diff_right = diff_right;
+	last_diff_left = diff_left;
 	
 	output_u = output_u/128;	//Skala ner igen;
 	
