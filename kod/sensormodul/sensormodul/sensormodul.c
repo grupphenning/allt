@@ -288,12 +288,12 @@ void init_sensor_timer()
 	//25 hertz, ges av 8000000/(256*1250) = 25 Hz
 	//ICR1 = 1250;
 	
-	//62,5 Hz
+	//208 Hz
 	ICR1 = 150;
 	
 }
 
-//Sensor timer! (25 Hz)
+//Sensor timer! (208 Hz)
 ISR(TIMER1_OVF_vect)
 {
 	read_all_sensors();

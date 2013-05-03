@@ -134,31 +134,39 @@ int main(void)
 // 		{
 // 			regulate_end_tape(spi_data_from_sensor);
 // 		}
-		if(spi_comm_write != spi_comm_read)
-		{
-			decode_comm(spi_data_from_comm[spi_comm_read]);
-			++spi_comm_read;
-			spi_comm_read %= BUF_SZ;
-		}
-	
-		if(spi_sensor_write != spi_sensor_read)
-		{
-			uint8_t turn_amount;
-			
-			decode_sensor(spi_data_from_sensor[spi_sensor_read]);
-			++spi_sensor_read;
-			spi_sensor_read %= BUF_SZ;
-		}
-		
-		if (regulator_enable && regulator_flag)
-		{
-			regulator(sensor_buffer[IR_RIGHT_FRONT] - sensor_buffer[IR_RIGHT_BACK], 
-					  sensor_buffer[IR_LEFT_FRONT] - sensor_buffer[IR_LEFT_BACK], 
-					  sensor_buffer[IR_RIGHT_FRONT] - sensor_buffer[IR_LEFT_FRONT], 
-					  sensor_buffer[IR_RIGHT_BACK] - sensor_buffer[IR_LEFT_BACK]);
-			regulator_enable = 0;
-		}	
-		
+// 		if(spi_comm_write != spi_comm_read)
+// 		{
+// 			decode_comm(spi_data_from_comm[spi_comm_read]);
+// 			++spi_comm_read;
+// 			spi_comm_read %= BUF_SZ;
+// 		}
+// 	
+// 		if(spi_sensor_write != spi_sensor_read)
+// 		{
+// 			uint8_t turn_amount;
+// 			
+// 			decode_sensor(spi_data_from_sensor[spi_sensor_read]);
+// 			++spi_sensor_read;
+// 			spi_sensor_read %= BUF_SZ;
+// 		}
+// 		
+// 		if (regulator_enable && regulator_flag)
+// 		{
+// 			regulator(sensor_buffer[IR_RIGHT_FRONT] - sensor_buffer[IR_RIGHT_BACK], 
+// 					  sensor_buffer[IR_LEFT_FRONT] - sensor_buffer[IR_LEFT_BACK], 
+// 					  sensor_buffer[IR_RIGHT_FRONT] - sensor_buffer[IR_LEFT_FRONT], 
+// 					  sensor_buffer[IR_RIGHT_BACK] - sensor_buffer[IR_LEFT_BACK]);
+// 			regulator_enable = 0;
+// 		}	
+// 	
+	_delay_ms(2000);	
+	claw_in();
+	send_string(" Klo in ");
+	update();
+	_delay_ms(2000);
+	claw_out();
+	send_string(" Klo ut ");
+	update();
 	}
 }
 
@@ -467,7 +475,7 @@ void pwm_init()
 	
 	//TCCR1A = (1 << COM1A1) | (1 << WGM11);
 	//TCCR1B = (1 << WGM11) | (1 << WGM13) | (1 << WGM12) | (1 << CS12) | (1 << CS10);
-	TIMSK1 = (1 << OCIE1A);  // Enable Interrupt TimerCounter1 Compare Match A (TIMER1_COMPA_vect)
+	//////////////////////////////////////////////////////////////////////////TIMSK1 = (1 << OCIE1A);  // Enable Interrupt TimerCounter1 Compare Match A (TIMER1_COMPA_vect)
 	//ICR1 = 390;
 	//ICR1 = 625;
 	//ICR1 = 313;
@@ -723,55 +731,60 @@ ISR(INT0_vect)
 	setbit(PORTB, PORTB2);		//Sätter sensor till sleepmode
 }
 
+// ISR(TIMER1_COMPA_vect)
+// {
+// 	
+// }
+
 //kör i 50 Hz! Ändra ej frekvensen, då denna även
 //används till gripklon, som måste köras i 50 Hz!
-ISR(TIMER1_COMPA_vect)
-{
-	if(turn)
-	{
-		ninety_timer++;		
-	}
-
-	//en sekund har gått
-	if(ninety_timer == 17)
-	{
-		turn = 0;
-		//tank_turn_left(255);
-		ninety_timer=0;
-	}
-
-	// Refresha motor-output. Detta får äntligen styrningen att fungera pålitligt.
-	if(dirbits & 1) {
-		clearbit(PORT_DIR, LEFT_DIR);
-		setbit(PORT_DIR, LEFT_DIR);
-	}
-	else {
-		setbit(PORT_DIR, LEFT_DIR);
-		clearbit(PORT_DIR, LEFT_DIR);
-	}
-
-	if(dirbits & 2) {
-		clearbit(PORT_DIR, RIGHT_DIR);
-		setbit(PORT_DIR, RIGHT_DIR);
-	}
-	else {
-		setbit(PORT_DIR, RIGHT_DIR);
-		clearbit(PORT_DIR, RIGHT_DIR);
-	}
-
-	uint8_t l, r;
-	l = LEFT_AMOUNT;
-	r = RIGHT_AMOUNT;
-
-	if(l) {
-		LEFT_AMOUNT = 0;
-		LEFT_AMOUNT = l;
-	}
-	if(r) {
-		RIGHT_AMOUNT = 0;
-		RIGHT_AMOUNT = r;
-	}		
-}
+// ISR(TIMER1_COMPA_vect)
+// {
+// 	if(turn)
+// 	{
+// 		ninety_timer++;		
+// 	}
+// 
+// 	//en sekund har gått
+// 	if(ninety_timer == 17)
+// 	{
+// 		turn = 0;
+// 		//tank_turn_left(255);
+// 		ninety_timer=0;
+// 	}
+// 
+// 	// Refresha motor-output. Detta får äntligen styrningen att fungera pålitligt.
+// 	if(dirbits & 1) {
+// 		clearbit(PORT_DIR, LEFT_DIR);
+// 		setbit(PORT_DIR, LEFT_DIR);
+// 	}
+// 	else {
+// 		setbit(PORT_DIR, LEFT_DIR);
+// 		clearbit(PORT_DIR, LEFT_DIR);
+// 	}
+// 
+// 	if(dirbits & 2) {
+// 		clearbit(PORT_DIR, RIGHT_DIR);
+// 		setbit(PORT_DIR, RIGHT_DIR);
+// 	}
+// 	else {
+// 		setbit(PORT_DIR, RIGHT_DIR);
+// 		clearbit(PORT_DIR, RIGHT_DIR);
+// 	}
+// 
+// 	uint8_t l, r;
+// 	l = LEFT_AMOUNT;
+// 	r = RIGHT_AMOUNT;
+// 
+// 	if(l) {
+// 		LEFT_AMOUNT = 0;
+// 		LEFT_AMOUNT = l;
+// 	}
+// 	if(r) {
+// 		RIGHT_AMOUNT = 0;
+// 		RIGHT_AMOUNT = r;
+// 	}		
+// }
 
 //overflow på timer0, ställ in frekvens med
 //OCR0A, och CSxx-flaggorna i TCCR0B
