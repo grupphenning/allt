@@ -19,6 +19,10 @@ uint8_t test;
 
 #define BUF_SZ 256
 
+uint8_t is_returning_home;
+char crossing_buffer[256];
+uint8_t crossing_buffer_p;
+
 // Buffrar för interrupt-koden
 
 volatile uint8_t spi_data_from_comm[BUF_SZ];
@@ -364,9 +368,17 @@ void regulate_end_tape_3()
 	//div med 0
 	if(n_of_reflexes_on != 0)
 		pos = res*2/n_of_reflexes_on;	//ojojoj
-	else //utanför tejp, stopp!
-		stop_motors();			
+	//utanför tejp, stopp!
+	else 
+	{
+		stop_motors();
+		/*
+		OBS!!! 
+		HÄR SKALL KLO STÄNGAS OCH 180-GRADERSSVÄNGEN INITIERAS!!!
+		*/
 		
+		is_returning_home = 1;	// OBS! SKALL GÖRAS EFTER ATT 180-GRADERSSVÄNGEN UTFÖRTS!!!	
+	}		
 	clear_screen();
 	//_delay_ms(100);
 	for (i=0;i < 9;i++)
@@ -1006,22 +1018,63 @@ void decode_sensor(uint8_t data)
 			}
 
 
-
-			if(tape_crossings)
-			{			
-				/*Hantera tejp-korsningar*/
-				//decode_tape_sensor_data();
-			}
-			if(crossings)
+			// Om vi ska köra hemåt
+			if(is_returning_home)
 			{
-				/*Hantera korsningar*/
-				handle_crossing();
-			}				
+				static uint8_t turn_first = 1;
+				char c;
+				// Analysera sensordata för att ta reda på när vi hittat en korsning.
+				if (!has_detected_crossing && !make_turn_flag && !drive_from_crossing &&
+				(sensor_buffer[IR_LEFT_FRONT] >= SEGMENT_LENGTH || sensor_buffer[IR_RIGHT_FRONT] >= SEGMENT_LENGTH))
+				{
+					analyze_ir_sensors();
+				}
+				// Korsning funnen
+				if(has_detected_crossing)
+				{
+					drive_to_crossing_end(crossing_stop_value);
+				}
+				if(make_turn_flag && turn_first) 
+				{
+					// Sväng i motsatt riktning gentemot buffern, samt räkna ner bufferpekaren
+					c = crossing_buffer[--crossing_buffer_p];
+					c =
+						c == 'l' ? 'r'
+						: c == 'r' ? 'l'
+						: c;
+					turn_first = 0;
+				}					
+				if(make_turn_flag)
+				{
+					// Kolla om svängen är klar
+					make_turn(c);
+					if(make_turn_flag == 0 && crossing_buffer_p == 0)
+					{
+						// TODO kör ut sista sträckan från labyrinten
+						is_returning_home = 0;
+						stop_motors();
+					}
+				}
+				if(!make_turn_flag) turn_first = 1;
+			}
+			else 
+			{	
+				if(tape_crossings)
+				{			
+					/*Hantera tejp-korsningar*/
+					//decode_tape_sensor_data();
+				}
+				if(crossings)
+				{
+					/*Hantera korsningar*/
+					handle_crossing();
+				}				
 
-  			if (follow_end_tape)
-  			{
-  				//regulate_end_tape_3();
-  			}
+  				if (follow_end_tape)
+  				{
+  					//regulate_end_tape_3();
+  				}
+			}
 
 			break;
 		default:
@@ -1177,23 +1230,21 @@ void decode_tape_segment(char first, char second)
 		//turn left
 		stop_motors();
 		_delay_ms(250);
-		//begin_turning(-90);
-		tank_turn_left(SPEED);
+		make_turn('l');
 	}
 	else if (first == 'l' && second == 's')
 	{
 		//turn right
 		stop_motors();
-		_delay_ms(2500);
-		//begin_turning(90);
-		tank_turn_right(SPEED);
+		_delay_ms(250);
+		make_turn('r');
 	}
 	else if (first == 's' && second == 's')
 	{
 		//keep going
 		stop_motors();
 		_delay_ms(250);
-		drive_forwards(SPEED);
+		make_turn('f');
 	}
 	//första var smal, andra fanns ej, vi är vid mål!
 	else if (first == 's' && !second)
@@ -1295,7 +1346,7 @@ void handle_crossing()
 		
 		drive_to_crossing_end(crossing_stop_value);
 	}
-	//Sväng tills vilkor för svängning uppfyllt, sätt  is_turning flagga, nollställ begin turning
+	//Sväng tills villkor för svängning uppfyllt, sätt  is_turning flagga, nollställ begin turning
 	else if (make_turn_flag)
 	{
 		make_turn(crossing_direction);
@@ -1368,6 +1419,7 @@ void analyze_ir_sensors()
 		sensor_buffer[IR_FRONT] >= MAXIMUM_IR_DISTANCE &&
 		sensor_buffer[IR_RIGHT_FRONT] <= SEGMENT_LENGTH)
 	{
+
 		has_detected_crossing = 1;
 		crossing_direction = 'f';
 		crossing_stop_value = 0;
@@ -1384,6 +1436,10 @@ void analyze_ir_sensors()
 	}
 }
 
+void add_to_crossing_buffer(char c)
+{
+	crossing_buffer[crossing_buffer_p++] = c;
+}
 
 /*
  * CROSSING_TURN(STOP_DISTANCE)
@@ -1405,6 +1461,7 @@ void drive_to_crossing_end(uint8_t stop_distance)
 void make_turn(char dir)
 {
 	static uint8_t first = 1;
+	// Sväng färdig
 	if (!turn && !first)
 	{
 		stop_motors();
@@ -1413,6 +1470,7 @@ void make_turn(char dir)
 		first = 1;
 		make_turn_flag = 0;
 		drive_from_crossing = 1;
+		if(!is_returning_home) add_to_crossing_buffer(dir);
 	}
 	else
 	{
