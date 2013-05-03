@@ -75,6 +75,9 @@ uint8_t big_ir_centimeter_array[117] = {16, 16, 17, 17, 18, 18, 19, 19, 20, 20, 
 uint8_t follow_end_tape = 1;
 
 
+//Kalibrering
+uint8_t calibrate_sensors = 0;
+
 //Korsningsgrejer
 uint8_t crossings = 0;
 uint8_t tape_crossings = 0;
@@ -924,11 +927,11 @@ void decode_comm(uint8_t command)
 	}
 	else if(command == COMM_CALIBRATE_SENSORS)
 	{
-		send_string_remote("abcdefghijklmnopqrstuvwxyz");
+		calibrate_sensors = 1;
 	}
 	else if(command == COMM_SET_SPEED) {
 		set_speed = 1;
-	}		
+	}	
 	else	
 	{
 		char tmp[30];
@@ -958,6 +961,9 @@ void decode_sensor(uint8_t data)
 {
 	
 	static uint8_t sensor_transmission_number = 0;
+	
+	//Tilläggsvariabler
+	static uint8_t left_back=0, left_front=0, right_back=0, right_front = 0; 
 
 	/* Första byten i ett meddelande är storleken */
 	if(sensor_start)
@@ -990,12 +996,39 @@ void decode_sensor(uint8_t data)
 			stop_motors();
 			break;	
 		case SENSOR:
+		
 			//Omvandla sensorvärden från spänningar till centimeter.
 			sensor_buffer[IR_FRONT] = interpret_big_ir(sensor_buffer[IR_FRONT]);
-			sensor_buffer[IR_LEFT_FRONT] = interpret_big_ir(sensor_buffer[IR_LEFT_FRONT]);
-			sensor_buffer[IR_RIGHT_FRONT] = interpret_big_ir(sensor_buffer[IR_RIGHT_FRONT]);
-			sensor_buffer[IR_LEFT_BACK] = interpret_small_ir(sensor_buffer[IR_LEFT_BACK]) + 1;
-			sensor_buffer[IR_RIGHT_BACK] = interpret_small_ir(sensor_buffer[IR_RIGHT_BACK]) + 1;
+			sensor_buffer[IR_LEFT_FRONT] = interpret_big_ir(sensor_buffer[IR_LEFT_FRONT])+left_front;
+			sensor_buffer[IR_RIGHT_FRONT] = interpret_big_ir(sensor_buffer[IR_RIGHT_FRONT])+right_front;
+			sensor_buffer[IR_LEFT_BACK] = interpret_small_ir(sensor_buffer[IR_LEFT_BACK])+left_back;
+			sensor_buffer[IR_RIGHT_BACK] = interpret_small_ir(sensor_buffer[IR_RIGHT_BACK])+right_front;
+			
+			if(calibrate_sensors)
+			{
+				int8_t left_diff = sensor_buffer[IR_LEFT_FRONT]-sensor_buffer[IR_LEFT_BACK];
+				int8_t right_diff = sensor_buffer[IR_RIGHT_FRONT]-sensor_buffer[IR_RIGHT_BACK];
+				//Left
+				if(left_diff>0)
+				{
+					left_back = left_diff;
+				}
+				else if(left_diff<0)
+				{
+					left_front = abs(left_diff);
+				}
+				//Right
+				if(right_diff>0)
+				{
+					right_back = right_diff;
+				}
+				else if(right_diff<0)
+				{
+					right_front = abs(right_diff);
+				}
+				
+				calibrate_sensors = 0;			
+			}
 			
 			
 			//Wait a few times before using data

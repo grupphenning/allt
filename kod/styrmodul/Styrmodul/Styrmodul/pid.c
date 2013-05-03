@@ -65,19 +65,19 @@ void regulator(int8_t diff_right, int8_t diff_left, int8_t diff_front, int8_t di
 	int16_t output_u;
 		
 	//Undersök vilken vägg som är närmast.
-	uint8_t targetwall;
-	targetwall = (sensor_buffer[IR_LEFT_BACK]+sensor_buffer[IR_LEFT_FRONT]) > (sensor_buffer[IR_RIGHT_BACK] + sensor_buffer[IR_RIGHT_FRONT])? 1 : 0;
+	uint8_t targetwall = 0;
+	//targetwall = (sensor_buffer[IR_LEFT_BACK]+sensor_buffer[IR_LEFT_FRONT]) > (sensor_buffer[IR_RIGHT_BACK] + sensor_buffer[IR_RIGHT_FRONT])? 1 : 0;
 	
 	//Dubbelkolla om för nära en vägg, eller för långt ifrån.
 // 	if (((sensor_buffer[IR_LEFT_FRONT] <= 20) && (sensor_buffer[IR_LEFT_BACK] <= 20)) || sensor_buffer[IR_LEFT_FRONT] > 80) targetwall = 1;
 // 	else if (((sensor_buffer[IR_RIGHT_FRONT] <= 20) && (sensor_buffer[IR_RIGHT_BACK] <= 20)) || sensor_buffer[IR_RIGHT_FRONT] > 80) targetwall = 0;
 	
 	
-	if ((sensor_buffer[IR_LEFT_FRONT] <= 30) || (sensor_buffer[IR_LEFT_BACK] <= 30))
+	if ((sensor_buffer[IR_LEFT_FRONT] <= 25) || (sensor_buffer[IR_LEFT_BACK] <= 25))
 	{
 		output_u += 128*50;			//Om nära en vägg, dra på lite extra.
 	}
-	else if ((sensor_buffer[IR_RIGHT_FRONT] <= 30) || (sensor_buffer[IR_RIGHT_BACK] <= 30))
+	else if ((sensor_buffer[IR_RIGHT_FRONT] <= 25) || (sensor_buffer[IR_RIGHT_BACK] <= 25))
 	{
 		output_u -= 128*50;
 	}
