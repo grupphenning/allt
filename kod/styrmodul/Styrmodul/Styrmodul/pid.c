@@ -77,7 +77,7 @@ void regulator(int8_t diff_right, int8_t diff_left, int8_t diff_front, int8_t di
 	{
 		output_u += 128*50;			//Om nära en vägg, dra på lite extra.
 	}
-	else if ((sensor_buffer[IR_RIGHT_FRONT] <= 25) || (sensor_buffer[IR_RIGHT_BACK] <= 25))
+	else if ((sensor_buffer[IR_RIGHT_FRONT] <= 30) || (sensor_buffer[IR_RIGHT_BACK] <= 30))
 	{
 		output_u -= 128*50;
 	}

@@ -112,7 +112,7 @@ int main(void)
 	
 	clear_pid();
 	init_pid(50, -50);
-	update_k_values(20, 0, 10);
+	update_k_values(100, 0, 170);
 	
 	//_delay_ms(2000);
 	//drive_forwards(255);
@@ -1014,7 +1014,7 @@ void decode_sensor(uint8_t data)
 			sensor_buffer[IR_LEFT_FRONT] = interpret_big_ir(sensor_buffer[IR_LEFT_FRONT])+left_front;
 			sensor_buffer[IR_RIGHT_FRONT] = interpret_big_ir(sensor_buffer[IR_RIGHT_FRONT])+right_front;
 			sensor_buffer[IR_LEFT_BACK] = interpret_small_ir(sensor_buffer[IR_LEFT_BACK])+left_back;
-			sensor_buffer[IR_RIGHT_BACK] = interpret_small_ir(sensor_buffer[IR_RIGHT_BACK])+right_front;
+			sensor_buffer[IR_RIGHT_BACK] = interpret_small_ir(sensor_buffer[IR_RIGHT_BACK])+right_back;
 			
 			if(calibrate_sensors)
 			{
