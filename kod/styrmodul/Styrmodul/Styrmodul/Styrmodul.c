@@ -1007,6 +1007,92 @@ void decode_sensor(uint8_t data)
 		case GYRO_SENSOR:
 			stop_motors();
 			break;	
+		case SENSOR_IR:
+					//Omvandla sensorvärden från spänningar till centimeter.
+			sensor_buffer[IR_FRONT] = interpret_big_ir(sensor_buffer[IR_FRONT]);
+			sensor_buffer[IR_LEFT_FRONT] = interpret_big_ir(sensor_buffer[IR_LEFT_FRONT])+left_front;
+			sensor_buffer[IR_RIGHT_FRONT] = interpret_big_ir(sensor_buffer[IR_RIGHT_FRONT])+right_front;
+			sensor_buffer[IR_LEFT_BACK] = interpret_small_ir(sensor_buffer[IR_LEFT_BACK])+left_back;
+			sensor_buffer[IR_RIGHT_BACK] = interpret_small_ir(sensor_buffer[IR_RIGHT_BACK])+right_front;
+			
+			if(calibrate_sensors)
+			{
+				int8_t left_diff = sensor_buffer[IR_LEFT_FRONT]-sensor_buffer[IR_LEFT_BACK];
+				int8_t right_diff = sensor_buffer[IR_RIGHT_FRONT]-sensor_buffer[IR_RIGHT_BACK];
+				//Left
+				if(left_diff>0)
+				{
+					left_back = left_diff;
+				}
+				else if(left_diff<0)
+				{
+					left_front = abs(left_diff);
+				}
+				//Right
+				if(right_diff>0)
+				{
+					right_back = right_diff;
+				}
+				else if(right_diff<0)
+				{
+					right_front = abs(right_diff);
+				}
+				
+				calibrate_sensors = 0;			
+			}
+			
+			
+			//Wait a few times before using data
+			if(sensor_transmission_number<4)
+			{
+				sensor_transmission_number++;
+				return;
+			}
+
+
+			// Om vi ska köra hemåt
+			if(is_returning_home)
+			{
+				static uint8_t turn_first = 1;
+				char c;
+				// Analysera sensordata för att ta reda på när vi hittat en korsning.
+				if (!has_detected_crossing && !make_turn_flag && !drive_from_crossing &&
+				(sensor_buffer[IR_LEFT_FRONT] >= SEGMENT_LENGTH || sensor_buffer[IR_RIGHT_FRONT] >= SEGMENT_LENGTH))
+				{
+					analyze_ir_sensors();
+				}
+				// Korsning funnen
+				if(has_detected_crossing)
+				{
+					drive_to_crossing_end(crossing_stop_value);
+				}
+				if(make_turn_flag && turn_first) 
+				{
+					// Sväng i motsatt riktning gentemot buffern, samt räkna ner bufferpekaren
+					c = crossing_buffer[--crossing_buffer_p];
+					c =
+						c == 'l' ? 'r'
+						: c == 'r' ? 'l'
+						: c;
+					turn_first = 0;
+				}					
+				if(make_turn_flag)
+				{
+					// Kolla om svängen är klar
+					make_turn(c);
+					if(make_turn_flag == 0 && crossing_buffer_p == 0)
+					{
+						// TODO kör ut sista sträckan från labyrinten
+						is_returning_home = 0;
+						stop_motors();
+					}
+				}
+				if(!make_turn_flag) turn_first = 1;
+			}
+			break;
+		case SENSOR_TAPE:
+			make_turning_decision();
+			break;
 		case SENSOR:
 		
 			//Omvandla sensorvärden från spänningar till centimeter.
@@ -1255,6 +1341,37 @@ void decode_tape_sensor_data()
 	
 }
 
+void make_turning_decision()
+{ 
+	uint8_t tape_type = sensor_buffer[1];
+	switch (tape_type)
+	{
+	case 'l':
+		//turn left 
+		stop_motors();
+		_delay_ms(250);
+		make_turn('l');
+		break;
+	
+	case 'r':
+		//turn right
+		stop_motors();
+		_delay_ms(250);
+		make_turn('r');
+		break;	 
+	
+	case 'f':
+		//keep going
+		stop_motors();
+		_delay_ms(250);
+		make_turn('f');
+		break;
+		
+	case 'g':
+		follow_end_tape = 1;
+		break;
+	}
+}
 void decode_tape_segment(char first, char second)
 {
 	_delay_ms(250);
@@ -1536,8 +1653,9 @@ void make_turn(char dir)
 			default: break;
 		}
 	}
-
 }
+
+
 void enable_crossings()
 {
 	crossings = 1;

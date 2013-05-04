@@ -25,6 +25,7 @@ volatile uint8_t test_data[18];
 volatile uint8_t data_index=1;
 volatile uint8_t adc_interrupt = 0;
 volatile uint8_t has_data_from_spi = 0;
+volatile uint8_t read_and_send_ir_to_master = 0;
 
 
 int main(void)
@@ -46,6 +47,11 @@ int main(void)
 	
     while(1)
     {
+		if (read_and_send_ir_to_master)
+		{
+			read_and_send_ir_to_master = 0;
+			read_and_send_ir();
+		}
 		if(has_data_from_spi)
 		{
 // 			switch(spi_data_to_master)
@@ -61,11 +67,10 @@ int main(void)
 // 			}
 			has_data_from_spi = 0;
 		}
-		read_tape(2);
-		read_tape();
+		read_one_tape();
 		decode_tape();
-					
-    }
+		send_decoded_tape();
+	}
 }
 
 /* VAFAN ÄR DETTA??
@@ -209,6 +214,7 @@ void send_decoded_tape()
 	decoded_tape_data[0] = SENSOR_TAPE;
 	decoded_tape_data[1] = tape_type;
 	send_to_master(1, decoded_tape_data);
+	sei();
 }		
 
 /* 
@@ -320,9 +326,9 @@ void read_one_tape()
 	clearbit(ADMUX,MUX3);
 	clearbit(ADMUX,MUX4);
 	setbit(PORTA, PINA1);
-	PORTD = (sensor_no<<4)+sensor_no;
+	PORTD = 0x22; //Sensor nummer 2
 
-	read_adc_tape();
+	read_adc_one_tape();
 }
 
 
@@ -338,7 +344,7 @@ void read_adc_tape()
 	//adc_interrupt = 0;
 }
 
-void read_adc_one_tape_sensor()
+void read_adc_one_tape()
 {
 	setbit(ADCSRA,ADSC); //start_reading
 	while(bitclear(ADCSRA, ADIF));
@@ -363,56 +369,54 @@ void read_adc_ir()
 // 	//adc_interrupt = 0;
 // }
 
-void decode_tape()
-{
-	if (tape_sensor_data[] > REFLEX_SENSITIVITY && )
-	{
-	}
-}
 
-void decode_tape_sensor_data()
+void decode_tape()
 {
 	static uint8_t tape_count=0;
 	static uint8_t no_tape_count = 0;
 	static uint8_t is_over_tape = 0;
 	static uint8_t is_in_tape_segment = 0;
+	static uint8_t first_tape_count = 0;
+	static uint8_t second_tape_count = 0;
 	static char first_tape;
 	static char second_tape;
 	
-	if (sensor_buffer[REFLEX1]>REFLEX_SENSITIVITY) //Tejpbitsstart hittad
+	if (tape_sensor > REFLEX_SENSITIVITY) //Tejpbitsstart hittad
 	{
+		//cli(); //Stänger av globala avbrott
 		is_over_tape = 1;
 		no_tape_count = 0;
 		tape_count++;
-		//send_string("tejp");
-		//update();
 	}
 	
-	else if (is_over_tape && sensor_buffer[REFLEX1]<REFLEX_SENSITIVITY) //Tejpbit avslutad
+	else if (is_over_tape && tape_sensor < REFLEX_SENSITIVITY) //Tejpbit avslutad
 	{
 		is_over_tape = 0;
 		if(is_in_tape_segment) //Andra tejpbiten avslutad
 		{
 			is_in_tape_segment = 0;
-			second_tape = tape_count < 5 ? 's': 'l';
-			decode_tape_segment(first_tape, second_tape); //Kör tejpsegmentsavkodning
+			//second_tape = tape_count < 5 ? 's': 'l';
+			second_tape_count = tape_count;
+			decode_tape_segment(first_tape_count, second_tape_count); //Kör tejpsegmentsavkodning
 		}
 		else // Första tejpbit avslutad
 		{
 			is_in_tape_segment = 1;
-			first_tape = tape_count < 5 ? 's': 'l';
+			//first_tape = tape_count < 5 ? 's': 'l';
+			first_tape_count = tape_count;
 		}
 		tape_count=0;
 	}
 	
-	else if(sensor_buffer[REFLEX1]<REFLEX_SENSITIVITY) //Utanför tejp
+	else if(tape_sensor < REFLEX_SENSITIVITY) //Utanför tejp
 	{
-		//checka om den bara sett en tejpbit, alltså är den vid mål
-		if(first_tape == 's' && no_tape_count > 7 && is_in_tape_segment)
+		//checka om den bara sett en tejpbit, alltså är den vid mål. Kontrollerar aldrig om det är en kort eller lång tejpbit!
+		if(no_tape_count > 2 * first_tape_count && is_in_tape_segment)
 		{
-			decode_tape_segment(first_tape, 0);
+			is_in_tape_segment = 0;
+			decode_tape_segment(first_tape_count, 0);
 		}
-		is_in_tape_segment = no_tape_count++ > 7 ? 0 : is_in_tape_segment; //vilken jävla oneliner!
+		//is_in_tape_segment = no_tape_count++ > 7 ? 0 : is_in_tape_segment; //vilken jävla oneliner!
 		
 		
 		//overflowskydd
@@ -423,41 +427,36 @@ void decode_tape_sensor_data()
 	
 }
 
-void decode_tape_segment(char first, char second)
+void decode_tape_segment(uint8_t first, uint8_t second)
 {
+	uint8_t tape_ratio;
 	_delay_ms(250);
-	if(first == 's' && second == 'l')
+	if (second != 0)
 	{
-		//turn left
-		stop_motors();
-		_delay_ms(250);
-		make_turn('l');
+		tape_ratio = first*10/second;
 	}
-	else if (first == 'l' && second == 's')
+	else 	//Bara en tejp, vi är vid mål!
 	{
-		//turn right
-		stop_motors();
-		_delay_ms(250);
-		make_turn('r');
-	}
-	else if (first == 's' && second == 's')
-	{
-		//keep going
-		stop_motors();
-		_delay_ms(250);
-		make_turn('f');
-	}
-	//första var smal, andra fanns ej, vi är vid mål!
-	else if (first == 's' && !second)
-	{
-		follow_end_tape = 1;
+		tape_type = 'g';
+		return;
 	}
 	
-	else
+	if(1 < tape_ratio < 7 ) //(first == 's' && second == 'l')
 	{
-		
-		//ERROR nu, kanske hantering av målgång här senare ?
+		//turn left
+		tape_type = 'l';
 	}
+	else if (7 <= tape_ratio < 15) //(first == 'l' && second == 's')
+	{
+		//turn right
+		tape_type = 'r';
+	}
+	else if (15 <= tape_ratio) //(first == 's' && second == 's')
+	{
+		//keep going
+		tape_type = 'f';
+	}
+
 
 }
 /*=======================================TIMERS==================================*/
@@ -494,7 +493,7 @@ void init_sensor_timer()
 // Sensor timer! (25 Hz) 
 ISR(TIMER1_OVF_vect)
  {
-	 read_and_send_ir();
+	 read_and_send_ir_to_master = 1;
  }
 
 //Gyro timer! (XX Hz)

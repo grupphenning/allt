@@ -25,6 +25,8 @@
 #define TAPE_SENSOR PINA1
 #define IR_SENSOR PINA0
 
+#define REFLEX_SENSITIVITY 0x70
+
 void read_adc();
 void read_ir(uint8_t sensor_no);
 uint8_t read_gyro();
