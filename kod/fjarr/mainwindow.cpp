@@ -39,7 +39,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     // Serieport
     PortSettings settings = {BAUD115200, DATA_8, PAR_NONE, STOP_1, FLOW_OFF, 10};
-    port = new QextSerialPort("COM17", settings);
+    port = new QextSerialPort("COM12", settings);
     connect(port, SIGNAL(readyRead()), this, SLOT(onDataAvailable()));
     port->open(QIODevice::ReadWrite);
 
@@ -50,6 +50,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->bookmarks->addItem("Avstånd (default)", bookmarks.at(0));
     ui->bookmarks->addItem("Tejp", bookmarks.at(1));
 
+    debug_message = sensor_data = 0;
     /* Ladda bokmärken från QSettings! */
 }
 
@@ -75,38 +76,47 @@ void MainWindow::on_pid()
     port->flush();
 }
 
+void MainWindow::decode_comm(unsigned char b)
+{
+    if(debug_message) {
+        if(b) {
+            char str[2];
+            str[0] = b;
+            str[1] = '\0';
+            ui->debugOutput->insertPlainText(QString(str));
+        }
+        else {
+            QScrollBar *bar = ui->debugOutput->verticalScrollBar();
+            bar->setValue(bar->maximum());
+            debug_message = 0;
+        }
+    }
+    else if(sensor_data == 1) {
+        sensor_bytes_left = b;
+        sensor_buffer_p = 0;
+        sensor_data = 2;
+    }
+    else if(sensor_data == 2) {
+        sensor_buffer[sensor_buffer_p++] = b;
+        if(!--sensor_bytes_left) {
+            ui->label_2->setText(QString("%1 cm").arg((int)sensor_buffer[1]));
+            ui->label_4->setText(QString("%1 cm").arg((int)sensor_buffer[2]));
+            sensor_data = 0;
+        }
+    }
+    else {
+        if(b == 'd') debug_message = 1;
+        else if(b == 's') sensor_data = 1;
+    }
+}
 
 void MainWindow::onDataAvailable()
 {
-    char type;
-    port->read(&type, 1);
-    if(type == 's') {
-        unsigned char sensor_buffer[32];
-        unsigned char c;
-        unsigned i;
-        port->read((char *)&c, 1);
-        for(i = 0; i < c; ++i) {
-            port->read((char *)&sensor_buffer[i], 1);
-        }
-        ui->label_2->setText(QString("%1 cm").arg((int)sensor_buffer[1]));
-        ui->label_4->setText(QString("%1 cm").arg((int)sensor_buffer[2]));
+    int i;
+    QByteArray a = port->readAll();
+    for(i = 0; i < a.size(); ++i) {
+        decode_comm(a[i]);
     }
-    else if(type == 'd') {
-        char c[2];
-        c[1] = '\0';
-        while(1) {
-            port->read(&c[0], 1);
-            if(!c[0]) break;
-            ui->debugOutput->insertPlainText(QString(c));
-            QScrollBar *bar = ui->debugOutput->verticalScrollBar();
-            bar->setValue(bar->maximum());
-        }
-    }
-    else{
-        std::cout<<"error"<<std::endl;
-        std::cout<<(int)type<<std::endl;
-    }
-
 }
 
 MainWindow::~MainWindow()

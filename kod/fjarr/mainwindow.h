@@ -109,6 +109,10 @@ private:
     PIDDialog pid;
     QByteArray printfString;   // Ingen riktig printf-sträng, Davids special!
     void on_pid();
+    unsigned debug_message, sensor_data;
+    unsigned char sensor_buffer[256], sensor_buffer_p;
+    unsigned sensor_bytes_left;
+    void decode_comm(unsigned char b);
 
 private slots:
     void on_pushButton_2_clicked();
