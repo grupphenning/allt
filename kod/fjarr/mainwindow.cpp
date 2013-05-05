@@ -39,11 +39,10 @@ MainWindow::MainWindow(QWidget *parent) :
 
     // Serieport
     PortSettings settings = {BAUD115200, DATA_8, PAR_NONE, STOP_1, FLOW_OFF, 10};
-    port = new QextSerialPort("COM12", settings);
+    port = new QextSerialPort("COM17", settings);
     connect(port, SIGNAL(readyRead()), this, SLOT(onDataAvailable()));
     port->open(QIODevice::ReadWrite);
 
-    connect(&pid, SIGNAL(accepted()), this, SLOT(on_pid()));
     ui->labelWarning->setVisible(false);
 
     bookmarks.append("V:%x\001,%x\002 F:%x\003    H:%x\004,%x\005");
@@ -79,30 +78,35 @@ void MainWindow::on_pid()
 
 void MainWindow::onDataAvailable()
 {
-#if 0
-    static unsigned char old;
-    unsigned char ch;
-    ch = port->read(1).constData()[0];
-    std::cout << ch;
-    if(old == 'Z') {
-        if(ch == '0') {
-            std::cout << ":)" << std::endl;
+    char type;
+    port->read(&type, 1);
+    if(type == 's') {
+        unsigned char sensor_buffer[32];
+        unsigned char c;
+        unsigned i;
+        port->read((char *)&c, 1);
+        for(i = 0; i < c; ++i) {
+            port->read((char *)&sensor_buffer[i], 1);
         }
-        else {
-            std::cout << ":(" << std::endl;
+        ui->label_2->setText(QString("%1 cm").arg((int)sensor_buffer[1]));
+        ui->label_4->setText(QString("%1 cm").arg((int)sensor_buffer[2]));
+    }
+    else if(type == 'd') {
+        char c[2];
+        c[1] = '\0';
+        while(1) {
+            port->read(&c[0], 1);
+            if(!c[0]) break;
+            ui->debugOutput->insertPlainText(QString(c));
+            QScrollBar *bar = ui->debugOutput->verticalScrollBar();
+            bar->setValue(bar->maximum());
         }
     }
-    old = ch;
-    if(ch == 'Z') std::cout.flush();
-#else
-    ui->debugOutput->insertPlainText(port->readAll());
-    QScrollBar *bar = ui->debugOutput->verticalScrollBar();
-    bar->setValue(bar->maximum());
-//    qDebug() << port->readAll().constData();
-//    std::cout << port->readAll().constData();
-//    std::cout.flush();
-//    printf("%s", port->readAll().constData());
-#endif
+    else{
+        std::cout<<"error"<<std::endl;
+        std::cout<<(int)type<<std::endl;
+    }
+
 }
 
 MainWindow::~MainWindow()
@@ -296,7 +300,6 @@ void MainWindow::on_pushButtonClearDisplay_clicked()
 void KeyPressEater::on_pushButtonLeft90_clicked(){}
 void MainWindow::on_pushButtonLeft90_clicked()
 {
-std::cout.flush();
     port->write("w");
     port->flush();
 }
@@ -425,9 +428,6 @@ void MainWindow::on_pushButton_13_clicked()
             array.append(printfString.at(i));
         }
     }
-    for(int i = 0; i < array.length(); i++)
-        std::cout << array.at(i);
-    std::cout.flush();
     array.append('z');
     array.append('\0');
     port->write(array);

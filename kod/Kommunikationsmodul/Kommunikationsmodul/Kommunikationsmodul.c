@@ -14,8 +14,6 @@
 #include "../../Styrmodul/Styrmodul/Styrmodul/komm_styr_protokoll.h"
 #include <avr/interrupt.h>
 
-#define BUF_SZ 256
-
 volatile uint8_t data_from_styr;
 
 
@@ -39,6 +37,7 @@ int main(void)
 
     while(1)
     {
+
 		static uint8_t spi_state = 0; // 0 väntar, 1 skriver
 		static uint8_t usart_state = 0; // 0 väntar, 1 skriver
 		uint8_t spir, has_spir = 0, usartr, has_usartr = 0;
@@ -58,7 +57,15 @@ int main(void)
 			}				
 		}
 		else if(spi_state == 1) {
-			if(SPSR & (1 << SPIF)) spi_state = 0;
+			if(SPSR & (1 << SPIF)) {
+				uint8_t c;
+				spi_state = 0;
+				c = SPDR;
+				if(c != 0) {
+					has_spir = 1;
+					spir = c;
+				}
+			}				
 		}
 
 		// Processa USART
@@ -86,23 +93,10 @@ int main(void)
 		// och i spir om has_spir == 1
 		
 		if(has_usartr) {
-			send_usart(usartr);
-			send_usart('\n');
-/*			
-if(usartr == '1')
-{
-send_usart_string("a0123456781234568123456778123215\n");
-send_usart_string("b0123456781234568123456778123215\n");
-send_usart_string("c0123456781234568123456778123215\n");
-send_usart_string("d0123456781234568123456778123215\n");
-send_usart_string("e0123456781234568123456778123215\n");
-send_usart_string("f0123456781234568123456778123215\n");
-}
-*/
 			decode_remote(usartr);
 		}
 		if(has_spir) {
-		//	send_usart(spir);
+			send_usart(spir);
 		}
 		
 //		data = USART_Receive();
@@ -144,33 +138,6 @@ void serial_send_byte(uint8_t val)
 	UDR = val;
 }
 
-void USART_Transmit(unsigned char data)
-{
-	// Wait until firefly is ready to receive
-	while(PORTC & (1<<PINC1));
-	
-	//Put data into buffer, sends the data
-	UDR = data;
-	
-	//Wait for empty transmit buffer
-	while(!(UCSRA & (1<<UDRE)));
-}
-
-uint8_t USART_Receive(void)
-{
-	// Ready to receive
-	clearbit(PORTC, PINC0);
-	
-	//Wait for data to be received
-	while(!(UCSRA & (1<<RXC)));
-	
-	// Not ready to receive anymore
-	setbit(PORTC, PINC0);
-
-	//Get and return received data from buffer
-	return UDR;
-}
-
 void USART_init()
 {
 	OSCCAL = 0x70;		// Sänk klockhastigheten (0x7f betyder standard, dvs 8MHz).
@@ -181,12 +148,6 @@ void USART_init()
 	UCSRC = (1<<URSEL)|(1<<USBS)|(3<<UCSZ0);
 	UCSRB = (1<<TXEN)|(1<<RXEN);
 }
-
-ISR(SPI_STC_vect)
-{
-	data_from_styr = SPDR;
-}	
-
 
 void decode_remote(uint8_t ch)
 {
@@ -250,10 +211,4 @@ void decode_remote(uint8_t ch)
 			case '#': speed_all = 1; break;
 		}			
 	}
-}
-
-void send_to_master(uint8_t byte)
-{
-	SPDR = byte;
-	PORTA ^= (1 << PORTA7);
 }

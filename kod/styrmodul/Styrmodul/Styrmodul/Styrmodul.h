@@ -51,7 +51,8 @@
 //#define SPEED 200
 extern uint8_t SPEED;
 
-#define SENSOR_BUFFER_SIZE 256
+// Om du ändrar den här måste du ändra i fjärr också
+#define SENSOR_BUFFER_SIZE 32
 
 //KORNINGSLÄNGDDATA
 #define IR_FRONT_TO_MIDDLE_LENGTH		11

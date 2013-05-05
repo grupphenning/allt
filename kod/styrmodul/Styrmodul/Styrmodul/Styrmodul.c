@@ -17,22 +17,37 @@ uint8_t SPEED = 255;
 //#define INTERPOLATION_POINTS 12
 uint8_t test;
 
-#define BUF_SZ 256
-
 uint8_t autonomous;
 uint8_t is_returning_home;
 char crossing_buffer[256];
 uint8_t crossing_buffer_p;
 
-// Buffrar för interrupt-koden
+// Buffrar som sparar data vi får från de andra SPI-enheterna
 
-volatile uint8_t spi_data_from_comm[BUF_SZ];
-uint8_t spi_comm_read;
-volatile uint16_t spi_comm_write;
+volatile uint8_t spi_data_from_comm[256];
+volatile uint8_t spi_comm_read;
+volatile uint8_t spi_comm_write;
 
-volatile uint8_t spi_data_from_sensor[BUF_SZ];
-uint8_t spi_sensor_read;
-volatile uint16_t spi_sensor_write;
+volatile uint8_t spi_data_from_sensor[256];
+volatile uint8_t spi_sensor_read;
+volatile uint8_t spi_sensor_write;
+
+// Buffrar som sparar den data vi ska skriva till de andra SPI-enheterna
+
+volatile uint8_t spi_to_comm[256];
+volatile uint8_t spi_to_comm_read;
+volatile uint8_t spi_to_comm_write;
+
+volatile uint8_t spi_to_sensor[256];
+volatile uint8_t spi_to_sensor_read;
+volatile uint8_t spi_to_sensor_write;
+
+volatile uint8_t sensor_interrupt, comm_interrupt;
+
+enum { SPI_NONE, SPI_FROM_COMM, SPI_FROM_SENSOR, SPI_TO_COMM, SPI_TO_SENSOR };
+volatile uint8_t transmit_source = SPI_NONE;
+
+// Slut på SPI-buffrar
 
 volatile uint8_t ninety_timer, turn, pid_timer;
 uint8_t left = 1;
@@ -122,7 +137,33 @@ int main(void)
 	
 	while(1)
 	{
+		/* SPI */
 		
+		if(transmit_source == SPI_NONE) {
+			if(sensor_interrupt) {
+				sensor_interrupt = 0;
+				transmit_source = SPI_FROM_SENSOR;
+				clearbit(PORTB, PORTB2);
+				SPDR = 0;
+			}
+			else if(comm_interrupt) {
+				comm_interrupt = 0;
+				transmit_source = SPI_FROM_COMM;
+				clearbit(PORTB, PORTB3);
+				SPDR = 0;
+			}
+			else if(spi_to_sensor_read != spi_to_sensor_write) {
+				transmit_source = SPI_TO_SENSOR;
+				clearbit(PORTB, PORTB2);
+				SPDR = spi_to_sensor[spi_to_sensor_read++];
+			}
+			else if(spi_to_comm_read != spi_to_comm_write) {
+				transmit_source = SPI_TO_COMM;
+				clearbit(PORTB, PORTB3);
+				SPDR = spi_to_comm[spi_to_comm_read++];
+			}
+		} /* Slut på SPI */
+
 // 		if(turn)
 // 			tank_turn_left(SPEED);
 // 		else
@@ -148,7 +189,6 @@ int main(void)
 		{
 			decode_comm(spi_data_from_comm[spi_comm_read]);
 			++spi_comm_read;
-			spi_comm_read %= BUF_SZ;
 		}
 	
 		if(spi_sensor_write != spi_sensor_read)
@@ -157,7 +197,6 @@ int main(void)
 			
 			decode_sensor(spi_data_from_sensor[spi_sensor_read]);
 			++spi_sensor_read;
-			spi_sensor_read %= BUF_SZ;
 		}
 		
 		if (regulator_enable && regulator_flag)
@@ -172,14 +211,49 @@ int main(void)
 	}
 }
 
-/*
- * Skickar en sträng till fjärrenheten (via komm) som dumpar den på skärmen
- */
-void send_string_remote(char *str)
+/* SPI */
+
+ISR(INT1_vect) { comm_interrupt = 1; }
+ISR(INT0_vect) { sensor_interrupt = 1; }
+
+ISR(SPI_STC_vect)
 {
-	while(*str)
-		send_byte_to_comm(*str++);
+	if(transmit_source == SPI_TO_COMM) {
+		setbit(PORTB, PORTB3);
+	}
+	else if(transmit_source == SPI_TO_SENSOR) {
+		setbit(PORTB, PORTB2);
+	}		
+	else if(transmit_source == SPI_FROM_COMM) {
+		spi_data_from_comm[spi_comm_write++] = SPDR;
+		setbit(PORTB, PORTB3);
+	}
+	else if(transmit_source == SPI_FROM_SENSOR) {
+		spi_data_from_sensor[spi_sensor_write++] = SPDR;
+		setbit(PORTB, PORTB2);
+	}
+	transmit_source = SPI_NONE;
 }
+void send_byte_to_sensor(uint8_t byte) { spi_to_sensor[spi_to_sensor_write++] = byte; }
+void send_byte_to_comm(uint8_t byte) { spi_to_comm[spi_to_comm_write++] = byte; }
+
+// Skickar en sträng till fjärrenheten (via komm) som dumpar den på skärmen
+void debug(char *str)
+{
+	send_byte_to_comm('d');
+	while(*str) send_byte_to_comm(*str++);
+	send_byte_to_comm('\n');
+	send_byte_to_comm(0);
+}
+void send_sensor_buffer_to_remote(void)
+{
+	unsigned i;
+	send_byte_to_comm('s');
+	send_byte_to_comm(SENSOR_BUFFER_SIZE);
+	for(i = 0; i < SENSOR_BUFFER_SIZE; ++i) send_byte_to_comm(sensor_buffer[i]);
+}
+
+/* Slut på SPI */
 
 uint8_t * reflex_sensors_currently_seeing_tape(uint8_t * values)
 {
@@ -546,7 +620,7 @@ void spi_init()
 	
 	//Sätt SPCR-registret, inställningar om master/slave, spi enable, data order, klockdelning
 	SPCR = 0;
-	//setbit(SPCR, SPIE);
+	setbit(SPCR, SPIE);
 	setbit(SPCR, SPE);
 	setbit(SPCR, MSTR);
 	//setbit(SPCR, SPR0);
@@ -564,34 +638,6 @@ void spi_init()
 	sensor_start = 1;				// Flagga som avgör huruvida vi är i början av meddelande
 	sensor_packet_length = 0x00;			// Anger aktuell längd av meddelandet
 
-}
-
-void send_byte_to_sensor(uint8_t byte)
-{
-	clearbit(PORTB, PORTB2); //Välj Komm-enheten måste ändras till allmän slav!
-	SPDR = byte;
-	
-	//SPDR = 0xaa;
-	/* Wait for transmission complete */
-	while(!(SPSR & (1 << SPIF)));
-	setbit(PORTB, PORTB2); //Sätt slave till sleepmode
-	//test = SPDR;
-	
-	//PORTD = test;
-}
-
-void send_byte_to_comm(uint8_t byte)
-{
-	clearbit(PORTB, PORTB3); //Välj Komm-enheten måste ändras till allmän slav!
-	SPDR = byte;
-	
-	//SPDR = 0xaa;
-	/* Wait for transmission complete */
-	while(!(SPSR & (1 << SPIF)));
-	setbit(PORTB, PORTB3); //Sätt slave till sleepmode
-	//test = SPDR;
-	
-	//PORTD = test;
 }
 
 uint8_t dirbits;
@@ -718,28 +764,6 @@ void claw_in()
 ..................................................|         \ |__________________|  |                  |  |                  |........................
 */
 
-
-// Kommunikationsenheten skickar en avbrottsförfrågan
-ISR(INT1_vect)
-{
-	clearbit(PORTB, PORTB3);	//Väljer komm
-	SPDR = 0;		//Lägger in meddelande i SPDR, startar överföringen
-	while(!(SPSR & (1 << SPIF)));
-	spi_data_from_comm[spi_comm_write] = SPDR;
-	spi_comm_write = (spi_comm_write + 1) % BUF_SZ;
-	setbit(PORTB, PORTB3);		//Sätter komm till sleepmode
-}
-
-// Sensorenheten skickar en avbrottsförfrågan
-ISR(INT0_vect)
-{
-	clearbit(PORTB, PORTB2);	//Väljer sensor
-	SPDR = 0;		//Lägger in meddelande i SPDR, startar överföringen
-	while(!(SPSR & (1 << SPIF)));
-	spi_data_from_sensor[spi_sensor_write] = SPDR;
-	spi_sensor_write = (spi_sensor_write + 1) % BUF_SZ;
-	setbit(PORTB, PORTB2);		//Sätter sensor till sleepmode
-}
 
 //kör i 50 Hz! Ändra ej frekvensen, då denna även
 //används till gripklon, som måste köras i 50 Hz!
@@ -946,6 +970,8 @@ is_returning_home = 1;
 		}
 	else if(command == COMM_TURN_90_DEGREES_LEFT)
 	{
+debug("a0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+"\nb0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ");
 		send_string("PERPENDICULAR LEFT");
 		update();
 	}
@@ -1160,6 +1186,7 @@ void decode_sensor(uint8_t data)
 	{
 		a=0;
 		update_display_string();
+		//send_sensor_buffer_to_remote();
 	}
 }
 
