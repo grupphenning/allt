@@ -13,6 +13,7 @@
 #define GYRO_SENSOR		0x04
 #define SENSOR_IR		0x05
 #define SENSOR_TAPE		0x06
+#define SENSOR_FOLLOW_TAPE 0x07
 
 #define TURN_RIGHT		0x10
 #define TURN_LEFT		0x11	

@@ -357,7 +357,7 @@ void regulate_end_tape_3()
 	for (i = 0; i < 9; i++)
 	{
 		pos_index = i-4;
-		if(sensor_buffer[i+REFLEX2] > REFLEX_SENSITIVITY)
+		if(sensor_buffer[i] > REFLEX_SENSITIVITY)
 		{
 			reflex[i] = 1;
 			res += pos_index;
@@ -378,6 +378,7 @@ void regulate_end_tape_3()
 		/*
 		OBS!!! 
 		HÄR SKALL KLO STÄNGAS OCH 180-GRADERSSVÄNGEN INITIERAS!!!
+		Kommer den att ha åkt för långt då?
 		*/
 		
 		is_returning_home = 1;	// OBS! SKALL GÖRAS EFTER ATT 180-GRADERSSVÄNGEN UTFÖRTS!!!	
@@ -419,6 +420,30 @@ void regulate_end_tape_3()
 		drive_forwards(SPEED);
 	}
 
+}
+
+void regulate_end_tape_4()
+{
+	int8_t pos = sensor_buffer[0]; //-5 för längst till vänster, 5 för höger, 0 i mitten!
+	
+	if(pos > 0)
+	{
+		RIGHT_AMOUNT = SPEED + 30 + pos*5;
+		LEFT_AMOUNT = SPEED;
+		setbit(PORT_DIR, LEFT_DIR);
+		setbit(PORT_DIR, RIGHT_DIR);
+	}
+	
+	else if(pos < 0){
+		LEFT_AMOUNT = SPEED + 30 + abs(pos)*5;
+		RIGHT_AMOUNT = SPEED;
+		setbit(PORT_DIR, LEFT_DIR);
+		setbit(PORT_DIR, RIGHT_DIR);
+	}
+	
+	else if(pos == 0){ // == 0
+		drive_forwards(SPEED);
+	}
 }
 
 
@@ -1008,93 +1033,6 @@ void decode_sensor(uint8_t data)
 			stop_motors();
 			break;	
 		case SENSOR_IR:
-					//Omvandla sensorvärden från spänningar till centimeter.
-			sensor_buffer[IR_FRONT] = interpret_big_ir(sensor_buffer[IR_FRONT]);
-			sensor_buffer[IR_LEFT_FRONT] = interpret_big_ir(sensor_buffer[IR_LEFT_FRONT])+left_front;
-			sensor_buffer[IR_RIGHT_FRONT] = interpret_big_ir(sensor_buffer[IR_RIGHT_FRONT])+right_front;
-			sensor_buffer[IR_LEFT_BACK] = interpret_small_ir(sensor_buffer[IR_LEFT_BACK])+left_back;
-			sensor_buffer[IR_RIGHT_BACK] = interpret_small_ir(sensor_buffer[IR_RIGHT_BACK])+right_front;
-			
-			if(calibrate_sensors)
-			{
-				int8_t left_diff = sensor_buffer[IR_LEFT_FRONT]-sensor_buffer[IR_LEFT_BACK];
-				int8_t right_diff = sensor_buffer[IR_RIGHT_FRONT]-sensor_buffer[IR_RIGHT_BACK];
-				//Left
-				if(left_diff>0)
-				{
-					left_back = left_diff;
-				}
-				else if(left_diff<0)
-				{
-					left_front = abs(left_diff);
-				}
-				//Right
-				if(right_diff>0)
-				{
-					right_back = right_diff;
-				}
-				else if(right_diff<0)
-				{
-					right_front = abs(right_diff);
-				}
-				
-				calibrate_sensors = 0;			
-			}
-			
-			
-			//Wait a few times before using data
-			if(sensor_transmission_number<4)
-			{
-				sensor_transmission_number++;
-				return;
-			}
-
-
-			// Om vi ska köra hemåt
-			if(is_returning_home)
-			{
-				static uint8_t turn_first = 1;
-				char c;
-				// Analysera sensordata för att ta reda på när vi hittat en korsning.
-				if (!has_detected_crossing && !make_turn_flag && !drive_from_crossing &&
-				(sensor_buffer[IR_LEFT_FRONT] >= SEGMENT_LENGTH || sensor_buffer[IR_RIGHT_FRONT] >= SEGMENT_LENGTH))
-				{
-					analyze_ir_sensors();
-				}
-				// Korsning funnen
-				if(has_detected_crossing)
-				{
-					drive_to_crossing_end(crossing_stop_value);
-				}
-				if(make_turn_flag && turn_first) 
-				{
-					// Sväng i motsatt riktning gentemot buffern, samt räkna ner bufferpekaren
-					c = crossing_buffer[--crossing_buffer_p];
-					c =
-						c == 'l' ? 'r'
-						: c == 'r' ? 'l'
-						: c;
-					turn_first = 0;
-				}					
-				if(make_turn_flag)
-				{
-					// Kolla om svängen är klar
-					make_turn(c);
-					if(make_turn_flag == 0 && crossing_buffer_p == 0)
-					{
-						// TODO kör ut sista sträckan från labyrinten
-						is_returning_home = 0;
-						stop_motors();
-					}
-				}
-				if(!make_turn_flag) turn_first = 1;
-			}
-			break;
-		case SENSOR_TAPE:
-			make_turning_decision();
-			break;
-		case SENSOR:
-		
 			//Omvandla sensorvärden från spänningar till centimeter.
 			sensor_buffer[IR_FRONT] = interpret_big_ir(sensor_buffer[IR_FRONT]);
 			sensor_buffer[IR_LEFT_FRONT] = interpret_big_ir(sensor_buffer[IR_LEFT_FRONT])+left_front;
@@ -1125,7 +1063,7 @@ void decode_sensor(uint8_t data)
 					right_front = abs(right_diff);
 				}
 				
-				calibrate_sensors = 0;			
+				calibrate_sensors = 0;
 			}
 			
 			
@@ -1153,16 +1091,16 @@ void decode_sensor(uint8_t data)
 				{
 					drive_to_crossing_end(crossing_stop_value);
 				}
-				if(make_turn_flag && turn_first) 
+				if(make_turn_flag && turn_first)
 				{
 					// Sväng i motsatt riktning gentemot buffern, samt räkna ner bufferpekaren
 					c = crossing_buffer[--crossing_buffer_p];
 					c =
-						c == 'l' ? 'r'
-						: c == 'r' ? 'l'
-						: c;
+					c == 'l' ? 'r'
+					: c == 'r' ? 'l'
+					: c;
 					turn_first = 0;
-				}					
+				}
 				if(make_turn_flag)
 				{
 					// Kolla om svängen är klar
@@ -1176,26 +1114,34 @@ void decode_sensor(uint8_t data)
 				}
 				if(!make_turn_flag) turn_first = 1;
 			}
-			else 
-			{	
-				if(tape_crossings)
-				{			
-					/*Hantera tejp-korsningar*/
-					//decode_tape_sensor_data();
-				}
+			else
+			{
+// 				if(tape_crossings)
+// 				{
+// 					/*Hantera tejp-korsningar*/
+// 					//decode_tape_sensor_data();
+// 				}
 				if(crossings)
 				{
 					/*Hantera korsningar*/
 					handle_crossing();
-				}				
+				}
 
-  				if (follow_end_tape)
-  				{
-  					//regulate_end_tape_3();
-  				}
+// 				if (follow_end_tape)
+// 				{
+// 					//regulate_end_tape_3();
+// 				}
 			}
 
 			break;
+		case SENSOR_TAPE:
+			make_turning_decision();
+			break;
+		case SENSOR_FOLLOW_TAPE:
+			regulate_end_tape_4();
+			break;
+		
+		
 		default:
 				// Unimplemented command
 			break;

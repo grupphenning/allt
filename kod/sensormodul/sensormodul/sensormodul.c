@@ -18,14 +18,16 @@ uint8_t spi_data_from_master;
 uint8_t spi_data_to_master;
 uint8_t tape_sensor;
 char tape_type;
-volatile uint8_t tape_sensor_data[9+2];
-volatile uint8_t ir_sensor_data[5+2];
-volatile uint8_t decoded_tape_data[1+2];
-volatile uint8_t test_data[18];
+volatile uint8_t tape_sensor_data[9];
+volatile uint8_t ir_sensor_data[5+1];
+volatile uint8_t decoded_tape_data[1+1];
+volatile uint8_t tape_position[1+1];
+volatile uint8_t test_data[16+1];
 volatile uint8_t data_index=1;
 volatile uint8_t adc_interrupt = 0;
 volatile uint8_t has_data_from_spi = 0;
 volatile uint8_t read_and_send_ir_to_master = 0;
+volatile uint8_t follow_end_tape = 0;
 
 
 int main(void)
@@ -52,6 +54,15 @@ int main(void)
 			read_and_send_ir_to_master = 0;
 			read_and_send_ir();
 		}
+		if (follow_end_tape)
+		{
+			data_index = 0;
+			for (uint8_t i = 1; i < 10; i++)
+			{
+				read_tape(i);
+			}
+			regulate_end_tape();
+		}
 		if(has_data_from_spi)
 		{
 // 			switch(spi_data_to_master)
@@ -67,8 +78,8 @@ int main(void)
 // 			}
 			has_data_from_spi = 0;
 		}
-		read_one_tape();
-		decode_tape();
+		read_one_tape(); //AD-omvandlar andra tejpsensorn
+		decode_tape(); //
 		send_decoded_tape();
 	}
 }
@@ -205,7 +216,7 @@ void read_and_send_ir()
 	{
 		read_ir(i);
 	}
-	send_to_master(5, ir_sensor_data);
+	send_to_master(6, ir_sensor_data);
 }
 
 void send_decoded_tape()
@@ -213,8 +224,7 @@ void send_decoded_tape()
 	data_index = 1;
 	decoded_tape_data[0] = SENSOR_TAPE;
 	decoded_tape_data[1] = tape_type;
-	send_to_master(1, decoded_tape_data);
-	sei();
+	send_to_master(2, decoded_tape_data);
 }		
 
 /* 
@@ -225,12 +235,12 @@ void read_and_send_tape()
 	data_index = 1;
 	tape_sensor_data[0] = SENSOR;
 	uint8_t i;
-	for(i = 0; i < 11; i++)
+	for(i = 1; i < 9; i++)
 	{
 		read_tape(i);
 	}
 	
-	send_to_master(11, tape_sensor_data);
+	send_to_master(9, tape_sensor_data);
 }
 
 /*
@@ -338,7 +348,7 @@ void read_one_tape()
 void read_adc_tape()
 {
 	setbit(ADCSRA,ADSC); //start_reading
-	//while(!adc_interrupt); //Wait for interupt to occur
+	//while(!adc_interrupt); //Wait for interrupt to occur
 	while(bitclear(ADCSRA, ADIF));
 	tape_sensor_data[data_index++] = ADCH;
 	//adc_interrupt = 0;
@@ -414,7 +424,8 @@ void decode_tape()
 		if(no_tape_count > 2 * first_tape_count && is_in_tape_segment)
 		{
 			is_in_tape_segment = 0;
-			decode_tape_segment(first_tape_count, 0);
+			decode_tape_segment(first_tape_count, 0); // Skickas vid början av linjeföljningen!
+			follow_end_tape = 1;
 		}
 		//is_in_tape_segment = no_tape_count++ > 7 ? 0 : is_in_tape_segment; //vilken jävla oneliner!
 		
@@ -441,12 +452,12 @@ void decode_tape_segment(uint8_t first, uint8_t second)
 		return;
 	}
 	
-	if(1 < tape_ratio < 7 ) //(first == 's' && second == 'l')
+	if(1 < tape_ratio && tape_ratio < 7 ) //(first == 's' && second == 'l')
 	{
 		//turn left
 		tape_type = 'l';
 	}
-	else if (7 <= tape_ratio < 15) //(first == 'l' && second == 's')
+	else if (7 <= tape_ratio && tape_ratio < 15) //(first == 'l' && second == 's')
 	{
 		//turn right
 		tape_type = 'r';
@@ -456,9 +467,48 @@ void decode_tape_segment(uint8_t first, uint8_t second)
 		//keep going
 		tape_type = 'f';
 	}
-
-
 }
+
+void regulate_end_tape()
+{
+	int8_t pos_index; //-5 för längst till vänster, 5 för höger, 0 i mitten!
+	uint8_t i, n_of_reflexes_on = 0;
+	int8_t res=0;
+	int8_t old_pos=0, pos=0;
+	uint8_t reflex[9];
+	
+	for (i = 0; i < 9; i++)
+	{
+		pos_index = i-4;
+		if(tape_sensor_data[i] > REFLEX_SENSITIVITY)
+		{
+			reflex[i] = 1;
+			res += pos_index;
+			n_of_reflexes_on += 1;
+		}
+		else
+			reflex[i] = 0;
+	}
+	
+	//div med 0
+	if(n_of_reflexes_on != 0)
+	{
+		pos = res*2/n_of_reflexes_on;	//ojojoj
+		tape_position[0] = SENSOR_FOLLOW_TAPE;
+		tape_position[1] = pos;
+		//Skicka positionen till master
+		send_to_master(2, tape_position);
+	}		
+	//utanför tejp, stopp!
+	else 
+	{
+		//Skickar att det är slut på linjeföljning till mastern
+		tape_position[0] = SENSOR_FOLLOW_TAPE;
+		tape_position[1] = 'e';
+		send_to_master(2, );
+	}		
+}
+
 /*=======================================TIMERS==================================*/
 
 /*
@@ -605,7 +655,7 @@ void send_stop_turn_message()
  * Byte:
  *	1				längd av datapaket (max 255)
  *  2				Kommando
- *  3 -	(len-2)		eventuella argument
+ *  3 -	(len-1)		eventuella argument
  */
 void send_to_master(uint8_t len, uint8_t *data)
 {
