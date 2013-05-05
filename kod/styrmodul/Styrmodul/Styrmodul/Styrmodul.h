@@ -52,7 +52,7 @@
 extern uint8_t SPEED;
 
 // Om du ändrar den här måste du ändra i fjärr också
-#define SENSOR_BUFFER_SIZE 32
+#define SENSOR_BUFFER_SIZE 256
 
 //KORNINGSLÄNGDDATA
 #define IR_FRONT_TO_MIDDLE_LENGTH		11
@@ -71,8 +71,6 @@ void regulate_end_tape_2(uint8_t* values);
 void regulate_end_tape_3();
 uint8_t * reflex_sensors_currently_seeing_tape(uint8_t * values);
 void init_default_printf_string();
-
-
 //Korsning
 void handle_crossing();
 void analyze_ir_sensors();

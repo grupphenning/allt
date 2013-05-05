@@ -3,6 +3,7 @@
  
  Regulatorn ska köras med intervall på ~40ms
  */ 
+void debug(char *str);
 #include "pid.h"
 #include "Styrmodul.h"
 
@@ -122,4 +123,24 @@ void regulator(int8_t diff_right, int8_t diff_left, int8_t diff_front, int8_t di
 		RIGHT_AMOUNT = SPEED;
 		LEFT_AMOUNT = SPEED;
 	}
+}
+
+void pid_timer_init()
+{
+	//sätt "Fast PWM mode", med OCRA (OCR0A?) som toppvärde!
+	setbit(TCCR0A, WGM00);
+	setbit(TCCR0A, WGM01);
+	setbit(TCCR0B, WGM02);
+	
+	//sätt klockskalning, fck = f/1024
+	setbit(TCCR0B, CS00);
+	setbit(TCCR0B, CS02);
+	
+	//aktivera interrupts, skickas på overflow
+	setbit(TIMSK0, TOIE0);
+	
+	//8 bit-register
+	//frekvensen blir då 8000000/(1024*255) = 30.63 Hz
+	//vilket är mingränsen!
+	OCR0A = 255;
 }

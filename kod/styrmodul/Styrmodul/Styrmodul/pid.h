@@ -14,6 +14,7 @@ void clear_pid();
 void enable_pid();
 void disable_pid();
 void regulator(int8_t diff_right, int8_t diff_left, int8_t diff_front, int8_t diff_back);
+void pid_timer_init();
 
 extern uint8_t regulator_flag;
 extern int16_t reg_out;
