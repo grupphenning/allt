@@ -6,7 +6,6 @@
 #include "komm_styr_protokoll.h"
 #include "sensor_styr_protokoll.h"
 
-
 #define LEFT_DIR PB1
 #define RIGHT_DIR PB0
 #define PORT_DIR PORTB
@@ -48,8 +47,8 @@
 
 #define REFLEX_SENSITIVITY 0x70
 
-//#define SPEED 200
-extern uint8_t SPEED;
+#define SPEED 50
+//extern uint8_t SPEED;
 
 #define SENSOR_BUFFER_SIZE 256
 

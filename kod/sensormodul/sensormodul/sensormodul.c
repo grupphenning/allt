@@ -18,6 +18,7 @@ uint8_t spi_data_from_master;
 uint8_t spi_data_to_master;
 uint8_t tape_sensor;
 char tape_type;
+
 volatile uint8_t tape_sensor_data[9];
 volatile uint8_t ir_sensor_data[5+1];
 volatile uint8_t decoded_tape_data[1+1];
@@ -27,7 +28,8 @@ volatile uint8_t data_index=1;
 volatile uint8_t adc_interrupt = 0;
 volatile uint8_t has_data_from_spi = 0;
 volatile uint8_t read_and_send_ir_to_master = 0;
-volatile uint8_t follow_end_tape = 0;
+volatile uint8_t follow_end_tape = 1;
+
 
 
 int main(void)
@@ -41,15 +43,14 @@ int main(void)
 	setbit(DDRC, PINC0);
 	init_spi();
 	init_adc();
-	init_gyro();
+	//init_gyro();
 	init_sensor_timer();
 	
-
-//	_delay_ms(500);	// Ja, vänta! Annars hamnar SPI-protokollet i osynk!
+	_delay_ms(500);	// Ja, vänta! Annars hamnar SPI-protokollet i osynk!
 	
     while(1)
     {
-		if (read_and_send_ir_to_master)
+		if (read_and_send_ir_to_master && !follow_end_tape)
 		{
 			read_and_send_ir_to_master = 0;
 			read_and_send_ir();
@@ -78,9 +79,13 @@ int main(void)
 // 			}
 			has_data_from_spi = 0;
 		}
-		read_one_tape(); //AD-omvandlar andra tejpsensorn
-		decode_tape(); //
-		send_decoded_tape();
+		if (!follow_end_tape)
+		{
+			read_one_tape(); //AD-omvandlar andra tejpsensorn
+			decode_tape(); //
+			send_decoded_tape();
+		}
+		
 	}
 }
 
@@ -90,7 +95,6 @@ void init_gyro_timer()
 {
 	
 }
-
 
 void read_all_sensors()
 =======
@@ -230,6 +234,7 @@ void send_decoded_tape()
 /* 
  * Läser bara av tejpsensorer, skicka rådata eller beräkna mittpunkt här?!
  */
+/*
 void read_and_send_tape()
 {
 	data_index = 1;
@@ -242,6 +247,7 @@ void read_and_send_tape()
 	
 	send_to_master(9, tape_sensor_data);
 }
+*/
 
 /*
  * Läs av gyrot.
@@ -503,10 +509,12 @@ void regulate_end_tape()
 	else 
 	{
 		//Skickar att det är slut på linjeföljning till mastern
-		tape_position[0] = SENSOR_FOLLOW_TAPE;
+		tape_position[0] = SENSOR_FOLLOW_TAPE_END;
 		tape_position[1] = 'e';
-		send_to_master(2, );
-	}		
+		_delay_ms(40);
+		send_to_master(2, tape_position);
+		follow_end_tape = 0;
+	}
 }
 
 /*=======================================TIMERS==================================*/
@@ -528,6 +536,9 @@ void init_sensor_timer()
 	
 	//25 hertz, ges av 8000000/(256*1250) = 25 Hz
 	ICR1 = 1250;
+	
+	//typ 100 Hz
+	//ICR1 = 312;
 	
 	//208 Hz
 	//ICR1 = 150;

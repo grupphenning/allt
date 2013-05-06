@@ -12,7 +12,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-uint8_t SPEED = 255;
+//uint8_t SPEED = 255;
+//#define SPEED 50
 
 //#define INTERPOLATION_POINTS 12
 uint8_t test;
@@ -114,8 +115,8 @@ int main(void)
 	init_pid(50, -50);
 	update_k_values(20, 0, 10);
 	
-	//_delay_ms(2000);
-	//drive_forwards(255);
+// 	_delay_ms(2000);
+// 	drive_forwards(255);
 	
 	while(1)
 	{
@@ -157,14 +158,14 @@ int main(void)
 			spi_sensor_read %= BUF_SZ;
 		}
 		
-		if (regulator_enable && regulator_flag)
-		{
-			regulator(sensor_buffer[IR_RIGHT_FRONT] - sensor_buffer[IR_RIGHT_BACK], 
-					  sensor_buffer[IR_LEFT_FRONT] - sensor_buffer[IR_LEFT_BACK], 
-					  sensor_buffer[IR_RIGHT_FRONT] - sensor_buffer[IR_LEFT_FRONT], 
-					  sensor_buffer[IR_RIGHT_BACK] - sensor_buffer[IR_LEFT_BACK]);
-			regulator_enable = 0;
-		}	
+// 		if (regulator_enable && regulator_flag)
+// 		{
+// 			regulator(sensor_buffer[IR_RIGHT_FRONT] - sensor_buffer[IR_RIGHT_BACK], 
+// 					  sensor_buffer[IR_LEFT_FRONT] - sensor_buffer[IR_LEFT_BACK], 
+// 					  sensor_buffer[IR_RIGHT_FRONT] - sensor_buffer[IR_LEFT_FRONT], 
+// 					  sensor_buffer[IR_RIGHT_BACK] - sensor_buffer[IR_LEFT_BACK]);
+// 			regulator_enable = 0;
+// 		}	
 		
 	}
 }
@@ -424,8 +425,15 @@ void regulate_end_tape_3()
 
 void regulate_end_tape_4()
 {
-	int8_t pos = sensor_buffer[0]; //-5 för längst till vänster, 5 för höger, 0 i mitten!
+	static uint8_t hihi = 0;
+	if(hihi++ > 100)
+	{
+		hihi = 0;
+		send_string("1");
+		update();
+	}
 	
+	int8_t pos = sensor_buffer[1]; //-5 för längst till vänster, 5 för höger, 0 i mitten!
 	if(pos > 0)
 	{
 		RIGHT_AMOUNT = SPEED + 30 + pos*5;
@@ -434,14 +442,16 @@ void regulate_end_tape_4()
 		setbit(PORT_DIR, RIGHT_DIR);
 	}
 	
-	else if(pos < 0){
+	else if(pos < 0)
+	{
 		LEFT_AMOUNT = SPEED + 30 + abs(pos)*5;
 		RIGHT_AMOUNT = SPEED;
 		setbit(PORT_DIR, LEFT_DIR);
 		setbit(PORT_DIR, RIGHT_DIR);
 	}
 	
-	else if(pos == 0){ // == 0
+	else //if(pos == 0)
+	{ // == 0
 		drive_forwards(SPEED);
 	}
 }
@@ -779,7 +789,8 @@ ISR(TIMER1_COMPA_vect)
 		//tank_turn_left(255);
 		ninety_timer=0;
 	}
-
+	
+	/*
 	// Refresha motor-output. Detta får äntligen styrningen att fungera pålitligt.
 	if(dirbits & 1) {
 		clearbit(PORT_DIR, LEFT_DIR);
@@ -810,7 +821,8 @@ ISR(TIMER1_COMPA_vect)
 	if(r) {
 		RIGHT_AMOUNT = 0;
 		RIGHT_AMOUNT = r;
-	}		
+	}
+	*/		
 }
 
 //overflow på timer0, ställ in frekvens med
@@ -863,7 +875,7 @@ void decode_comm(uint8_t command)
 		--pid;
 	} 
 	else if(set_speed) {
-		SPEED = command;
+		//SPEED = command;
 		set_speed = 0;
 	}
 	else if(display)
@@ -1033,6 +1045,8 @@ void decode_sensor(uint8_t data)
 			stop_motors();
 			break;	
 		case SENSOR_IR:
+			send_string("ERROR");
+			update();
 			//Omvandla sensorvärden från spänningar till centimeter.
 			sensor_buffer[IR_FRONT] = interpret_big_ir(sensor_buffer[IR_FRONT]);
 			sensor_buffer[IR_LEFT_FRONT] = interpret_big_ir(sensor_buffer[IR_LEFT_FRONT])+left_front;
@@ -1121,11 +1135,11 @@ void decode_sensor(uint8_t data)
 // 					/*Hantera tejp-korsningar*/
 // 					//decode_tape_sensor_data();
 // 				}
-				if(crossings)
-				{
-					/*Hantera korsningar*/
-					handle_crossing();
-				}
+///////////////////////////////////////// 				if(crossings)
+// 				{
+// 					/*Hantera korsningar*/
+// 					handle_crossing();
+// 				}
 
 // 				if (follow_end_tape)
 // 				{
@@ -1140,6 +1154,18 @@ void decode_sensor(uint8_t data)
 		case SENSOR_FOLLOW_TAPE:
 			regulate_end_tape_4();
 			break;
+		case SENSOR_FOLLOW_TAPE_END:
+			{
+				stop_motors();
+				/*
+				OBS!!! 
+				HÄR SKALL KLO STÄNGAS OCH 180-GRADERSSVÄNGEN INITIERAS!!!
+				Kommer den att ha åkt för långt då?
+				*/
+		
+				//is_returning_home = 1;	// OBS! SKALL GÖRAS EFTER ATT 180-GRADERSSVÄNGEN UTFÖRTS!!!
+				follow_end_tape = 0;	
+			}
 		
 		
 		default:
@@ -1157,7 +1183,7 @@ void decode_sensor(uint8_t data)
 	if((a++ & 0b10000))
 	{
 		a=0;
-		update_display_string();
+		/////////////////////update_display_string();
 	}
 }
 

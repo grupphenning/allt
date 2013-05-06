@@ -14,6 +14,7 @@
 #define SENSOR_IR		0x05
 #define SENSOR_TAPE		0x06
 #define SENSOR_FOLLOW_TAPE 0x07
+#define SENSOR_FOLLOW_TAPE_END 0x08
 
 #define TURN_RIGHT		0x10
 #define TURN_LEFT		0x11	
