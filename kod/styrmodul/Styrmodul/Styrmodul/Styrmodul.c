@@ -12,7 +12,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-//uint8_t SPEED = 255;
+uint8_t speed = 255;
 //#define SPEED 50
 
 //#define INTERPOLATION_POINTS 12
@@ -122,10 +122,10 @@ int main(void)
 	{
 		
 // 		if(turn)
-// 			tank_turn_left(SPEED);
+// 			tank_turn_left(speed);
 // 		else
 // 			stop_motors();
-			//drive_forwards(SPEED);
+			//drive_forwards(speed);
 		
 //		if (follow_end_tape)
 //		{
@@ -252,17 +252,17 @@ void regulate_end_tape(uint8_t* values)
 	
 	else if(pos > 0)
 	{
-		RIGHT_AMOUNT = pos*SPEED;
-		LEFT_AMOUNT = SPEED;
+		RIGHT_AMOUNT = pos*speed;
+		LEFT_AMOUNT = speed;
 		
 	}
 	else if(pos < 0){
-		LEFT_AMOUNT = abs(pos)*SPEED;
-		RIGHT_AMOUNT = SPEED;
+		LEFT_AMOUNT = abs(pos)*speed;
+		RIGHT_AMOUNT = speed;
 	}
 	else{ // == 0
-		LEFT_AMOUNT = SPEED;
-		RIGHT_AMOUNT = SPEED;
+		LEFT_AMOUNT = speed;
+		RIGHT_AMOUNT = speed;
 	}
 	
 }
@@ -331,17 +331,17 @@ void regulate_end_tape_2(uint8_t* values)
 	
 	else if(res > 0)
 	{
-// 		RIGHT_AMOUNT = pos*SPEED;
-// 		LEFT_AMOUNT = SPEED;
+// 		RIGHT_AMOUNT = pos*speed;
+// 		LEFT_AMOUNT = speed;
 // 		
 	}
 	else if(res < 0){
-// 		LEFT_AMOUNT = abs(pos)*SPEED;
-// 		RIGHT_AMOUNT = SPEED;
+// 		LEFT_AMOUNT = abs(pos)*speed;
+// 		RIGHT_AMOUNT = speed;
  	}
 	else{ // == 0
-// 	LEFT_AMOUNT = SPEED;
-// 	RIGHT_AMOUNT = SPEED;
+// 	LEFT_AMOUNT = speed;
+// 	RIGHT_AMOUNT = speed;
 }
 
 }
@@ -404,27 +404,28 @@ void regulate_end_tape_3()
 	
 	if(res > 0)
 	{
-		RIGHT_AMOUNT = SPEED + 30 + pos*5;
-		LEFT_AMOUNT = SPEED;
+		RIGHT_AMOUNT = speed + 30 + pos*5;
+		LEFT_AMOUNT = speed;
 		setbit(PORT_DIR, LEFT_DIR);
 		setbit(PORT_DIR, RIGHT_DIR);
 	}
 	
 	else if(res < 0){
-		LEFT_AMOUNT = SPEED + 30 + abs(pos)*5;
-		RIGHT_AMOUNT = SPEED;
+		LEFT_AMOUNT = speed + 30 + abs(pos)*5;
+		RIGHT_AMOUNT = speed;
 		setbit(PORT_DIR, LEFT_DIR);
 		setbit(PORT_DIR, RIGHT_DIR);
 	}
 	
 	else if(res == 0 && n_of_reflexes_on != 0){ // == 0
-		drive_forwards(SPEED);
+		drive_forwards(speed);
 	}
 
 }
 
 void regulate_end_tape_4()
 {
+	speed = 50;
 	static uint8_t hihi = 0;
 	if(hihi++ > 100)
 	{
@@ -436,9 +437,9 @@ void regulate_end_tape_4()
 	int8_t pos = sensor_buffer[1]; //-5 för längst till vänster, 5 för höger, 0 i mitten!
 	if(pos > 0)
 	{
-		RIGHT_AMOUNT = SPEED + 30 + pos*5;
+		RIGHT_AMOUNT = speed + 30 + pos*5;
 		if(pos < 7)
-		LEFT_AMOUNT = SPEED - 20 - pos*5;
+		LEFT_AMOUNT = speed - 20 - pos*5;
 		else
 		LEFT_AMOUNT = 0;
 		setbit(PORT_DIR, LEFT_DIR);
@@ -447,9 +448,9 @@ void regulate_end_tape_4()
 	
 	else if(pos < 0)
 	{
-		LEFT_AMOUNT = SPEED + 30 + abs(pos)*5;
+		LEFT_AMOUNT = speed + 30 + abs(pos)*5;
 		if(abs(pos) < 7)
-		RIGHT_AMOUNT = SPEED - 20 - abs(pos)*5;
+		RIGHT_AMOUNT = speed - 20 - abs(pos)*5;
 		else
 		RIGHT_AMOUNT = 0;
 		setbit(PORT_DIR, LEFT_DIR);
@@ -458,7 +459,7 @@ void regulate_end_tape_4()
 	
 	else //if(pos == 0)
 	{ // == 0
-		drive_forwards(SPEED);
+		drive_forwards(speed);
 	}
 }
 
@@ -881,7 +882,7 @@ void decode_comm(uint8_t command)
 		--pid;
 	} 
 	else if(set_speed) {
-		//SPEED = command;
+		speed = command;
 		set_speed = 0;
 	}
 	else if(display)
@@ -903,26 +904,26 @@ void decode_comm(uint8_t command)
 	}
 	else if(command == COMM_DRIVE)
 	{
-		drive_forwards(SPEED);
+		drive_forwards(speed);
 	} else if(command == COMM_BACK)
 	{
-		drive_backwards(SPEED);
+		drive_backwards(speed);
 	} else if(command == COMM_STOP)
 	{
 		disable_pid();
 		stop_motors();
 	} else if(command == COMM_LEFT)
 	{
-		tank_turn_left(SPEED);
+		tank_turn_left(speed);
 	} else if(command == COMM_RIGHT)
 	{
-		tank_turn_right(SPEED);
+		tank_turn_right(speed);
 	} else if(command == COMM_DRIVE_LEFT)	// Ignorera argumentet tills vidare, vet inte hur vi ska lösa det...
 	{
-		turn_left(SPEED);
+		turn_left(speed);
 	}	else if(command == COMM_DRIVE_RIGHT)	// Ignorera argumentet även här, tills vidare...
 	{
-		turn_right(SPEED);
+		turn_right(speed);
 	} else if(command == COMM_CLAW_OUT)
 	{
 		claw_out();
@@ -1389,9 +1390,9 @@ void decode_tape_segment(char first, char second)
 // 		uint8_t i = 0;
 // 		for (i=0;i<10;i++)
 // 		{
-// 			tank_turn_right(SPEED);
+// 			tank_turn_right(speed);
 // 			_delay_ms(500);
-// 			tank_turn_left(SPEED);
+// 			tank_turn_left(speed);
 // 			_delay_ms(500);
 // 		}
 	}
@@ -1601,7 +1602,7 @@ void make_turn(char dir)
 	{
 		stop_motors();
 		_delay_ms(250);
-		drive_forwards(SPEED);
+		drive_forwards(speed);
 		first = 1;
 		make_turn_flag = 0;
 		drive_from_crossing = 1;
@@ -1618,7 +1619,7 @@ void make_turn(char dir)
 					_delay_ms(250);
 					turn = 1;
 					first = 0;
-					tank_turn_left(SPEED);
+					tank_turn_left(speed);
 				}
 			break;
 			
@@ -1629,11 +1630,11 @@ void make_turn(char dir)
 					_delay_ms(250);
 					turn = 1;
 					first = 0;
-					tank_turn_right(SPEED);
+					tank_turn_right(speed);
 				}
 			break;
 			
-			case 'f': /*drive_forwards(SPEED)*/stop_motors(); break;
+			case 'f': /*drive_forwards(speed)*/stop_motors(); break;
 			
 			default: break;
 		}
@@ -1668,7 +1669,7 @@ void disable_crossings()
 // 		
 // 		stop_motors();
 // 		_delay_ms(250);
-// 		drive_forwards(SPEED);
+// 		drive_forwards(speed);
 // 	}
 // 	else if(!is_turning) 
 // 	{
@@ -1676,7 +1677,7 @@ void disable_crossings()
 // 		is_turning = 1;
 // 		stop_motors();
 // 		_delay_ms(250);
-// 		tank_turn_left(SPEED);
+// 		tank_turn_left(speed);
 // 	}  
 // 	
 // }
@@ -1698,7 +1699,7 @@ void disable_crossings()
 		is_turning = 1;
 		stop_motors();
 		_delay_ms(500);
-		tank_turn_right(SPEED);
+		tank_turn_right(speed);
 	}
 	
 }*/

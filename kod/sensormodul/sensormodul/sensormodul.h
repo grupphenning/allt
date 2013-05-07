@@ -20,7 +20,6 @@
 #define TURN_LEFT		0x11	
 //FIXME: Lägg till fler!
 
-
 /* Övriga definitioner */
 #define GYRO PINA2
 #define INTERUPT_REQUEST PINA7

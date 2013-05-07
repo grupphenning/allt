@@ -408,6 +408,7 @@ void decode_tape()
 	else if (is_over_tape && tape_sensor < REFLEX_SENSITIVITY) //Tejpbit avslutad
 	{
 		is_over_tape = 0;
+		
 		if(is_in_tape_segment) //Andra tejpbiten avslutad
 		{
 			is_in_tape_segment = 0;
@@ -420,15 +421,15 @@ void decode_tape()
 			is_in_tape_segment = 1;
 			//first_tape = tape_count < 5 ? 's': 'l';
 			first_tape_count = tape_count;
-			no_tape_count++;
 		}
 		tape_count=0;
 	}
 	
 	else if(tape_sensor < REFLEX_SENSITIVITY) //Utanför tejp
 	{
+		no_tape_count++;
 		//checka om den bara sett en tejpbit, alltså är den vid mål. Kontrollerar aldrig om det är en kort eller lång tejpbit!
-		if(no_tape_count > 3 * first_tape_count && is_in_tape_segment)
+		if(no_tape_count > 2 * first_tape_count && is_in_tape_segment)
 		{
 			is_in_tape_segment = 0;
 			follow_end_tape = 1;
