@@ -28,7 +28,7 @@ volatile uint8_t data_index=1;
 volatile uint8_t adc_interrupt = 0;
 volatile uint8_t has_data_from_spi = 0;
 volatile uint8_t read_and_send_ir_to_master = 0;
-volatile uint8_t follow_end_tape = 1;
+volatile uint8_t follow_end_tape = 0;
 
 
 
@@ -225,7 +225,7 @@ void read_and_send_ir()
 
 void send_decoded_tape()
 {
-	data_index = 1;
+	data_index = 1; //Borde inte behövas, dubbelkolla det!
 	decoded_tape_data[0] = SENSOR_TAPE;
 	decoded_tape_data[1] = tape_type;
 	send_to_master(2, decoded_tape_data);
@@ -420,6 +420,7 @@ void decode_tape()
 			is_in_tape_segment = 1;
 			//first_tape = tape_count < 5 ? 's': 'l';
 			first_tape_count = tape_count;
+			no_tape_count++;
 		}
 		tape_count=0;
 	}
@@ -427,11 +428,12 @@ void decode_tape()
 	else if(tape_sensor < REFLEX_SENSITIVITY) //Utanför tejp
 	{
 		//checka om den bara sett en tejpbit, alltså är den vid mål. Kontrollerar aldrig om det är en kort eller lång tejpbit!
-		if(no_tape_count > 2 * first_tape_count && is_in_tape_segment)
+		if(no_tape_count > 3 * first_tape_count && is_in_tape_segment)
 		{
 			is_in_tape_segment = 0;
-			decode_tape_segment(first_tape_count, 0); // Skickas vid början av linjeföljningen!
 			follow_end_tape = 1;
+			decode_tape_segment(first_tape_count, 0); // Skickas vid början av linjeföljningen!
+			
 		}
 		//is_in_tape_segment = no_tape_count++ > 7 ? 0 : is_in_tape_segment; //vilken jävla oneliner!
 		
@@ -444,13 +446,14 @@ void decode_tape()
 	
 }
 
-void decode_tape_segment(uint8_t first, uint8_t second)
+void decode_tape_segment(uint16_t first, uint8_t second)
 {
 	uint8_t tape_ratio;
 	_delay_ms(250);
 	if (second != 0)
 	{
-		tape_ratio = first*10/second;
+		first = first*10;	
+		tape_ratio = first/second;
 	}
 	else 	//Bara en tejp, vi är vid mål!
 	{
@@ -465,13 +468,13 @@ void decode_tape_segment(uint8_t first, uint8_t second)
 	}
 	else if (7 <= tape_ratio && tape_ratio < 15) //(first == 'l' && second == 's')
 	{
-		//turn right
-		tape_type = 'r';
+		//keep going
+		tape_type = 'f';
 	}
 	else if (15 <= tape_ratio) //(first == 's' && second == 's')
 	{
-		//keep going
-		tape_type = 'f';
+		//turn right
+		tape_type = 'r';
 	}
 }
 
@@ -503,7 +506,6 @@ void regulate_end_tape()
 		tape_position[0] = SENSOR_FOLLOW_TAPE;
 		tape_position[1] = pos;
 		//Skicka positionen till master
-		_delay_ms(2);
 		send_to_master(2, tape_position);
 	}		
 	//utanför tejp, stopp!

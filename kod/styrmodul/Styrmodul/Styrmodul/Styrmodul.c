@@ -77,7 +77,7 @@ uint8_t big_ir_centimeter_array[117] = {16, 16, 17, 17, 18, 18, 19, 19, 20, 20, 
 // Innehåller de centimetervärden som ses i grafen på https://docs.isy.liu.se/twiki/pub/VanHeden/DataSheets/gp2y0a21.pdf, sid. 4.
 
 
-uint8_t follow_end_tape = 1;
+uint8_t follow_end_tape = 0;
 
 
 //Kalibrering
@@ -115,8 +115,8 @@ int main(void)
 	init_pid(50, -50);
 	update_k_values(20, 0, 10);
 	
-// 	_delay_ms(2000);
-// 	drive_forwards(255);
+ 	_delay_ms(2000);
+ 	drive_forwards(255);
 	
 	while(1)
 	{
@@ -437,7 +437,10 @@ void regulate_end_tape_4()
 	if(pos > 0)
 	{
 		RIGHT_AMOUNT = SPEED + 30 + pos*5;
-		LEFT_AMOUNT = SPEED;
+		if(pos < 7)
+		LEFT_AMOUNT = SPEED - 20 - pos*5;
+		else
+		LEFT_AMOUNT = 0;
 		setbit(PORT_DIR, LEFT_DIR);
 		setbit(PORT_DIR, RIGHT_DIR);
 	}
@@ -445,7 +448,10 @@ void regulate_end_tape_4()
 	else if(pos < 0)
 	{
 		LEFT_AMOUNT = SPEED + 30 + abs(pos)*5;
-		RIGHT_AMOUNT = SPEED;
+		if(abs(pos) < 7)
+		RIGHT_AMOUNT = SPEED - 20 - abs(pos)*5;
+		else
+		RIGHT_AMOUNT = 0;
 		setbit(PORT_DIR, LEFT_DIR);
 		setbit(PORT_DIR, RIGHT_DIR);
 	}
@@ -1045,8 +1051,6 @@ void decode_sensor(uint8_t data)
 			stop_motors();
 			break;	
 		case SENSOR_IR:
-			send_string("ERROR");
-			update();
 			//Omvandla sensorvärden från spänningar till centimeter.
 			sensor_buffer[IR_FRONT] = interpret_big_ir(sensor_buffer[IR_FRONT]);
 			sensor_buffer[IR_LEFT_FRONT] = interpret_big_ir(sensor_buffer[IR_LEFT_FRONT])+left_front;
@@ -1321,22 +1325,31 @@ void make_turning_decision()
 	case 'l':
 		//turn left 
 		stop_motors();
-		_delay_ms(250);
-		make_turn('l');
+		tank_turn_left(255);
+		send_string(" Left ");
+		update();
+// 		_delay_ms(250);
+// 		make_turn('l');
 		break;
 	
 	case 'r':
 		//turn right
 		stop_motors();
-		_delay_ms(250);
-		make_turn('r');
+		tank_turn_right(255);
+		send_string(" Right ");
+		update();
+// 		_delay_ms(250);
+// 		make_turn('r');
 		break;	 
 	
 	case 'f':
 		//keep going
 		stop_motors();
-		_delay_ms(250);
-		make_turn('f');
+		drive_forwards(255);
+		send_string(" Fram ");
+		update();
+// 		_delay_ms(250);
+// 		make_turn('f');
 		break;
 		
 	case 'g':

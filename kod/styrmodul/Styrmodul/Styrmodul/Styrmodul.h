@@ -45,9 +45,9 @@
 #define REFLEX10		15
 #define REFLEX11		16
 
-#define REFLEX_SENSITIVITY 0x70
+#define REFLEX_SENSITIVITY 0x50
 
-#define SPEED 50
+#define SPEED 255
 //extern uint8_t SPEED;
 
 #define SENSOR_BUFFER_SIZE 256
