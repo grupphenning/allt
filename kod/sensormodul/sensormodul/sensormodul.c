@@ -503,6 +503,7 @@ void regulate_end_tape()
 		tape_position[0] = SENSOR_FOLLOW_TAPE;
 		tape_position[1] = pos;
 		//Skicka positionen till master
+		_delay_ms(2);
 		send_to_master(2, tape_position);
 	}		
 	//utanför tejp, stopp!
@@ -511,7 +512,6 @@ void regulate_end_tape()
 		//Skickar att det är slut på linjeföljning till mastern
 		tape_position[0] = SENSOR_FOLLOW_TAPE_END;
 		tape_position[1] = 'e';
-		_delay_ms(40);
 		send_to_master(2, tape_position);
 		follow_end_tape = 0;
 	}
