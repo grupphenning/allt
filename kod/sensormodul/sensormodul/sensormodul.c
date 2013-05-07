@@ -432,7 +432,7 @@ void decode_tape()
 		{
 			is_in_tape_segment = 0;
 			follow_end_tape = 1;
-			decode_tape_segment(first_tape_count, 0); // Skickas vid början av linjeföljningen!
+			//decode_tape_segment(first_tape_count, 0); // Skickas vid början av linjeföljningen!
 			
 		}
 		//is_in_tape_segment = no_tape_count++ > 7 ? 0 : is_in_tape_segment; //vilken jävla oneliner!
