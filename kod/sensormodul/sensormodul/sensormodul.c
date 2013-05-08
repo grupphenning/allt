@@ -16,11 +16,19 @@
 
 uint8_t spi_data_from_master;
 uint8_t spi_data_to_master;
-volatile uint8_t test_data[18];
+uint8_t tape_sensor;
+char tape_type;
+
+volatile uint8_t tape_sensor_data[9];
+volatile uint8_t ir_sensor_data[5+1+1];
+volatile uint8_t decoded_tape_data[1+1];
+volatile uint8_t tape_position[1+1];
+volatile uint8_t test_data[16+1];
 volatile uint8_t data_index=1;
 volatile uint8_t adc_interrupt = 0;
 volatile uint8_t has_data_from_spi = 0;
-
+volatile uint8_t read_and_send_ir_to_master = 0;
+volatile uint8_t follow_end_tape = 0;
 
 int main(void)
 {
@@ -31,31 +39,57 @@ int main(void)
 	
 	DDRD = 0xFF; //A,B,C,D till muxarna
 	setbit(DDRC, PINC0);
+	
+	_delay_ms(100);	// Ja, vänta! Annars hamnar SPI-protokollet i osynk!
+	
 	init_spi();
 	init_adc();
-	init_gyro();
+	//init_gyro();
 	init_sensor_timer();
 	
 
-//	_delay_ms(500);	// Ja, vänta! Annars hamnar SPI-protokollet i osynk!
+	
 	
     while(1)
     {
+		if (read_and_send_ir_to_master && !follow_end_tape)
+		{
+			read_and_send_ir_to_master = 0;
+			read_and_send_ir();
+		}
+		if (follow_end_tape)
+		{
+			data_index = 0;
+			for (uint8_t i = 1; i < 10; i++)
+			{
+				read_tape(i);
+			}
+			regulate_end_tape();
+		}
+		
+		
 		if(has_data_from_spi)
 		{
-			switch(spi_data_to_master)
-			{
-				case TURN_RIGHT:
-					begin_turning(90);
-					break;
-				case TURN_LEFT:
-					begin_turning(-90);
-					break;
-				default:
-					break; 
-			}
+// 			switch(spi_data_to_master)
+// 			{
+// 				case TURN_RIGHT:
+// 					begin_turning(90);
+// 					break;
+// 				case TURN_LEFT:
+// 					begin_turning(-90);
+// 					break;
+// 				default:
+// 					break; 
+// 			}
 			has_data_from_spi = 0;
-		}			
+		}	
+		
+		if (!follow_end_tape)
+		{
+			read_one_tape(); //AD-omvandlar andra tejpsensorn
+			decode_tape(); //
+			send_decoded_tape();
+		}		
     }
 }
 
@@ -178,9 +212,35 @@ void read_all_sensors()
 	clearbit(PORTC, PINC0);		// For debug!!
 }
 
+/*
+* Läser och skickar data från ir-sensorerna
+*/
+
+void read_and_send_ir()
+{
+	data_index = 1;
+	ir_sensor_data[0] = SENSOR_IR;
+	for (uint8_t i=0; i<5; i++)
+	{
+		read_ir(i);
+	}
+	send_to_master(6, ir_sensor_data);
+}
+
+void send_decoded_tape()
+{
+	data_index = 1; //Borde inte behövas, dubbelkolla det!
+	decoded_tape_data[0] = SENSOR_TAPE;
+	decoded_tape_data[1] = tape_type;
+	send_to_master(2, decoded_tape_data);
+}
+
+
 /* 
  * Läser bara av tejpsensorer, skicka rådata eller beräkna mittpunkt här?!
  */
+
+
 void read_and_send_tape()
 {
 	data_index = 1;
@@ -216,8 +276,8 @@ uint8_t read_gyro()
 
 
 /*
- * Läs av ir-sensor med nr sensor_no
- */
+* Läs av ir-sensor med nr sensor_no
+*/
 void read_ir(uint8_t sensor_no)
 {
 	unsigned index = data_index;
@@ -229,13 +289,13 @@ void read_ir(uint8_t sensor_no)
 	clearbit(ADMUX,MUX3);
 	clearbit(ADMUX,MUX4);
 	PORTD = ((11+sensor_no)<<4); //Tell mux where to read from
-	read_adc();
+	read_adc_ir();
 	
 	/*MJUKVARUFILTER*/
 	second_to_last[sensor_no] = last[sensor_no];
-	last[sensor_no] = test_data[index];
+	last[sensor_no] = ir_sensor_data[index];
 	
-	test_data[index] = second_to_last[sensor_no] < last[sensor_no] ? second_to_last[sensor_no] : last[sensor_no];
+	ir_sensor_data[index] = second_to_last[sensor_no] < last[sensor_no] ? second_to_last[sensor_no] : last[sensor_no];
 }
 
 
@@ -252,19 +312,184 @@ void read_tape(uint8_t sensor_no)
 	setbit(PORTA, PINA1);
 	PORTD = (sensor_no<<4)+sensor_no;
 
-	read_adc();
+	read_adc_tape();
+}
+
+void read_one_tape()
+{
+	clearbit(ADMUX,MUX0);
+	clearbit(ADMUX,MUX1);
+	clearbit(ADMUX,MUX2);
+	clearbit(ADMUX,MUX3);
+	clearbit(ADMUX,MUX4);
+	setbit(PORTA, PINA1);
+	PORTD = 0x22; //Sensor nummer 2
+
+	read_adc_one_tape();
 }
 
 /*
- * Läs adc och lägg resultatet till den array som är ämnad att sändas till master
- */
-void read_adc()
+* Läs adc och lägg resultatet till den array som är ämnad att sändas till master
+*/
+void read_adc_tape()
+{
+	setbit(ADCSRA,ADSC); //start_reading
+	//while(!adc_interrupt); //Wait for interrupt to occur
+	while(bitclear(ADCSRA, ADIF));
+	tape_sensor_data[data_index++] = ADCH;
+	//adc_interrupt = 0;
+}
+
+void read_adc_one_tape()
+{
+	setbit(ADCSRA,ADSC); //start_reading
+	while(bitclear(ADCSRA, ADIF));
+	tape_sensor = ADCH;
+}
+
+void read_adc_ir()
 {
 	setbit(ADCSRA,ADSC); //start_reading
 	//while(!adc_interrupt); //Wait for interupt to occur
 	while(bitclear(ADCSRA, ADIF));
-	test_data[data_index++] = ADCH;
+	ir_sensor_data[data_index++] = ADCH;
 	//adc_interrupt = 0;
+}
+
+
+void decode_tape()
+{
+	static uint8_t tape_count=0;
+	static uint8_t no_tape_count = 0;
+	static uint8_t is_over_tape = 0;
+	static uint8_t is_in_tape_segment = 0;
+	static uint8_t first_tape_count = 0;
+	static uint8_t second_tape_count = 0;
+	static char first_tape;
+	static char second_tape;
+	
+	if (tape_sensor > REFLEX_SENSITIVITY) //Tejpbitsstart hittad
+	{
+		//cli(); //Stänger av globala avbrott
+		is_over_tape = 1;
+		no_tape_count = 0;
+		tape_count++;
+	}
+	
+	else if (is_over_tape && tape_sensor < REFLEX_SENSITIVITY) //Tejpbit avslutad
+	{
+		is_over_tape = 0;
+		
+		if(is_in_tape_segment) //Andra tejpbiten avslutad
+		{
+			is_in_tape_segment = 0;
+			//second_tape = tape_count < 5 ? 's': 'l';
+			second_tape_count = tape_count;
+			decode_tape_segment(first_tape_count, second_tape_count); //Kör tejpsegmentsavkodning
+		}
+		else // Första tejpbit avslutad
+		{
+			is_in_tape_segment = 1;
+			//first_tape = tape_count < 5 ? 's': 'l';
+			first_tape_count = tape_count;
+		}
+		tape_count=0;
+	}
+	
+	else if(tape_sensor < REFLEX_SENSITIVITY) //Utanför tejp
+	{
+		no_tape_count++;
+		//checka om den bara sett en tejpbit, alltså är den vid mål. Kontrollerar aldrig om det är en kort eller lång tejpbit!
+		if(no_tape_count > 2 * first_tape_count && is_in_tape_segment)
+		{
+			is_in_tape_segment = 0;
+			follow_end_tape = 1;
+			//decode_tape_segment(first_tape_count, 0); // Skickas vid början av linjeföljningen!
+			
+		}
+		//is_in_tape_segment = no_tape_count++ > 7 ? 0 : is_in_tape_segment; //vilken jävla oneliner!
+		
+		
+		//overflowskydd
+		if(no_tape_count == 255)
+		no_tape_count = 255;
+		
+	}
+	
+}
+
+
+void decode_tape_segment(uint16_t first, uint8_t second)
+{
+	uint8_t tape_ratio;
+	_delay_ms(250);
+	if (second != 0)
+	{
+		first = first*10;
+		tape_ratio = first/second;
+	}
+	else         //Bara en tejp, vi är vid mål!
+	{
+		tape_type = 'g';
+		return;
+	}
+	
+	if(1 < tape_ratio && tape_ratio < 7 ) //(first == 's' && second == 'l')
+	{
+		//turn left
+		tape_type = 'l';
+	}
+	else if (7 <= tape_ratio && tape_ratio < 15) //(first == 's' && second == 's')
+	{
+		//keep going
+		tape_type = 'f';
+	}
+	else if (15 <= tape_ratio) //(first == 'l' && second == 's')
+	{
+		//turn right
+		tape_type = 'r';
+	}
+}
+
+void regulate_end_tape()
+{
+	int8_t pos_index; //-5 för längst till vänster, 5 för höger, 0 i mitten!
+	uint8_t i, n_of_reflexes_on = 0;
+	int8_t res=0;
+	int8_t old_pos=0, pos=0;
+	uint8_t reflex[9];
+	
+	for (i = 0; i < 9; i++)
+	{
+		pos_index = i-4;
+		if(tape_sensor_data[i] > REFLEX_SENSITIVITY)
+		{
+			reflex[i] = 1;
+			res += pos_index;
+			n_of_reflexes_on += 1;
+		}
+		else
+		reflex[i] = 0;
+	}
+	
+	//div med 0
+	if(n_of_reflexes_on != 0)
+	{
+		pos = res*2/n_of_reflexes_on;        //ojojoj
+		tape_position[0] = SENSOR_FOLLOW_TAPE;
+		tape_position[1] = pos;
+		//Skicka positionen till master
+		send_to_master(2, tape_position);
+	}
+	//utanför tejp, stopp!
+	else
+	{
+		//Skickar att det är slut på linjeföljning till mastern
+		tape_position[0] = SENSOR_FOLLOW_TAPE_END;
+		tape_position[1] = 'e';
+		send_to_master(2, tape_position);
+		follow_end_tape = 0;
+	}
 }
 
 
@@ -286,17 +511,22 @@ void init_sensor_timer()
 	setbit(TIMSK, TOIE1);
 	
 	//25 hertz, ges av 8000000/(256*1250) = 25 Hz
-	//ICR1 = 1250;
+	ICR1 = 1250;
 	
 	//62,5 Hz
-	ICR1 = 150;
+	//ICR1 = 150;
 	
 }
 
 //Sensor timer! (25 Hz)
+// ISR(TIMER1_OVF_vect)
+// {
+// 	read_all_sensors();
+// }
+
 ISR(TIMER1_OVF_vect)
 {
-	read_all_sensors();
+	read_and_send_ir_to_master = 1;
 }
 
 //Gyro timer! (XX Hz)

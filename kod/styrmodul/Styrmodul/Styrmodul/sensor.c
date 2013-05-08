@@ -114,219 +114,46 @@ uint8_t is_empty(uint8_t * values, uint8_t len)
 }
 
 
-void regulate_end_tape(uint8_t* values)
+void regulate_end_tape_4()
 {
-	//loopa igenom de elva sista
-	static uint8_t offset = 5; //de fem första värdena är IR-skräp, vi vill bara läsa reflexerna
-	int8_t pos_index; //-5 för längst till vänster, 5 för höger, 0 i mitten!
-	uint8_t i;
-	int8_t average=0, res=0;
-	int8_t old_pos=0, pos=0;
-	
-	for (i = 0; i < 11; i++)
+	speed = 50;
+	static uint8_t hihi = 0;
+	if(hihi++ > 100)
 	{
-		pos_index = i-5;
-		res += pos_index*values[i];
-		average += values[i];
-		
-	}
-	
-	pos = res/average;	//ojojoj
-	
-	char temp[32];
-	sprintf(temp,"%03d ", pos);
-	send_string(temp);
-	update();
-	
-	static uint8_t a=0;
-	if(a++ > 250)
-	{
-		
-// 	  clear_screen();
-// 	  update();
-// 	  send_string("POS: ");
-// 	  update();
-// 	  send_string(temp);
-// 	  update();
-	}
-	
-	if(is_empty(values,11))
-	{
-		LEFT_AMOUNT = 0;
-		RIGHT_AMOUNT = 0;
-	}
-	
-	else if(pos > 0)
-	{
-		RIGHT_AMOUNT = pos*SPEED;
-		LEFT_AMOUNT = SPEED;
-		
-	}
-	else if(pos < 0){
-		LEFT_AMOUNT = abs(pos)*SPEED;
-		RIGHT_AMOUNT = SPEED;
-	}
-	else{ // == 0
-		LEFT_AMOUNT = SPEED;
-		RIGHT_AMOUNT = SPEED;
-	}
-	
-}
-
-
-
-void regulate_end_tape_2(uint8_t* values)
-{
-	//loopa igenom de elva sista
-	send_string("hej");
-	update();
-	static uint8_t offset = 6; //de fem första värdena är IR-skräp, vi vill bara läsa reflexerna
-	int8_t pos_index; //-5 för längst till vänster, 5 för höger, 0 i mitten!
-	uint8_t i;
-	int8_t average=0, res=0;
-	int8_t old_pos=0, pos=0;
-	//uint8_t _1 = 0, _2 = 0, _3 = 0, _4 = 0, _5 = 0, _6 = 0, _7 = 0, _8 = 0, _9 = 0, _10 = 0, _11 = 0;
-	uint8_t reflex[11];
-	
-	for (i = 0; i < 11; i++)
-	{
-		pos_index = i-5;
-		if(values[i+offset] > REFLEX_SENSITIVITY)
-		{
-			reflex[i] = 1;
-			res += pos_index;
-			average += 1;
-		}
-		else
-		reflex[i] = 0;
-		
-	}
-	
-	pos = res/average;	//ojojoj
-// 	
- 	
-// 	send_string(temp);
-// 	update();
-	
-	static uint16_t a=0;
-	if(a++ > 65000)
-	{
-		clear_screen();
-		_delay_ms(100);
-		for (i=0;i < 11;i++)
-		{
-			char temp[2];
-			sprintf(temp,"%d", reflex[i]);
-			send_string(temp);
-			update();
-		}
-		
-		//update();
-// 		
-// 		send_string("POS: ");
-// 		update();
-// 		send_string(temp);
-// 		update();
-	}
-	
-	if(is_empty(values,11))
-	{
-		LEFT_AMOUNT = 0;
-		RIGHT_AMOUNT = 0;
-	}
-	
-	else if(res > 0)
-	{
-// 		RIGHT_AMOUNT = pos*SPEED;
-// 		LEFT_AMOUNT = SPEED;
-// 		
-	}
-	else if(res < 0){
-// 		LEFT_AMOUNT = abs(pos)*SPEED;
-// 		RIGHT_AMOUNT = SPEED;
- 	}
-	else{ // == 0
-// 	LEFT_AMOUNT = SPEED;
-// 	RIGHT_AMOUNT = SPEED;
-}
-
-}
-
-
-void regulate_end_tape_3()
-{
-	int8_t pos_index; //-5 för längst till vänster, 5 för höger, 0 i mitten!
-	uint8_t i, n_of_reflexes_on = 0;
-	int8_t res=0;
-	int8_t old_pos=0, pos=0;
-	uint8_t reflex[9];
-	
-	for (i = 0; i < 9; i++)
-	{
-		pos_index = i-4;
-		if(sensor_buffer[i+REFLEX2] > REFLEX_SENSITIVITY)
-		{
-			reflex[i] = 1;
-			res += pos_index;
-			n_of_reflexes_on += 1;
-		}
-		else
-			reflex[i] = 0;
-		
-	}
-	
-	//div med 0
-	if(n_of_reflexes_on != 0)
-		pos = res*2/n_of_reflexes_on;	//ojojoj
-	//utanför tejp, stopp!
-	else 
-	{
-		stop_motors();
-		/*
-		OBS!!! 
-		HÄR SKALL KLO STÄNGAS OCH 180-GRADERSSVÄNGEN INITIERAS!!!
-		*/
-		
-		is_returning_home = 1;	// OBS! SKALL GÖRAS EFTER ATT 180-GRADERSSVÄNGEN UTFÖRTS!!!	
-	}		
-	clear_screen();
-	//_delay_ms(100);
-	for (i=0;i < 9;i++)
-	{
-		char temp[2];
-		sprintf(temp,"%d", reflex[i]);
-		send_string(temp);
+		hihi = 0;
+		send_string("1");
 		update();
 	}
-		
-		//update();
-		//
-		// 		send_string("POS: ");
-		// 		update();
-		// 		send_string(temp);
-		// 		update();
-	//}
 	
-	if(res > 0)
+	int8_t pos = sensor_buffer[1]; //-5 för längst till vänster, 5 för höger, 0 i mitten!
+	if(pos > 0)
 	{
-		RIGHT_AMOUNT = SPEED + 30 + pos*5;
-		LEFT_AMOUNT = SPEED;
+		RIGHT_AMOUNT = speed + 30 + pos*5;
+		if(pos < 7)
+		LEFT_AMOUNT = speed - 20 - pos*5;
+		else
+		LEFT_AMOUNT = 0;
 		setbit(PORT_DIR, LEFT_DIR);
 		setbit(PORT_DIR, RIGHT_DIR);
 	}
 	
-	else if(res < 0){
-		LEFT_AMOUNT = SPEED + 30 + abs(pos)*5;
-		RIGHT_AMOUNT = SPEED;
+	else if(pos < 0)
+	{
+		LEFT_AMOUNT = speed + 30 + abs(pos)*5;
+		if(abs(pos) < 7)
+		RIGHT_AMOUNT = speed - 20 - abs(pos)*5;
+		else
+		RIGHT_AMOUNT = 0;
 		setbit(PORT_DIR, LEFT_DIR);
 		setbit(PORT_DIR, RIGHT_DIR);
 	}
 	
-	else if(res == 0 && n_of_reflexes_on != 0){ // == 0
-		drive_forwards(SPEED);
+	else //if(pos == 0)
+	{ // == 0
+		drive_forwards(speed);
 	}
-
 }
+
 
 
 
@@ -468,14 +295,16 @@ void decode_sensor(uint8_t data)
 		case GYRO_SENSOR:
 			stop_motors();
 			break;	
-		case SENSOR:
-		
+		case SENSOR_IR:
+			
+			
 			//Omvandla sensorvärden från spänningar till centimeter.
 			sensor_buffer[IR_FRONT] = interpret_big_ir(sensor_buffer[IR_FRONT]);
 			sensor_buffer[IR_LEFT_FRONT] = interpret_big_ir(sensor_buffer[IR_LEFT_FRONT])+left_front;
 			sensor_buffer[IR_RIGHT_FRONT] = interpret_big_ir(sensor_buffer[IR_RIGHT_FRONT])+right_front;
 			sensor_buffer[IR_LEFT_BACK] = interpret_small_ir(sensor_buffer[IR_LEFT_BACK])+left_back;
 			sensor_buffer[IR_RIGHT_BACK] = interpret_small_ir(sensor_buffer[IR_RIGHT_BACK])+right_back;
+			
 			
 			if(calibrate_sensors)
 			{
@@ -576,18 +405,47 @@ void decode_sensor(uint8_t data)
 						//stop_motors();
 						/*_delay_ms(250);
 						turn = 1;
-						tank_turn_left(SPEED);
+						tank_turn_left(speed);
 						stop_motors();
 						_delay_ms(250);
 						turn = 1;
-						tank_turn_left(SPEED);*/
+						tank_turn_left(speed);*/
 						//_delay_ms(5000);
 						//is_returning_home = 1;
 					}
 				}
 			}			
-
+			
 			break;
+			case SENSOR_TAPE:
+				if(autonomous)
+				{
+					//disable_pid();
+                    make_turning_decision();
+				}					
+                    break;
+            case SENSOR_FOLLOW_TAPE:
+				if(autonomous)
+				{
+                    regulate_end_tape_4();
+				}					
+                    break;
+            case SENSOR_FOLLOW_TAPE_END:
+                    {
+						if(autonomous)
+						{
+                            stop_motors();
+                            /*
+                            OBS!!! 
+                            HÄR SKALL KLO STÄNGAS OCH 180-GRADERSSVÄNGEN INITIERAS!!!
+                            Kommer den att ha åkt för långt då?
+                            */
+               
+                            //is_returning_home = 1;        // OBS! SKALL GÖRAS EFTER ATT 180-GRADERSSVÄNGEN UTFÖRTS!!!
+                            follow_end_tape = 0;
+						}							        
+                    }
+			
 		default:
 				// Unimplemented command
 			break;
@@ -608,6 +466,46 @@ void decode_sensor(uint8_t data)
 	}
 }
 
+void make_turning_decision()
+{
+	uint8_t tape_type = sensor_buffer[1];
+	switch (tape_type)
+	{
+		case 'l':
+		//turn left
+		stop_motors();
+		tank_turn_left(255);
+		send_string(" Left ");
+		update();
+		//                 _delay_ms(250);
+		//                 make_turn('l');
+		break;
+		
+		case 'r':
+		//turn right
+		stop_motors();
+		tank_turn_right(255);
+		send_string(" Right ");
+		update();
+		//                 _delay_ms(250);
+		//                 make_turn('r');
+		break;
+		
+		case 'f':
+		//keep going
+		stop_motors();
+		drive_forwards(255);
+		send_string(" Fram ");
+		update();
+		//                 _delay_ms(250);
+		//                 make_turn('f');
+		break;
+		
+		case 'g':
+		follow_end_tape = 1;
+		break;
+	}
+}
 
 
 void sensor_debug_message()
@@ -815,7 +713,7 @@ void make_turn(char dir)
 	{
 		stop_motors();
 		_delay_ms(turn_delay);
-		drive_forwards(SPEED);
+		drive_forwards(speed);
 		first = 1;
 		make_turn_flag = 0;
 		drive_from_crossing = 1;
@@ -832,7 +730,7 @@ void make_turn(char dir)
 					_delay_ms(turn_delay);
 					turn = 1;
 					first = 0;
-					tank_turn_left(SPEED);
+					tank_turn_left(speed);
 				}
 			break;
 			
@@ -843,7 +741,7 @@ void make_turn(char dir)
 					_delay_ms(turn_delay);
 					turn = 1;
 					first = 0;
-					tank_turn_right(SPEED);
+					tank_turn_right(speed);
 				}
 			break;
 			
@@ -883,7 +781,7 @@ void disable_crossings()
 // 		
 // 		stop_motors();
 // 		_delay_ms(250);
-// 		drive_forwards(SPEED);
+// 		drive_forwards(speed);
 // 	}
 // 	else if(!is_turning) 
 // 	{
@@ -891,7 +789,7 @@ void disable_crossings()
 // 		is_turning = 1;
 // 		stop_motors();
 // 		_delay_ms(250);
-// 		tank_turn_left(SPEED);
+// 		tank_turn_left(speed);
 // 	}  
 // 	
 // }
@@ -913,7 +811,7 @@ void disable_crossings()
 		is_turning = 1;
 		stop_motors();
 		_delay_ms(500);
-		tank_turn_right(SPEED);
+		tank_turn_right(speed);
 	}
 	
 }*/

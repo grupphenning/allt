@@ -16,7 +16,7 @@ void debug(char *str);
 #include "sensor.h"
 #include "comm.h"
 
-uint8_t SPEED = 255;
+uint8_t speed = 255;
 
 
 int main(void)
@@ -28,18 +28,18 @@ int main(void)
 	//display ska ut
 //	DDRA = 0xFF;
 
-	init_display();
-	update();
+
+	
 	spi_init();
 	pwm_init();
 	sei();		//aktivera global interrupts
+	init_display();
+	update();
 	
 	clear_pid();
 	init_pid(50, -50);
 	update_k_values(100, 0, 170);
 	
-	//_delay_ms(2000);
-	//drive_forwards(255);
 	
 	sensor_buffer_pointer = 0x00;	// Pekare till aktuell position i bufferten
 	sensor_start = 1;				// Flagga som avgör huruvida vi är i början av meddelande
@@ -58,10 +58,10 @@ int main(void)
 		if(has_sensor_data) decode_sensor(sensor_data);
 		
 // 		if(turn)
-// 			tank_turn_left(SPEED);
+// 			tank_turn_left(speed);
 // 		else
 // 			stop_motors();
-			//drive_forwards(SPEED);
+			//drive_forwards(speed);
 		
 //		if (follow_end_tape)
 //		{

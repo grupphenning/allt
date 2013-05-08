@@ -187,11 +187,11 @@ void tank_turn_right(uint8_t amount)
 
 void claw_out()
 {
-	CLAW_AMOUNT = 70*4;
+	CLAW_AMOUNT = 312;
 }
 
 void claw_in()
 {
-	CLAW_AMOUNT = 50*4;
+	CLAW_AMOUNT = 63;
 }
 

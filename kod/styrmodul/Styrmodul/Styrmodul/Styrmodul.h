@@ -49,7 +49,7 @@
 #define REFLEX_SENSITIVITY 0x70
 
 //#define SPEED 200
-extern uint8_t SPEED;
+extern uint8_t speed;
 
 // Om du ändrar den här måste du ändra i fjärr också
 #define SENSOR_BUFFER_SIZE 256

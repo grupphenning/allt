@@ -74,7 +74,7 @@ void spi_init()
 
 
 ISR(INT1_vect) { comm_interrupt = 1; }
-ISR(INT0_vect) { sensor_interrupt = 1; }
+ISR(INT0_vect) { sensor_interrupt = 1;}
 
 ISR(SPI_STC_vect)
 {

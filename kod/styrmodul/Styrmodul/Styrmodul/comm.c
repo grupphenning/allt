@@ -53,7 +53,7 @@ void decode_comm(uint8_t command)
 		--pid;
 	} 
 	else if(set_speed) {
-		SPEED = command;
+		speed = command;
 		set_speed = 0;
 	}
 	else if(display)
@@ -75,26 +75,26 @@ void decode_comm(uint8_t command)
 	}
 	else if(command == COMM_DRIVE)
 	{
-		drive_forwards(SPEED);
+		drive_forwards(speed);
 	} else if(command == COMM_BACK)
 	{
-		drive_backwards(SPEED);
+		drive_backwards(speed);
 	} else if(command == COMM_STOP)
 	{
 		disable_pid();
 		stop_motors();
 	} else if(command == COMM_LEFT)
 	{
-		tank_turn_left(SPEED);
+		tank_turn_left(speed);
 	} else if(command == COMM_RIGHT)
 	{
-		tank_turn_right(SPEED);
+		tank_turn_right(speed);
 	} else if(command == COMM_DRIVE_LEFT)	// Ignorera argumentet tills vidare, vet inte hur vi ska lösa det...
 	{
-		turn_left(SPEED);
+		turn_left(speed);
 	}	else if(command == COMM_DRIVE_RIGHT)	// Ignorera argumentet även här, tills vidare...
 	{
-		turn_right(SPEED);
+		turn_right(speed);
 	} else if(command == COMM_CLAW_OUT)
 	{
 		claw_out();
@@ -115,7 +115,7 @@ void decode_comm(uint8_t command)
 	{
 		autonomous = 1;
 //		crossing_buffer_p = 0;
-drive_forwards(SPEED);
+drive_forwards(speed);
 		enable_pid();
 		enable_crossings();
 		setbit(PORT_DIR, LEFT_DIR);		//Kör framåt under regleringen.
