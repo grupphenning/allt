@@ -467,12 +467,12 @@ void decode_tape_segment(uint16_t first, uint8_t second)
 		//turn left
 		tape_type = 'l';
 	}
-	else if (7 <= tape_ratio && tape_ratio < 15) //(first == 'l' && second == 's')
+	else if (7 <= tape_ratio && tape_ratio < 15) //(first == 's' && second == 's')
 	{
 		//keep going
 		tape_type = 'f';
 	}
-	else if (15 <= tape_ratio) //(first == 's' && second == 's')
+	else if (15 <= tape_ratio) //(first == 'l' && second == 's')
 	{
 		//turn right
 		tape_type = 'r';
@@ -497,7 +497,7 @@ void regulate_end_tape()
 			n_of_reflexes_on += 1;
 		}
 		else
-			reflex[i] = 0;
+			 reflex[i] = 0;
 	}
 	
 	//div med 0

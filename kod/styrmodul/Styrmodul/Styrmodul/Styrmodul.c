@@ -115,8 +115,14 @@ int main(void)
 	init_pid(50, -50);
 	update_k_values(20, 0, 10);
 	
- 	_delay_ms(2000);
- 	drive_forwards(255);
+	_delay_ms(2000);
+	claw_in();
+	_delay_ms(2000);
+	claw_out();
+	
+	
+ 	//_delay_ms(2000);
+ 	//drive_forwards(255);
 	
 	while(1)
 	{
