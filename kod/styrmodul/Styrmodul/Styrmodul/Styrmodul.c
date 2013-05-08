@@ -680,12 +680,17 @@ dirbits = 1;
 
 void claw_out()
 {
-	CLAW_AMOUNT = 70*4;
+	//CLAW_AMOUNT = 70*4;
+	CLAW_AMOUNT = 312;
+	//CLAW_AMOUNT = 156;
 }
 
 void claw_in()
 {
-	CLAW_AMOUNT = 50*4;
+	//CLAW_AMOUNT = 50*4;
+	//CLAW_AMOUNT = 63;
+	CLAW_AMOUNT = 156;
+	//CLAW_AMOUNT = 100;
 }
 
 
