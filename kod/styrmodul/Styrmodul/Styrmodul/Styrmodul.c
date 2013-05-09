@@ -17,6 +17,7 @@ void debug(char *str);
 #include "comm.h"
 
 uint8_t speed = 255;
+uint8_t SPEED_OFFSET = 14;
 
 
 int main(void)

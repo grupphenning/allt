@@ -99,7 +99,7 @@ void drive_forwards(uint8_t amount)
 	setbit(PORT_DIR, RIGHT_DIR);
 	
 	dirbits=3;
-	LEFT_AMOUNT = amount;
+	LEFT_AMOUNT = amount - SPEED_OFFSET;
 	RIGHT_AMOUNT = amount;
 }
 
@@ -113,7 +113,7 @@ void drive_backwards(uint8_t amount)
 	clearbit(PORT_DIR, RIGHT_DIR);
 	dirbits = 0;
 	
-	LEFT_AMOUNT = amount;
+	LEFT_AMOUNT = amount - SPEED_OFFSET;
 	RIGHT_AMOUNT = amount;
 }
 
@@ -135,7 +135,7 @@ void turn_right(uint8_t amount)
 	setbit(PORT_DIR, RIGHT_DIR);
 
 	dirbits=3;
-	LEFT_AMOUNT = amount;
+	LEFT_AMOUNT = amount - SPEED_OFFSET;
 	RIGHT_AMOUNT = 60;
 }
 

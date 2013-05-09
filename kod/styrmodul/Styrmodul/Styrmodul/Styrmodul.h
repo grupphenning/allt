@@ -50,6 +50,7 @@
 
 //#define SPEED 200
 extern uint8_t speed;
+extern uint8_t SPEED_OFFSET;
 
 // Om du ändrar den här måste du ändra i fjärr också
 #define SENSOR_BUFFER_SIZE 256

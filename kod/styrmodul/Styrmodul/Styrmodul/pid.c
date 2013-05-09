@@ -110,18 +110,18 @@ void regulator(int8_t diff_right, int8_t diff_left, int8_t diff_front, int8_t di
 	{
 		b = speed - (uint8_t)output_u;
 		RIGHT_AMOUNT = b;
-		LEFT_AMOUNT = speed;
+		LEFT_AMOUNT = speed - SPEED_OFFSET;
 	}
 	else if (output_u < 0)
 	{
-		b = speed - (uint8_t)abs(output_u);
+		b = speed - SPEED_OFFSET - (uint8_t)abs(output_u);
 		RIGHT_AMOUNT = speed;
 		LEFT_AMOUNT = b;
 	}
 	else if (output_u == 0)
 	{
 		RIGHT_AMOUNT = speed;
-		LEFT_AMOUNT = speed;
+		LEFT_AMOUNT = speed - SPEED_OFFSET;
 	}
 }
 
