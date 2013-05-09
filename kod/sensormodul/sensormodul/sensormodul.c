@@ -28,6 +28,7 @@ volatile uint8_t adc_interrupt = 0;
 volatile uint8_t has_data_from_spi = 0;
 volatile uint8_t read_and_send_ir_to_master = 0;
 volatile uint8_t follow_end_tape = 0;
+volatile uint8_t autonomous = 0;
 
 int main(void)
 {
@@ -46,6 +47,7 @@ int main(void)
 	//init_gyro();
 	init_sensor_timer();
 	
+	setbit(DDRB, PORTB3);
 
 	
 	
@@ -66,18 +68,22 @@ int main(void)
 			regulate_end_tape();
 		}
 		
-		
+		clearbit(PORTB, PORTB3);
 		if(has_data_from_spi)
 		{
 			
 			if(spi_data_from_master == AUTONOMOUS_MODE)
 			{
+				setbit(PORTB, PORTB3);
+				autonomous = 1;
 				//resetta allt, vi vill inte börja snurra o hålla på
 				data_index=1;
 				adc_interrupt = 0;
 				has_data_from_spi = 0;
 				read_and_send_ir_to_master = 0;
 				follow_end_tape = 0;
+				tape_sensor = 0;
+				tape_type = 0;
 			}
 			
 // 			switch(spi_data_to_master)
@@ -98,8 +104,11 @@ int main(void)
 		if (!follow_end_tape)
 		{
 			read_one_tape(); //AD-omvandlar andra tejpsensorn
-			decode_tape(); //
-			send_decoded_tape();
+			if(tape_sensor != 0)
+			{
+				decode_tape(); //
+				send_decoded_tape();
+			}			
 		}		
     }
 }

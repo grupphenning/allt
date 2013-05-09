@@ -28,8 +28,6 @@ int main(void)
 	//OSCCAL = 0x70;
 	//display ska ut
 //	DDRA = 0xFF;
-
-
 	
 	spi_init();
 	pwm_init();
@@ -49,8 +47,11 @@ int main(void)
 	
 	clear_screen();
 	update();
+	
+	
 	while(1)
 	{
+		
 			uint8_t has_comm_data, has_sensor_data, comm_data, sensor_data;
 		
 		do_spi(&has_comm_data, &has_sensor_data, &comm_data, &sensor_data);
@@ -182,5 +183,7 @@ ISR(TIMER0_OVF_vect)
 	
 }
 
-
-
+ISR(TIMER3_COMPA_vect)
+{
+	turn = 0;
+}

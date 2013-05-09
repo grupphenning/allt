@@ -19,7 +19,7 @@
 #define TURN_RIGHT					0x10
 #define TURN_LEFT					0x11	
 //FIXME: Lägg till fler!
-#define AUTONOMOUS_MODE				17
+#define AUTONOMOUS_MODE				0x12
 
 /* Övriga definitioner */
 #define GYRO PINA2

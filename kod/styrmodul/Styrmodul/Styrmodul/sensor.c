@@ -414,7 +414,7 @@ void decode_sensor(uint8_t data)
 						//is_returning_home = 1;
 					}
 				}
-			}			
+			}
 			
 			break;
 			case SENSOR_TAPE:
@@ -422,7 +422,8 @@ void decode_sensor(uint8_t data)
 				{
 					//disable_pid();
                     make_turning_decision();
-				}					
+				}
+				
                     break;
             case SENSOR_FOLLOW_TAPE:
 				if(autonomous)
@@ -474,31 +475,31 @@ void make_turning_decision()
 		case 'l':
 		//turn left
 		stop_motors();
-		tank_turn_left(255);
+		//tank_turn_left(255);
 		send_string(" Left ");
 		update();
-		//                 _delay_ms(250);
-		//                 make_turn('l');
+		_delay_ms(250);
+		make_turn('l');
 		break;
 		
 		case 'r':
 		//turn right
 		stop_motors();
-		tank_turn_right(255);
+		//tank_turn_right(255);
 		send_string(" Right ");
 		update();
-		//                 _delay_ms(250);
-		//                 make_turn('r');
+		_delay_ms(250);
+		make_turn('r');
 		break;
 		
 		case 'f':
 		//keep going
 		stop_motors();
-		drive_forwards(255);
+		//drive_forwards(255);
 		send_string(" Fram ");
 		update();
-		//                 _delay_ms(250);
-		//                 make_turn('f');
+		_delay_ms(250);
+		make_turn('f');
 		break;
 		
 		case 'g':
@@ -707,7 +708,8 @@ void drive_to_crossing_end(uint8_t stop_distance)
 void make_turn(char dir)
 {
 	static uint8_t first = 1;
-	uint8_t turn_delay = 50;
+	//uint8_t turn_delay = 50;
+	#define turn_delay 50
 	// Sväng färdig
 	if (!turn && !first)
 	{
@@ -729,6 +731,10 @@ void make_turn(char dir)
 					stop_motors();
 					_delay_ms(turn_delay);
 					turn = 1;
+					//sätt igång timern!
+					setbit(TCCR3B, CS30);
+					setbit(TCCR3B, CS32);
+					
 					first = 0;
 					tank_turn_left(speed);
 				}
@@ -740,6 +746,11 @@ void make_turn(char dir)
 					stop_motors();
 					_delay_ms(turn_delay);
 					turn = 1;
+					
+					//sätt igång timern!
+					setbit(TCCR3B, CS30);
+					setbit(TCCR3B, CS32);
+					
 					first = 0;
 					tank_turn_right(speed);
 				}
