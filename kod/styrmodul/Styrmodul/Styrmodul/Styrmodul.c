@@ -130,7 +130,7 @@ ISR(TIMER1_COMPA_vect)
 {
 	if(turn)
 	{
-		ninety_timer++;		
+		ninety_timer++;
 	}
 
 	//en sekund har gått

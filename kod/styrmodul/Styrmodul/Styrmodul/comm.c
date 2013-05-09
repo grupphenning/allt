@@ -114,8 +114,9 @@ void decode_comm(uint8_t command)
 	else if(command == COMM_ENABLE_PID)
 	{
 		autonomous = 1;
+		send_byte_to_sensor(AUTONOMOUS_MODE);
 //		crossing_buffer_p = 0;
-drive_forwards(speed);
+		drive_forwards(speed);
 		enable_pid();
 		enable_crossings();
 		setbit(PORT_DIR, LEFT_DIR);		//Kör framåt under regleringen.

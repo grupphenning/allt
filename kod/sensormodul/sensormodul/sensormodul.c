@@ -13,14 +13,13 @@
 #include <avr/delay.h>
 #include <avr/interrupt.h>
 
-
 uint8_t spi_data_from_master;
 uint8_t spi_data_to_master;
 uint8_t tape_sensor;
 char tape_type;
 
 volatile uint8_t tape_sensor_data[9];
-volatile uint8_t ir_sensor_data[5+1+1];
+volatile uint8_t ir_sensor_data[5+1];
 volatile uint8_t decoded_tape_data[1+1];
 volatile uint8_t tape_position[1+1];
 volatile uint8_t test_data[16+1];
@@ -70,6 +69,17 @@ int main(void)
 		
 		if(has_data_from_spi)
 		{
+			
+			if(spi_data_from_master == AUTONOMOUS_MODE)
+			{
+				//resetta allt, vi vill inte börja snurra o hålla på
+				data_index=1;
+				adc_interrupt = 0;
+				has_data_from_spi = 0;
+				read_and_send_ir_to_master = 0;
+				follow_end_tape = 0;
+			}
+			
 // 			switch(spi_data_to_master)
 // 			{
 // 				case TURN_RIGHT:
@@ -81,6 +91,7 @@ int main(void)
 // 				default:
 // 					break; 
 // 			}
+
 			has_data_from_spi = 0;
 		}	
 		

@@ -48,6 +48,8 @@
 
 #define REFLEX_SENSITIVITY 0x70
 
+#define AUTONOMOUS_MODE	17
+
 //#define SPEED 200
 extern uint8_t speed;
 extern uint8_t SPEED_OFFSET;
