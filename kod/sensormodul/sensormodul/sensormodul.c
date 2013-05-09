@@ -67,6 +67,7 @@ int main(void)
 			}
 			regulate_end_tape();
 		}
+
 		
 		clearbit(PORTB, PORTB3);
 		if(has_data_from_spi)

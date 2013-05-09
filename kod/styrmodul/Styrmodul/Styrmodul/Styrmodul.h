@@ -59,7 +59,7 @@ extern uint8_t SPEED_OFFSET;
 
 //KORNINGSLÄNGDDATA
 #define IR_FRONT_TO_MIDDLE_LENGTH		11
-#define OFFSET							22 
+#define OFFSET							40 
 #define DISTANCE_TO_ALLEY_END			120
 #define MAXIMUM_IR_DISTANCE				150
 #define SEGMENT_LENGTH					80	

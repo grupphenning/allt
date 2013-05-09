@@ -77,6 +77,7 @@ char crossing_direction;
 uint8_t crossing_stop_value;
 uint8_t make_turn_flag = 0;
 uint8_t drive_from_crossing = 0;
+uint8_t first_time_in_tape_crossing = 1;
 
 /* Flagga som anger huruvida displayen ska uppdateras varje gång nya sensorvärden kommer in från sensorenheten */
 uint8_t display_auto_update = 1;	// Påslagen som default
@@ -383,16 +384,18 @@ void decode_sensor(uint8_t data)
 				}
 				else 
 				{	
-					if(tape_crossings)
-					{			
-						/*Hantera tejp-korsningar*/
-						decode_tape_sensor_data();
-					}
+					
 					if(crossings)
 					{
 						/*Hantera korsningar*/
 						handle_crossing();
-					}				
+					}
+					if(tape_crossings)
+					{			
+						/*Hantera tejp-korsningar Bra flaggor satta!*/
+						handle_crossing();
+					}
+			
 
   					if (follow_end_tape)
   					{
@@ -420,8 +423,24 @@ void decode_sensor(uint8_t data)
 			case SENSOR_TAPE:
 				if(autonomous)
 				{
-					//disable_pid();
-                    make_turning_decision();
+					if(!first_time_in_tape_crossing)
+						break;
+					
+					if(sensor_buffer[1] == 'f' || sensor_buffer[1] == 'r' || sensor_buffer[1] == 'l')
+					{
+						first_time_in_tape_crossing = 0;
+						crossing_direction = sensor_buffer[1];
+						tape_crossings = 1;
+						make_turn_flag = 1;
+						has_detected_crossing = 0;
+						crossings = 0;	
+					}
+					else if (sensor_buffer[1] == 'g')
+					{
+						follow_end_tape = 1;
+					}
+					
+                    //make_turning_decision();
 				}
 				
                     break;
@@ -463,7 +482,12 @@ void decode_sensor(uint8_t data)
 	{
 		a=0;
 		update_display_string();
-		send_sensor_buffer_to_remote();
+		/* OBS OBS OBS OBS OBS OBS OBS OBSOBS OBS OBS OBSOBS OBS OBS OBSOBS OBS OBS OBS
+			
+			OM NEDANSTÅENDE KODRAD KÖRS GÅR FJÄRRSTYRNINGEN ÅT HELVETE
+			
+		OBS OBS OBS OBSOBS OBS OBS OBSOBS OBS OBS OBSOBS OBS OBS OBSOBS OBS OBS OBSOBS OBS OBS OBS*/
+		//send_sensor_buffer_to_remote();				
 	}
 }
 
@@ -473,38 +497,25 @@ void make_turning_decision()
 	switch (tape_type)
 	{
 		case 'l':
-		//turn left
-		stop_motors();
-		//tank_turn_left(255);
-		send_string(" Left ");
-		update();
-		_delay_ms(250);
-		make_turn('l');
-		break;
+			//turn left
+			stop_motors();
+			make_turn('l');
+			break;
 		
 		case 'r':
-		//turn right
-		stop_motors();
-		//tank_turn_right(255);
-		send_string(" Right ");
-		update();
-		_delay_ms(250);
-		make_turn('r');
-		break;
+			//turn right
+			stop_motors();
+			make_turn('r');
+			break;
 		
 		case 'f':
-		//keep going
-		stop_motors();
-		//drive_forwards(255);
-		send_string(" Fram ");
-		update();
-		_delay_ms(250);
-		make_turn('f');
-		break;
+			//keep going
+			make_turn('f');
+			break;
 		
 		case 'g':
-		follow_end_tape = 1;
-		break;
+			follow_end_tape = 1;
+			break;
 	}
 }
 
@@ -582,7 +593,7 @@ void handle_crossing()
 	//Om korsning detekterad. Kör till korsningens rotationscentrum, och sätt is_turning flagga
 	else if(has_detected_crossing)
 	{
-		disable_pid();
+		//disable_pid();
 		drive_to_crossing_end(crossing_stop_value);
 	}
 	//Sväng tills villkor för svängning uppfyllt, sätt  is_turning flagga, nollställ begin turning
@@ -593,11 +604,14 @@ void handle_crossing()
 	//Kör ut från korsningen till regleringen är redo att slås på igen, nollställ drive_from_crossing flagga
 	else if(drive_from_crossing)
 	{
-		if (sensor_buffer[IR_LEFT_BACK] <= SEGMENT_LENGTH && sensor_buffer[IR_RIGHT_BACK] <= SEGMENT_LENGTH)
+		if (sensor_buffer[IR_LEFT_BACK] <= SEGMENT_LENGTH-30 && sensor_buffer[IR_RIGHT_BACK]-30 <= SEGMENT_LENGTH)
 		{
-			stop_motors();
+			
 			drive_from_crossing = 0;
-			enable_pid();
+			crossings = 1;
+			tape_crossings = 0;
+			first_time_in_tape_crossing = 0;
+			//enable_pid();
 		}
 	}
 	else
@@ -613,7 +627,7 @@ void handle_crossing()
  */
 void analyze_ir_sensors()
 {
-	uint8_t sample_limit = 5;
+	uint8_t sample_limit = 3;
 	static uint8_t decision_tlar_count = 0, decision_tral_count = 0, decision_tlaf_count = 0, decision_traf_count = 0, decision_tfal_count = 0, decision_tfar_count = 0; 
 	
 	//Turn left, alley right												
@@ -700,7 +714,7 @@ void drive_to_crossing_end(uint8_t stop_distance)
 	if ((sensor_buffer[IR_FRONT] <= stop_distance) || stop_distance == 0)
 	{
 		make_turn_flag = 1;
-		//stop_motors();
+		stop_motors();
 		has_detected_crossing = 0;
 	}
 	
@@ -708,14 +722,17 @@ void drive_to_crossing_end(uint8_t stop_distance)
 
 void make_turn(char dir)
 {
+
 	static uint8_t first = 1;
 	//uint8_t turn_delay = 50;
-	#define turn_delay 50
 	// Sväng färdig
 	if (!turn && !first)
 	{
+		//stoppa timern!
+		clearbit(TCCR3B, CS30);
+		clearbit(TCCR3B, CS32);
 		stop_motors();
-		_delay_ms(turn_delay);
+		_delay_ms(2000);
 		drive_forwards(speed);
 		first = 1;
 		make_turn_flag = 0;
@@ -729,8 +746,6 @@ void make_turn(char dir)
 			case 'l':
 				if(first)
 				{
-					stop_motors();
-					_delay_ms(turn_delay);
 					turn = 1;
 					//sätt igång timern!
 					setbit(TCCR3B, CS30);
@@ -744,8 +759,6 @@ void make_turn(char dir)
 			case 'r':
 				if(first)
 				{
-					stop_motors();
-					_delay_ms(turn_delay);
 					turn = 1;
 					
 					//sätt igång timern!
@@ -769,7 +782,6 @@ void make_turn(char dir)
 void enable_crossings()
 {
 	crossings = 1;
-	tape_crossings = 1;
 	has_detected_crossing = 0;
 	make_turn_flag = 0;
 	drive_from_crossing = 0;
@@ -777,7 +789,6 @@ void enable_crossings()
 
 void disable_crossings()
 {
-	tape_crossings = 0;
 	crossings = 0;
 }
 

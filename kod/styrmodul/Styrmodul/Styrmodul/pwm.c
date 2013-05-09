@@ -88,6 +88,7 @@ void pwm_init()
 	//fullt ös på OCR=0xff, inget på 0x00
 	
 	
+	
 	//en helt EGEN 90-graderstimer
 	TCCR3A = 0;
 	setbit(TCCR3A, COM3A1);
@@ -100,6 +101,11 @@ void pwm_init()
 	
 	//setbit(TCCR3B, CS30);
 	//setbit(TCCR3B, CS32);
+	
+	//För fulladdat batteri:
+		//Utan svart tejp på:		 2700
+		//Med svart tejp på:		 2400
+	
 	ICR3 = 2700;
 	//ICR3 = 7812; //1 Hz!!
 	//ICR3 = 15625;
