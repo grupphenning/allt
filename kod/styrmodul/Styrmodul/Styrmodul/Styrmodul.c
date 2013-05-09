@@ -137,7 +137,7 @@ ISR(TIMER1_COMPA_vect)
 	//en sekund har gått
 	if(ninety_timer == 17)
 	{
-		turn = 0;
+		//turn = 0;
 		//tank_turn_left(255);
 		ninety_timer=0;
 	}
