@@ -88,6 +88,19 @@ void pwm_init()
 	//fullt ös på OCR=0xff, inget på 0x00
 	
 	
+	//en helt EGEN 90-graderstimer
+	TCCR3A = 0;
+	setbit(TCCR3A, COM3A1);
+	setbit(TCCR3A, WGM30);
+	setbit(TCCR3A, WGM31);
+	
+	//starta inte timern än, gör det när du ska börja svänga!
+	//setbit(TCCR3B, CS30);
+	//setbit(TCCR3B, CS32);
+	ICR3 = 7812; //1 Hz!!
+	
+	setbit(TIMSK3, OCIE3A);
+	
 }
 
 

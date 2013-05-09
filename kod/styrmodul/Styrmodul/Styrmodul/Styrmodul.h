@@ -48,7 +48,7 @@
 
 #define REFLEX_SENSITIVITY 0x70
 
-#define AUTONOMOUS_MODE	17
+#define AUTONOMOUS_MODE	0x12
 
 //#define SPEED 200
 extern uint8_t speed;
