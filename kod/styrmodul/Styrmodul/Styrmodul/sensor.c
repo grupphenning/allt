@@ -581,7 +581,7 @@ void handle_crossing()
 	//Om korsning detekterad. Kör till korsningens rotationscentrum, och sätt is_turning flagga
 	else if(has_detected_crossing)
 	{
-		
+		disable_pid();
 		drive_to_crossing_end(crossing_stop_value);
 	}
 	//Sväng tills villkor för svängning uppfyllt, sätt  is_turning flagga, nollställ begin turning
@@ -596,6 +596,7 @@ void handle_crossing()
 		{
 			stop_motors();
 			drive_from_crossing = 0;
+			enable_pid();
 		}
 	}
 	else
@@ -611,7 +612,7 @@ void handle_crossing()
  */
 void analyze_ir_sensors()
 {
-	uint8_t sample_limit = 30;
+	uint8_t sample_limit = 5;
 	static uint8_t decision_tlar_count = 0, decision_tral_count = 0, decision_tlaf_count = 0, decision_traf_count = 0, decision_tfal_count = 0, decision_tfar_count = 0; 
 	
 	//Turn left, alley right												
