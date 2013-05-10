@@ -61,7 +61,8 @@ void update_display_string()
 		    if(base == 10)
 		    {
 			    sprintf(tmpp, "%3d", sensor_buffer[sensor]);
-			    tmpp++; // Decimal-strängen är tre tecken
+			    //debug(tmpp);
+				tmpp++; // Decimal-strängen är tre tecken
 			    tmpp++;
 			    tmpp++;
 		    } else

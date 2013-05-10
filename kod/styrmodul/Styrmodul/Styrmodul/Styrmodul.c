@@ -22,7 +22,6 @@ uint8_t SPEED_OFFSET = 14;
 
 int main(void)
 {
-	
 	//don't turn!
 	turn = 0;
 	//OSCCAL = 0x70;
@@ -40,9 +39,9 @@ int main(void)
 	update_k_values(100, 0, 170);
 	
 	
-	sensor_buffer_pointer = 0x00;	// Pekare till aktuell position i bufferten
+	tmp_sensor_buffer_p = 0x00;	// Pekare till aktuell position i bufferten
 	sensor_start = 1;				// Flagga som avgör huruvida vi är i början av meddelande
-	sensor_packet_length = 0x00;			// Anger aktuell längd av meddelandet
+	tmp_sensor_buffer_len = 0x00;			// Anger aktuell längd av meddelandet
 	init_default_printf_string();
 	
 	clear_screen();
@@ -52,12 +51,12 @@ int main(void)
 	while(1)
 	{
 		
-			uint8_t has_comm_data, has_sensor_data, comm_data, sensor_data;
+		uint8_t has_comm_data, has_sensor_data, comm_data, sensor_data;
 		
 		do_spi(&has_comm_data, &has_sensor_data, &comm_data, &sensor_data);
 		
 		if(has_comm_data) decode_comm(comm_data);
-		if(has_sensor_data) decode_sensor(sensor_data);
+		if(has_sensor_data) decode_sensor(sensor_data);		
 		
 // 		if(turn)
 // 			tank_turn_left(speed);
@@ -80,6 +79,9 @@ int main(void)
 // 		{
 // 			regulate_end_tape(spi_data_from_sensor);
 // 		}
+
+		//debug("Hej");
+
 		if (regulator_enable && regulator_flag)
 		{
 			regulator(sensor_buffer[IR_RIGHT_FRONT] - sensor_buffer[IR_RIGHT_BACK], 
@@ -97,17 +99,17 @@ void send_sensor_buffer_to_remote(void)
 {
 	unsigned i;
 	send_byte_to_comm('s');
-	send_byte_to_comm(32);
-	for(i = 0; i < 32; ++i) send_byte_to_comm(sensor_buffer[i]);
+	send_byte_to_comm(3);
+	for(i = 0; i < 3; ++i) send_byte_to_comm(sensor_buffer[i]);
 }
 
 
 
 
 
-/*
-..................................................|         /  _________________     __              __    __              __.........................
-..................................................|        /  |  ______________  |  |  \            /  |  |  \            /  |........................
+/*															   __________________    _                _    _                _
+..................................................|         / |  ______________  |  | \              / |  | \              / |.........................
+..................................................|        /  | |              | |  |  \            /  |  |  \            /  |........................
 ..................................................|       /   | |              | |  |   \          /   |  |   \          /   |........................
 ..................................................|      /    | |              | |  |    \        /    |  |    \        /    |.......................
 ..................................................|     /     | |              | |  |     \      /     |  |     \      /     |........................
@@ -135,7 +137,7 @@ ISR(TIMER1_COMPA_vect)
 	}
 
 	//en sekund har gått
-	if(ninety_timer == 17)
+	if(ninety_timer == 18)
 	{
 		//turn = 0;
 		//tank_turn_left(255);

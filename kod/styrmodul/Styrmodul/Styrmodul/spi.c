@@ -5,8 +5,10 @@
  *  Author: davek282
  */ 
 #include "spi.h"
+#include <avr/delay.h>
 #include <avr/interrupt.h>
 #include "bitmacros.h"
+#include <stddef.h>
 // Buffrar som sparar data vi får från de andra SPI-enheterna
 
 static volatile uint8_t spi_data_from_comm[256];
@@ -135,17 +137,29 @@ void do_spi(uint8_t *has_comm_data_out, uint8_t *has_sensor_data_out, uint8_t *c
 		}
 	}
 	
-	if(spi_comm_write != spi_comm_read)
-	{
-		*has_comm_data_out = 1;
-		*comm_data_out = spi_data_from_comm[spi_comm_read++];
-	}
-	else *has_comm_data_out = 0;
-			
-	if(spi_sensor_write != spi_sensor_read)
-	{
-		*has_sensor_data_out = 1;
-		*sensor_data_out = spi_data_from_sensor[spi_sensor_read++];
-	}
-	else *has_sensor_data_out = 0;
+	if(comm_data_out) {
+		if(spi_comm_write != spi_comm_read)
+		{
+			*has_comm_data_out = 1;
+			*comm_data_out = spi_data_from_comm[spi_comm_read++];
+		}
+		else *has_comm_data_out = 0;
+	}		
+	
+	if(sensor_data_out) {		
+		if(spi_sensor_write != spi_sensor_read)
+		{
+			*has_sensor_data_out = 1;
+			*sensor_data_out = spi_data_from_sensor[spi_sensor_read++];
+		}
+		else *has_sensor_data_out = 0;
+	}		
 }	
+
+void spi_delay_ms(unsigned ms)
+{
+	for(unsigned i = 0; i < ms; i += 5) {
+		do_spi(NULL, NULL, NULL, NULL);
+		_delay_ms(5);
+	}		
+}

@@ -28,17 +28,19 @@ uint8_t regulator_enable = 0;					//Flagga för att indikera 40 ms åt regulator
 
 // Denna ancänds bara av inte-interrupt-koden
 uint8_t sensor_buffer[SENSOR_BUFFER_SIZE];		// Buffer som håller data från sensorenheten
-uint8_t sensor_buffer_pointer;			// Pekare till aktuell position i bufferten
-uint8_t sensor_start;					// Flagga som avgör huruvida vi är i början av meddelande
-uint8_t sensor_packet_length;					// Anger aktuell längd av meddelandet
+uint8_t tape_command;
+uint8_t tmp_sensor_buffer[256];					// Tape-argument från sensorenheten
+uint8_t tmp_sensor_buffer_p;					// Pekare till aktuell position i bufferten
+uint8_t sensor_start;							// Flagga som avgör huruvida vi är i början av meddelande
+uint8_t tmp_sensor_buffer_len;					// Anger aktuell längd av meddelandet
 // Innehåller de spänningsvärden som ses i grafen på https://docs.isy.liu.se/twiki/pub/VanHeden/DataSheets/gp2y0a21.pdf, sid. 4.
 uint8_t small_ir_voltage_array[122] = {140, 139, 138, 137, 136, 135, 134, 133, 132, 131, 130, 129, 128, 127,
-126, 125, 124, 123, 122, 121, 120, 119, 118, 117, 116, 115, 114, 113,
-112, 111, 110, 109, 108, 107, 106, 105, 104, 103, 102, 101, 100, 99,
-98, 97, 96, 95, 94, 93, 92, 91, 90, 89, 88, 87, 86, 85, 84, 83, 82,
-81, 80, 79, 78, 77, 76, 75, 74, 73, 72, 71, 70, 69, 68, 67, 66, 65,
-64, 63, 62, 61, 60, 59, 58, 57, 56, 55, 54, 53, 52, 51, 50, 49, 48,
-47, 46, 45, 44, 43, 42, 41, 40, 39, 38, 37, 36, 35, 34, 33, 32, 31,
+									   126, 125, 124, 123, 122, 121, 120, 119, 118, 117, 116, 115, 114, 113,
+									   112, 111, 110, 109, 108, 107, 106, 105, 104, 103, 102, 101, 100, 99,
+									   98, 97, 96, 95, 94, 93, 92, 91, 90, 89, 88, 87, 86, 85, 84, 83, 82,
+									   81, 80, 79, 78, 77, 76, 75, 74, 73, 72, 71, 70, 69, 68, 67, 66, 65,
+									   64, 63, 62, 61, 60, 59, 58, 57, 56, 55, 54, 53, 52, 51, 50, 49, 48,
+									   47, 46, 45, 44, 43, 42, 41, 40, 39, 38, 37, 36, 35, 34, 33, 32, 31,
 									   30, 29, 28, 27, 26, 25, 24, 23, 22, 21, 20, 19};	
 uint8_t small_ir_centimeter_array[122] = {8, 8, 8, 8, 8, 8, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 10, 10, 10, 10, 10,
 										  10, 10, 10, 10, 11, 11, 11, 11, 11, 11, 11, 12, 12, 12, 12, 12, 12, 13, 
@@ -126,7 +128,7 @@ void regulate_end_tape_4()
 		update();
 	}
 	
-	int8_t pos = sensor_buffer[1]; //-5 för längst till vänster, 5 för höger, 0 i mitten!
+	int8_t pos = tape_command; //-5 för längst till vänster, 5 för höger, 0 i mitten!
 	if(pos > 0)
 	{
 		RIGHT_AMOUNT = speed + 30 + pos*5;
@@ -265,28 +267,29 @@ void decode_sensor(uint8_t data)
 	
 	//Tilläggsvariabler
 	static uint8_t left_back=0, left_front=0, right_back=0, right_front = 0; 
+	static uint8_t reading_tape = 0;
 
 	/* Första byten i ett meddelande är storleken */
 	if(sensor_start)
 	{
-		sensor_packet_length = data;
+		tmp_sensor_buffer_len = data;
 		sensor_start = 0;
 		return;
 	}
 
 	/* Annars, lägg in inkommande byten i bufferten */
-	sensor_buffer[sensor_buffer_pointer++] = data;
+	tmp_sensor_buffer[tmp_sensor_buffer_p++] = data;
 
 	/* Om det är fler byte kvar att ta emot, vänta på dem! */
-	if(sensor_buffer_pointer != sensor_packet_length)
+	if(tmp_sensor_buffer_p != tmp_sensor_buffer_len)
 		return;
 	/* Aha, vi har tagit emot hela meddelandet! Tolka detta! */
-	
+	sensor_start = 1;
 
 /**********************************************************************
  * Här hanteras kommandon från sensorenheten
  **********************************************************************/
-	switch(sensor_buffer[0]) {
+	switch(tmp_sensor_buffer[0]) {
 		case SENSOR_DEBUG:
 			//sensor_debug_message();
 			break;
@@ -297,7 +300,7 @@ void decode_sensor(uint8_t data)
 			stop_motors();
 			break;	
 		case SENSOR_IR:
-			
+			memcpy(sensor_buffer, tmp_sensor_buffer, tmp_sensor_buffer_len);
 			
 			//Omvandla sensorvärden från spänningar till centimeter.
 			sensor_buffer[IR_FRONT] = interpret_big_ir(sensor_buffer[IR_FRONT]);
@@ -305,7 +308,7 @@ void decode_sensor(uint8_t data)
 			sensor_buffer[IR_RIGHT_FRONT] = interpret_big_ir(sensor_buffer[IR_RIGHT_FRONT])+right_front;
 			sensor_buffer[IR_LEFT_BACK] = interpret_small_ir(sensor_buffer[IR_LEFT_BACK])+left_back;
 			sensor_buffer[IR_RIGHT_BACK] = interpret_small_ir(sensor_buffer[IR_RIGHT_BACK])+right_back;
-			
+
 			
 			if(calibrate_sensors)
 			{
@@ -332,8 +335,7 @@ void decode_sensor(uint8_t data)
 				
 				calibrate_sensors = 0;			
 			}
-			
-			
+		
 			//Wait a few times before using data
 			if(sensor_transmission_number<4)
 			{
@@ -418,24 +420,29 @@ void decode_sensor(uint8_t data)
 					}
 				}
 			}
-			
+			//update_display_string();
 			break;
+			
 			case SENSOR_TAPE:
+				tape_command = tmp_sensor_buffer[1];
+			
 				if(autonomous)
 				{
 					if(!first_time_in_tape_crossing)
 						break;
 					
-					if(sensor_buffer[1] == 'f' || sensor_buffer[1] == 'r' || sensor_buffer[1] == 'l')
+					if(tape_command == 'f' || tape_command == 'r' || tape_command == 'l')
 					{
+						spi_delay_ms(1500);
 						first_time_in_tape_crossing = 0;
-						crossing_direction = sensor_buffer[1];
+						crossing_direction = tape_command;
 						tape_crossings = 1;
 						make_turn_flag = 1;
 						has_detected_crossing = 0;
-						crossings = 0;	
+						crossings = 0;
+						crossing_stop_value = 40;	
 					}
-					else if (sensor_buffer[1] == 'g')
+					else if (tape_command == 'g')
 					{
 						follow_end_tape = 1;
 					}
@@ -445,13 +452,15 @@ void decode_sensor(uint8_t data)
 				
                     break;
             case SENSOR_FOLLOW_TAPE:
+				tape_command = tmp_sensor_buffer[1];
 				if(autonomous)
 				{
                     regulate_end_tape_4();
-				}					
+				}				
                     break;
             case SENSOR_FOLLOW_TAPE_END:
                     {
+						
 						if(autonomous)
 						{
                             stop_motors();
@@ -463,9 +472,10 @@ void decode_sensor(uint8_t data)
                
                             //is_returning_home = 1;        // OBS! SKALL GÖRAS EFTER ATT 180-GRADERSSVÄNGEN UTFÖRTS!!!
                             follow_end_tape = 0;
+							speed = 255;
 						}							        
-                    }
-			
+                    }	
+					break;			
 		default:
 				// Unimplemented command
 			break;
@@ -473,9 +483,8 @@ void decode_sensor(uint8_t data)
 
 	
 	/* Återställ pekare, för att visa att nästa byte är början av meddelande */
-	sensor_buffer_pointer = 0x00;
-	sensor_packet_length = 0;
-	sensor_start = 1;
+	tmp_sensor_buffer_p = 0x00;
+	tmp_sensor_buffer_len = 0;
 	
 	static uint8_t a=0;
 	if((a++ & 0b10000) && display_auto_update)
@@ -487,13 +496,13 @@ void decode_sensor(uint8_t data)
 			OM NEDANSTÅENDE KODRAD KÖRS GÅR FJÄRRSTYRNINGEN ÅT HELVETE
 			
 		OBS OBS OBS OBSOBS OBS OBS OBSOBS OBS OBS OBSOBS OBS OBS OBSOBS OBS OBS OBSOBS OBS OBS OBS*/
-		//send_sensor_buffer_to_remote();				
-	}
+		send_sensor_buffer_to_remote();				
+	}	
 }
 
 void make_turning_decision()
 {
-	uint8_t tape_type = sensor_buffer[1];
+	uint8_t tape_type = tape_command;
 	switch (tape_type)
 	{
 		case 'l':
@@ -523,7 +532,7 @@ void make_turning_decision()
 void sensor_debug_message()
 {
 	clear_screen();
-	send_string(sensor_buffer+1);
+	send_string(tmp_sensor_buffer+1);
 	update();
 }
 
@@ -531,9 +540,9 @@ void sensor_debug_hex()
 {
 	uint8_t pos = 1;	// Gå förbi DEBUG_HEX-kommandot
 	char tmpstr[10];
-	while(pos != sensor_packet_length)
+	while(pos != tmp_sensor_buffer_len)
 	{
-		sprintf(tmpstr, "%02X", sensor_buffer[pos++]);
+		sprintf(tmpstr, "%02X", tmp_sensor_buffer[pos++]);
 		send_string(tmpstr);
 	}
 	update();
@@ -610,7 +619,7 @@ void handle_crossing()
 			drive_from_crossing = 0;
 			crossings = 1;
 			tape_crossings = 0;
-			first_time_in_tape_crossing = 0;
+			first_time_in_tape_crossing = 1;
 			//enable_pid();
 		}
 	}

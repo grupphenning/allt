@@ -29,9 +29,9 @@ void sensor_debug_message();
 void decode_sensor(uint8_t data);
 
 extern volatile uint8_t turn;
-extern uint8_t sensor_buffer_pointer;
+extern uint8_t tmp_sensor_buffer_p;
 extern uint8_t sensor_start;
-extern uint8_t sensor_packet_length;
+extern uint8_t tmp_sensor_buffer_len;
 extern uint8_t regulator_enable;
 extern volatile uint8_t ninety_timer;
 extern uint8_t autonomous;

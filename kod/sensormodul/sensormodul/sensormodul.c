@@ -105,9 +105,9 @@ int main(void)
 		if (!follow_end_tape)
 		{
 			read_one_tape(); //AD-omvandlar andra tejpsensorn
-			if(tape_sensor != 0)
+			if(tape_sensor)
 			{
-				decode_tape(); //
+				decode_tape();
 				send_decoded_tape();
 			}			
 		}		
