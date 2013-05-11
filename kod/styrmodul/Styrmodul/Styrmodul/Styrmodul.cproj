@@ -26,7 +26,7 @@
     <com_atmel_avrdbg_tool_jtagicemk3>
       <ToolType>com.atmel.avrdbg.tool.jtagicemk3</ToolType>
       <ToolName>JTAGICE3</ToolName>
-      <ToolNumber>J30200009008</ToolNumber>
+      <ToolNumber>J30200013091</ToolNumber>
       <KeepTimersRunning>true</KeepTimersRunning>
       <OverrideVtor>false</OverrideVtor>
       <OverrideVtorValue>
@@ -41,7 +41,7 @@
         <InterfaceProperties>
           <JtagDbgClock>1000000</JtagDbgClock>
           <JtagProgClock>1000000</JtagProgClock>
-          <IspClock>150000</IspClock>
+          <IspClock>250000</IspClock>
           <JtagInChain>true</JtagInChain>
           <JtagEnableExtResetOnStartSession>false</JtagEnableExtResetOnStartSession>
           <JtagDevicesBefore>0</JtagDevicesBefore>

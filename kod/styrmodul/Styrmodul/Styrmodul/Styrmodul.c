@@ -34,9 +34,11 @@ int main(void)
 	init_display();
 	update();
 	
+	//Vid testning bästa konstanterna.
+	//Regulator känslig för dåligt kalibrerade sensorer.
 	clear_pid();
 	init_pid(80, -80);
-	update_k_values(15, 2, 11);
+	update_k_values(30, 10, 18);
 	
 	
 	tmp_sensor_buffer_p = 0x00;	// Pekare till aktuell position i bufferten
