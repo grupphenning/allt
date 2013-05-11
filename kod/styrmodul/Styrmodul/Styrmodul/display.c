@@ -1,6 +1,7 @@
 #include <avr/io.h>
 #include <util/delay.h>
 #include "display.h"
+#include "spi.h"
 
 void send_character_real(unsigned char character);
 unsigned char position = 0;
@@ -9,7 +10,7 @@ char framebuffer[32];
 void init_display(void)
 {
 	LCD_CONTROL_DIR |= 1 << LCD_ENABLE | 1 << LCD_RW | 1 << LCD_RS;
-	_delay_ms(200);		// Wait for LCD to turn on
+	spi_delay_ms(200);		// Wait for LCD to turn on
 
 	/* Command is as:
 	   001DNF--
@@ -18,7 +19,7 @@ void init_display(void)
 	   F  = Font
 	*/
 	send_command(0b00111000);
-	_delay_ms(50);			//FIXME!!! This should be 2 ms, shouldn't it?
+	spi_delay_ms(50);			//FIXME!!! This should be 2 ms, shouldn't it?
 
 	/* Command is as:
 	   00001DCB
@@ -27,13 +28,13 @@ void init_display(void)
 	   B = blink cursor
 	*/
 	send_command(0b00001101);
-	_delay_ms(50);			// FIXME!!! This too should be 2 ms!
+	spi_delay_ms(50);			// FIXME!!! This too should be 2 ms!
 
 	send_command(0x01);	// Clear display screen
-	_delay_ms(2);
+	spi_delay_ms(2);
 
 	LCD_DATA_DIR = 0xFF;		// set LCD data direction to output
-	_delay_ms(2);
+	spi_delay_ms(2);
 
 	init_swedish();
 }
@@ -58,15 +59,15 @@ void register_character(char* font, unsigned pos)
 	if(pos >= 0x10)	// There are only 16 custom characters
 		return;
 
-	_delay_ms(20);	// FIXME!!! Why?!? Makes no sense!
+	spi_delay_ms(20);	// FIXME!!! Why?!? Makes no sense!
 	send_command(0x40 | pos * 0x08);
-	_delay_ms(2);
+	spi_delay_ms(2);
 
 	int i;
 	for(i = 0; i <= 0x08; i++)
 	{
 		send_character_real(*font++);
-		_delay_ms(2);
+		spi_delay_ms(2);
 	}
 }
 
@@ -80,7 +81,7 @@ void gotoyx(unsigned y, unsigned x)
 		position = 0x10 + x;
 	// Hardware way to do it
 //	send_command(0x80 | pos);
-//	_delay_ms(50); // FIXME Too long, but how long is long enough?
+//	spi_delay_ms(50); // FIXME Too long, but how long is long enough?
 }
 
 
@@ -125,7 +126,7 @@ void send_string(char *string)
 
 void send_command(char command)
 {
-//	_delay_ms(20);		// This really shouldn't be necessecary...
+//	spi_delay_ms(20);		// This really shouldn't be necessecary...
 	check_busy();
 	LCD_DATA = command;
 	LCD_CONTROL &= ~((1 << LCD_RW) | (1 << LCD_RS)); // RW = 0 (= read mode), RS = 0 (= command mode)
@@ -169,18 +170,18 @@ void newline()
 void update()
 {
 	send_command(0x02);	// Cursor home
-	_delay_ms(20);		// FIXME!!! Seriously... what the hell? Why?!
+	spi_delay_ms(20);		// FIXME!!! Seriously... what the hell? Why?!
 
 	int length = 32;	// The total length of the LCD
 	unsigned char *string = framebuffer;
 	while(length > 0)
 	{
 		send_character_real(*string++);
-		_delay_ms(2);
+		spi_delay_ms(2);
 		if(--length == 16)	// End of first line of LCD
 		{
 			send_command(0x80 | 0x40);	// Next line
-			_delay_ms(2);
+			spi_delay_ms(2);
 		}
 	}
 }

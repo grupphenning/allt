@@ -36,8 +36,8 @@ int main(void)
 	
 	//Vid testning bästa konstanterna.
 	//Regulator känslig för dåligt kalibrerade sensorer.
-	clear_pid();
-	init_pid(80, -80);
+	clear_pid();	
+	init_pid(150, -150);
 	update_k_values(30, 10, 18);
 	
 	

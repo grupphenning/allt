@@ -131,7 +131,7 @@ void drive_forwards(uint8_t amount)
 void drive_backwards(uint8_t amount)
 {
 	stop_motors();
-	_delay_ms(10);
+	spi_delay_ms(10);
 	
 	//sätt nollor (bakåt) på DIR-pinnarna
 	clearbit(PORT_DIR, LEFT_DIR);

@@ -292,7 +292,7 @@ void MainWindow::on_pushButtonPID_clicked()
     QByteArray array;
     array.append('p');
     array.append(ui->spinBoxP->value());
-    array.append(ui->spinBoxP->value());
+    array.append(ui->spinBoxA->value());
     array.append((ui->spinBoxD->value() >> 8) & 0xff);
     array.append(ui->spinBoxD->value() & 0xff);
     port->write(array);

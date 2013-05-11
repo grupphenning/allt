@@ -491,13 +491,11 @@ void decode_sensor(uint8_t data)
 	{
 		a=0;
 		update_display_string();
-		/* OBS OBS OBS OBS OBS OBS OBS OBSOBS OBS OBS OBSOBS OBS OBS OBSOBS OBS OBS OBS
-			
-			OM NEDANSTÅENDE KODRAD KÖRS GÅR FJÄRRSTYRNINGEN ÅT HELVETE
-			
-		OBS OBS OBS OBSOBS OBS OBS OBSOBS OBS OBS OBSOBS OBS OBS OBSOBS OBS OBS OBSOBS OBS OBS OBS*/
-		send_sensor_buffer_to_remote();				
-	}	
+	}
+	static uint16_t c = 0;
+	if(c++ % 512 == 0)
+		send_sensor_buffer_to_remote();
+	
 }
 
 void make_turning_decision()
@@ -741,7 +739,7 @@ void make_turn(char dir)
 		clearbit(TCCR3B, CS30);
 		clearbit(TCCR3B, CS32);
 		stop_motors();
-		_delay_ms(2000);
+		spi_delay_ms(2000);
 		drive_forwards(speed);
 		first = 1;
 		make_turn_flag = 0;
