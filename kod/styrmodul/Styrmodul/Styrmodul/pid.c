@@ -54,7 +54,7 @@ Input:
 IR_LEFT_FRONT, IR_RIGHT_FRONT, IR_LEFT_BACK & IR_RIGHT_BACK.
 Frontsensorer: (16 -- 150)	Backsensorer: (8 -- 80)
 Output:
-Styrsignal till motorerna, u: (-50 -- 50)
+Styrsignal till motorerna, u: (-80 -- 80)
 
 Reglera mot målvägg.
 1 höger.
@@ -67,20 +67,20 @@ void regulator(int8_t diff_right, int8_t diff_left, int8_t diff_front, int8_t di
 		
 	//Undersök vilken vägg som är närmast.
 	uint8_t targetwall = 0;
-	//targetwall = (sensor_buffer[IR_LEFT_BACK]+sensor_buffer[IR_LEFT_FRONT]) > (sensor_buffer[IR_RIGHT_BACK] + sensor_buffer[IR_RIGHT_FRONT])? 1 : 0;
+	targetwall = (sensor_buffer[IR_LEFT_BACK]+sensor_buffer[IR_LEFT_FRONT]) > (sensor_buffer[IR_RIGHT_BACK] + sensor_buffer[IR_RIGHT_FRONT])? 1 : 0;
 	
 	//Dubbelkolla om för nära en vägg, eller för långt ifrån.
 // 	if (((sensor_buffer[IR_LEFT_FRONT] <= 20) && (sensor_buffer[IR_LEFT_BACK] <= 20)) || sensor_buffer[IR_LEFT_FRONT] > 80) targetwall = 1;
 // 	else if (((sensor_buffer[IR_RIGHT_FRONT] <= 20) && (sensor_buffer[IR_RIGHT_BACK] <= 20)) || sensor_buffer[IR_RIGHT_FRONT] > 80) targetwall = 0;
 	
 	
-	if ((sensor_buffer[IR_LEFT_FRONT] <= 25) || (sensor_buffer[IR_LEFT_BACK] <= 25))
+	if ((sensor_buffer[IR_LEFT_FRONT] <= 16) || (sensor_buffer[IR_LEFT_BACK] <= 16))
 	{
-		output_u += 128*50;			//Om nära en vägg, dra på lite extra.
+		output_u += 128*80;			//Om nära en vägg, dra på lite extra.
 	}
-	else if ((sensor_buffer[IR_RIGHT_FRONT] <= 30) || (sensor_buffer[IR_RIGHT_BACK] <= 30))
+	else if ((sensor_buffer[IR_RIGHT_FRONT] <= 16) || (sensor_buffer[IR_RIGHT_BACK] <= 16))
 	{
-		output_u -= 128*50;
+		output_u -= 128*80;
 	}
 	else if (targetwall == 1)		//Reglera mot höger vägg
 	{
@@ -92,15 +92,19 @@ void regulator(int8_t diff_right, int8_t diff_left, int8_t diff_front, int8_t di
 		output_u = -k_prop*diff_left;						//P-del
 		output_u -= k_der*(diff_left - last_diff_left);		//D-del
 	}
-	else						//Styr mot mitten.
-	{
-		/*output_u += (diff_front+diff_back)*2*/;
-	}
+							//Styr mot mitten.
+	
+	output_u += (diff_front+diff_back)*k_a;
+	
 	
 	last_diff_right = diff_right;
 	last_diff_left = diff_left;
 	
 	output_u = output_u/128;	//Skala ner igen;
+	
+// 	char debug_output;
+// 	sprintf(debug_output, "%3d", output_u);
+//	debug(debug_output);
 	
 	if (output_u > max_out) output_u = max_out;
 	else if(output_u < min_out) output_u = min_out;

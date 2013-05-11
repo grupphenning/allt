@@ -35,8 +35,8 @@ int main(void)
 	update();
 	
 	clear_pid();
-	init_pid(50, -50);
-	update_k_values(100, 0, 170);
+	init_pid(80, -80);
+	update_k_values(15, 2, 11);
 	
 	
 	tmp_sensor_buffer_p = 0x00;	// Pekare till aktuell position i bufferten
@@ -79,8 +79,6 @@ int main(void)
 // 		{
 // 			regulate_end_tape(spi_data_from_sensor);
 // 		}
-
-		//debug("Hej");
 
 		if (regulator_enable && regulator_flag)
 		{
