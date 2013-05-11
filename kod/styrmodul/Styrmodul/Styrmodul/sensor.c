@@ -26,6 +26,8 @@ uint8_t left = 1;
 uint8_t gyro_init_value;						//Gyrots initialvärde
 uint8_t regulator_enable = 0;					//Flagga för att indikera 40 ms åt regulatorn.
 
+int16_t turn_full;
+
 // Denna ancänds bara av inte-interrupt-koden
 uint8_t sensor_buffer[SENSOR_BUFFER_SIZE];		// Buffer som håller data från sensorenheten
 uint8_t tape_command;
@@ -262,7 +264,7 @@ void decode_tape_segment(char first, char second)
 
 void decode_sensor(uint8_t data)
 {
-	
+	static uint16_t d = 0;
 	static uint8_t sensor_transmission_number = 0;
 	
 	//Tilläggsvariabler
@@ -290,6 +292,7 @@ void decode_sensor(uint8_t data)
  * Här hanteras kommandon från sensorenheten
  **********************************************************************/
 	switch(tmp_sensor_buffer[0]) {
+			int16_t degrees_full;
 		case SENSOR_DEBUG:
 			//sensor_debug_message();
 			break;
@@ -299,6 +302,19 @@ void decode_sensor(uint8_t data)
 		case GYRO_SENSOR:
 			stop_motors();
 			break;	
+		case SENSOR_GYRO_INTEGRAL:
+			degrees_full = tmp_sensor_buffer[2] | (tmp_sensor_buffer[1] << 8);
+			if(abs(degrees_full) > abs(turn_full)) {
+				turn = 0;
+			}
+			
+			if(d++ % 64 == 0)
+			{
+				char integral_string[32];
+				sprintf(integral_string, "Integral: %d", tmp_sensor_buffer[2] | (tmp_sensor_buffer[1] << 8));
+				debug(integral_string);
+			}
+			break;
 		case SENSOR_IR:
 			memcpy(sensor_buffer, tmp_sensor_buffer, tmp_sensor_buffer_len);
 			
@@ -309,7 +325,6 @@ void decode_sensor(uint8_t data)
 			sensor_buffer[IR_LEFT_BACK] = interpret_small_ir(sensor_buffer[IR_LEFT_BACK])+left_back;
 			sensor_buffer[IR_RIGHT_BACK] = interpret_small_ir(sensor_buffer[IR_RIGHT_BACK])+right_back;
 
-			
 			if(calibrate_sensors)
 			{
 				int8_t left_diff = sensor_buffer[IR_LEFT_FRONT]-sensor_buffer[IR_LEFT_BACK];
@@ -736,8 +751,9 @@ void make_turn(char dir)
 	if (!turn && !first)
 	{
 		//stoppa timern!
-		clearbit(TCCR3B, CS30);
-		clearbit(TCCR3B, CS32);
+// 		clearbit(TCCR3B, CS30);
+// 		clearbit(TCCR3B, CS32);
+send_byte_to_sensor(STOP_TURN);
 		stop_motors();
 		spi_delay_ms(2000);
 		drive_forwards(speed);
@@ -755,8 +771,11 @@ void make_turn(char dir)
 				{
 					turn = 1;
 					//sätt igång timern!
-					setbit(TCCR3B, CS30);
-					setbit(TCCR3B, CS32);
+// 					setbit(TCCR3B, CS30);
+// 					setbit(TCCR3B, CS32);
+					send_byte_to_sensor(START_TURN);
+					turn_full = -600;
+
 					
 					first = 0;
 					tank_turn_left(speed);
@@ -769,8 +788,10 @@ void make_turn(char dir)
 					turn = 1;
 					
 					//sätt igång timern!
-					setbit(TCCR3B, CS30);
-					setbit(TCCR3B, CS32);
+// 					setbit(TCCR3B, CS30);
+// 					setbit(TCCR3B, CS32);
+					send_byte_to_sensor(START_TURN);
+					turn_full = 600;
 					
 					first = 0;
 					tank_turn_right(speed);

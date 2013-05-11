@@ -37,6 +37,7 @@ extern volatile uint8_t ninety_timer;
 extern uint8_t autonomous;
 extern uint8_t display_auto_update;
 extern uint8_t calibrate_sensors;
+extern uint8_t make_turn_flag;
 
 
 

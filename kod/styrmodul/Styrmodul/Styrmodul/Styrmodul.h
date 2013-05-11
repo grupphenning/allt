@@ -85,3 +85,4 @@ void turn_left90();
 
 extern uint8_t dirbits;
 extern uint8_t sensor_buffer[SENSOR_BUFFER_SIZE];
+extern uint8_t turn_dir;

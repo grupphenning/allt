@@ -15,11 +15,15 @@
 #define SENSOR_TAPE                 0x06
 #define SENSOR_FOLLOW_TAPE          0x07
 #define SENSOR_FOLLOW_TAPE_END      0x08
+#define SENSOR_GYRO_INTEGRAL		0x27
 
 #define TURN_RIGHT					0x10
 #define TURN_LEFT					0x11	
 //FIXME: Lägg till fler!
 #define AUTONOMOUS_MODE				0x12
+#define START_TURN					0x13
+#define STOP_TURN					0x14
+
 
 /* Övriga definitioner */
 #define GYRO PINA2

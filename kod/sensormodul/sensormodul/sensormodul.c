@@ -16,7 +16,11 @@
 uint8_t spi_data_from_master;
 uint8_t spi_data_to_master;
 uint8_t tape_sensor;
+uint8_t read_mode; // Om read_mode == 1, integrera gyro, annars läs IR och tejp.
 char tape_type;
+
+int16_t gyro_init_value;						//Gyrots initialvärde
+int16_t full_turn, gyro_int;
 
 volatile uint8_t tape_sensor_data[9];
 volatile uint8_t ir_sensor_data[5+1];
@@ -24,11 +28,19 @@ volatile uint8_t decoded_tape_data[1+1];
 volatile uint8_t tape_position[1+1];
 volatile uint8_t test_data[16+1];
 volatile uint8_t data_index=1;
-volatile uint8_t adc_interrupt = 0;
-volatile uint8_t has_data_from_spi = 0;
-volatile uint8_t read_and_send_ir_to_master = 0;
-volatile uint8_t follow_end_tape = 0;
-volatile uint8_t autonomous = 0;
+volatile uint8_t adc_interrupt;
+volatile uint8_t has_data_from_spi;
+volatile uint8_t read_and_send_ir_to_master;
+volatile uint8_t follow_end_tape;
+volatile uint8_t autonomous;
+volatile uint8_t to_read_gyro;
+volatile uint8_t spi_transfer_complete;
+
+void read_byte(uint8_t b)
+{
+	has_data_from_spi = 1;
+	spi_data_from_master = b;
+}
 
 int main(void)
 {
@@ -44,7 +56,8 @@ int main(void)
 	
 	init_spi();
 	init_adc();
-	//init_gyro();
+	init_gyro();
+	init_gyro_timer();
 	init_sensor_timer();
 	
 	setbit(DDRB, PORTB3);
@@ -53,26 +66,44 @@ int main(void)
 	
     while(1)
     {
-		if (read_and_send_ir_to_master && !follow_end_tape)
-		{
-			read_and_send_ir_to_master = 0;
-			read_and_send_ir();
-		}
-		if (follow_end_tape)
-		{
-			data_index = 0;
-			for (uint8_t i = 1; i < 10; i++)
+		if(read_mode) {
+			if(read_and_send_ir_to_master)
 			{
-				read_tape(i);
+				uint8_t values[3];
+				values[0] = SENSOR_GYRO_INTEGRAL;
+				values[1] = (gyro_int / 16) >> 8;
+				values[2] = (gyro_int / 16);
+				send_to_master(3, values);
 			}
-			regulate_end_tape();
+			if(to_read_gyro)
+			{
+				gyro_int += gyro_init_value - ((int16_t)read_gyro() * 16);			//Maxhastighet 300grader/s,
+				to_read_gyro = 0;
+			}				
 		}
+		else {			
+			if (read_and_send_ir_to_master && !follow_end_tape)
+			{
+				read_and_send_ir_to_master = 0;
+				read_and_send_ir();
+			}
+			if (follow_end_tape)
+			{
+				data_index = 0;
+				for (uint8_t i = 1; i < 10; i++)
+				{
+					read_tape(i);
+				}
+				regulate_end_tape();
+			}
+		}			
 
+		
+		if(SPSR & (1 << SPIF)) read_byte(SPDR);
 		
 		clearbit(PORTB, PORTB3);
 		if(has_data_from_spi)
 		{
-			
 			if(spi_data_from_master == AUTONOMOUS_MODE)
 			{
 				setbit(PORTB, PORTB3);
@@ -85,6 +116,13 @@ int main(void)
 				follow_end_tape = 0;
 				tape_sensor = 0;
 				tape_type = 0;
+			}
+			else if(spi_data_from_master == START_TURN) {
+				gyro_int = 0;
+				read_mode = 1;
+			}
+			else if(spi_data_from_master == STOP_TURN) {
+				read_mode = 0;
 			}
 			
 // 			switch(spi_data_to_master)
@@ -128,8 +166,6 @@ void read_all_sensors()
 
 /* =======================================GYRO=======================================*/
 
-uint8_t gyro_init_value;						//Gyrots initialvärde
-uint16_t full_turn, gyro_int;
 
 
 // Börja snurra. positiv degrees = medurs. Har slutat då is_turning blir 0.
@@ -138,7 +174,7 @@ void begin_turning(int16_t degrees)
 {
 	full_turn = 55*abs(degrees);	//Sväng x antal grader
 	gyro_int = 0;
-	init_gyro_timer();
+//	init_gyro_timer();
 
 }
 
@@ -150,19 +186,25 @@ void init_gyro()
 {
 	static uint8_t gyro_reads_number = 0;
 	
-	while(gyro_reads_number<3)
+	while(gyro_reads_number<5)
 	{
 		read_gyro();
 		gyro_reads_number++;
 	}
-	gyro_init_value = read_gyro();
+	//uint16_t sum = 0;
+	uint8_t i;
+	//for(i = 0; i < 16; ++i) sum += read_gyro();
+	gyro_init_value = 0;
+	for(i = 0; i < 16; ++i) gyro_init_value += read_gyro();
+	gyro_init_value += 1;
+	//gyro_init_value = sum;
 }
 
 
-//Anropas i timer under pågående sväng
+// 
 void timed_gyro_turn()
 {
-	gyro_int += 3*abs(gyro_init_value - (int)read_gyro());			//Maxhastighet 300grader/s,
+	gyro_int += 3 * abs(gyro_init_value - (uint8_t) read_gyro());			//Maxhastighet 300grader/s,
 	if(gyro_int >= full_turn)										//maxvärde-nollnivå ung 100.
 	{
 		disable_gyro_timer();
@@ -550,10 +592,10 @@ ISR(TIMER1_OVF_vect)
 	read_and_send_ir_to_master = 1;
 }
 
-//Gyro timer! (XX Hz)
+//Gyro timer! ( Hz)
 ISR(TIMER2_OVF_vect)
 {
-	timed_gyro_turn();
+	to_read_gyro = 1;
 }
 
 /*
@@ -564,26 +606,24 @@ void disable_gyro_timer()
 	clearbit(TIMSK,TOIE2);
 }
 
-// KOLLA PÅ DETTA, SNÄLLA LILLA HK!!!
-
 /*
- * Initeietra timer kopplad till gyrot
+ * Initeietra timer kopplad till gyrot (TIMER2)
  */
-
-// HÅÅÅÅÅÅÅÅÅKÅÅÅÅÅÅÅÅÅÅÅÅÅÅÅÅÅÅÅÅÅÅÅÅÅÅÅÅÅÅÅÅÅÅÅÅÅÅÅÅÅÅÅÅÅÅÅÅÅ!!!!!!!!!!
 void init_gyro_timer()
 {
-	setbit(TCCR2, WGM20);
-	setbit(TCCR2, WGM21);
+	// WTF? Waveform?
+//	setbit(TCCR2, WGM20);
+//	setbit(TCCR2, WGM21);
 	
-	//set prescaler på fck/256
-	setbit(TCCR2, CS22);
+	// Initvärde
+	TCNT2 = 0x00;
+	
+	//set prescaler på fck/1024
+	TCCR2 |= ((1 << CS22) | (1 << CS21) | (1 << CS20));
 	
 	//aktivera interrupt på overflow
-	setbit(TIMSK, TOIE2);
-	
-	//TEST
-	//OCR2A = 150;
+	TIMSK |= (1 << TOIE2);
+
 }
 
 /*=====================================SPI========================================*/
@@ -593,6 +633,7 @@ void init_gyro_timer()
 void init_spi()
 {
 	setbit(SPCR, SPE);		//Enables spi
+//	setbit(SPCR, SPIE);
 	clearbit(DDRB, PINB4);	// SS är input
 	clearbit(DDRB, PINB5);	// MOSI är input
 	setbit(DDRB, PINB6);	// MISO är output
@@ -602,15 +643,15 @@ void init_spi()
 	sei();
 }
 
-void SPI_read_byte()
-{
-	spi_data_from_master = SPDR;
-}
-
 ISR(SPI_STC_vect)
 {
-	SPI_read_byte();
-	has_data_from_spi = 1;
+// 	uint8_t byte;
+// 	byte = SPDR;
+// 	if(byte) {
+// 		has_data_from_spi = 1;
+// 		spi_data_to_master = byte;
+// 	}
+	spi_transfer_complete = 1;
 }
 
 /*
@@ -632,10 +673,14 @@ void send_string_to_master(char *str)
  */
 void send_to_master_real(uint8_t byte)
 {
-	SPDR = byte;
+	volatile uint8_t a;
+	if(SPSR & (1 << SPIF)) read_byte(SPDR);
 	// Skapa master-interrupt
+	spi_transfer_complete = 0;
+	SPDR = byte;
 	PORTA ^= (1 << PORTA7);
 	while(!(SPSR & (1 << SPIF)));
+	a = SPDR;
 }
 
 void send_stop_turn_message()
