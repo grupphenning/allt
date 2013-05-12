@@ -283,10 +283,22 @@ void decode_sensor(uint8_t data)
 	tmp_sensor_buffer[tmp_sensor_buffer_p++] = data;
 
 	/* Om det är fler byte kvar att ta emot, vänta på dem! */
-	if(tmp_sensor_buffer_p != tmp_sensor_buffer_len)
+	if(tmp_sensor_buffer_p != tmp_sensor_buffer_len + 1)
 		return;
 	/* Aha, vi har tagit emot hela meddelandet! Tolka detta! */
 	sensor_start = 1;
+
+	/* Kolla kontrollsumma */
+	uint8_t sum = 0;
+	unsigned i;
+	for(i = 0; i < tmp_sensor_buffer_len; ++i) {
+		sum += tmp_sensor_buffer[i];
+	}
+	if(sum != tmp_sensor_buffer[tmp_sensor_buffer_len]) {
+		debug("CS");
+		//sensor_start = 1;
+		//return;
+	}
 
 /**********************************************************************
  * Här hanteras kommandon från sensorenheten
@@ -308,7 +320,7 @@ void decode_sensor(uint8_t data)
 				turn = 0;
 			}
 			
-			if(d++ % 64 == 0)
+			if(1||d++ % 64 == 0)
 			{
 				char integral_string[32];
 				sprintf(integral_string, "Integral: %d", tmp_sensor_buffer[2] | (tmp_sensor_buffer[1] << 8));

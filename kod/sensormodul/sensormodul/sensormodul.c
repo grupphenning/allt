@@ -57,7 +57,7 @@ int main(void)
 	init_spi();
 	init_adc();
 	init_gyro();
-	init_gyro_timer();
+	//init_gyro_timer();
 	init_sensor_timer();
 	
 	setbit(DDRB, PORTB3);
@@ -69,15 +69,20 @@ int main(void)
 		if(read_mode) {
 			if(read_and_send_ir_to_master)
 			{
-				uint8_t values[3];
-				values[0] = SENSOR_GYRO_INTEGRAL;
-				values[1] = (gyro_int / 16) >> 8;
-				values[2] = (gyro_int / 16);
-				send_to_master(3, values);
+				gyro_int += gyro_init_value - ((int16_t)read_gyro() * 16);			//Maxhastighet 300grader/s,
+				read_and_send_ir_to_master = 0;
+				
+				static uint8_t count;
+				{
+					uint8_t values[3];
+					values[0] = SENSOR_GYRO_INTEGRAL;
+					values[1] = (gyro_int / 16) >> 8;
+					values[2] = (gyro_int / 16);
+					send_to_master(3, values);
+				}					
 			}
 			if(to_read_gyro)
 			{
-				gyro_int += gyro_init_value - ((int16_t)read_gyro() * 16);			//Maxhastighet 300grader/s,
 				to_read_gyro = 0;
 			}				
 		}
@@ -711,6 +716,7 @@ void send_to_master(uint8_t len, uint8_t *data)
 	
 	send_to_master_real(len);
 	int i = 0;
+	uint8_t sum = 0;
 	while(i < len)
 	{
 		/* FIXME!!!
@@ -720,6 +726,8 @@ void send_to_master(uint8_t len, uint8_t *data)
 		   funkar utan delay?
 		 */
 		//_delay_ms(1);
+		sum += data[i];
 		send_to_master_real(data[i++]);
 	}
+	send_to_master_real(sum);
 }
