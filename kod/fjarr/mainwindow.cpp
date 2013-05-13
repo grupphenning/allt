@@ -45,7 +45,8 @@ MainWindow::MainWindow(QWidget *parent) :
 
     ui->labelWarning->setVisible(false);
 
-    bookmarks.append("V:%x\001,%x\002 F:%x\003    H:%x\004,%x\005");
+    //bookmarks.append("V:%x\001,%x\002 F:%x\003    H:%x\004,%x\005");
+    bookmarks.append("V:%d\001,%d\004 F:%d\003 H:%d\002,%d\005");
     bookmarks.append("Tejp:%x\006,%x\007,%x\010,%x\011,%x\012,%x\013,%x\014,%x\015,%x\016");
     ui->bookmarks->addItem("Avstånd (default)", bookmarks.at(0));
     ui->bookmarks->addItem("Tejp", bookmarks.at(1));
@@ -394,7 +395,7 @@ void MainWindow::updateDisplayExample()
                 sprintf(tmpp, "%3d", sensor_buffer[sensor]);
                 tmpp++; // Decimal-strängen är tre tecken
                 tmpp++;
-//                tmpp++;
+                tmpp++;
             } else
             {
                 sprintf(tmpp, "%02X", sensor_buffer[sensor]);

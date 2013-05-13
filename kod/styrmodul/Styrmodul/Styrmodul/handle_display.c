@@ -50,14 +50,14 @@ void update_display_string()
 		    inp++;    // Bortom %-tecknet
 		    uint8_t base;   // Nästa är d för decimal, x för hex
 		    if(*inp == 'd')
-		    base = 10;
+				base = 10;
 		    else if((*inp == 'x') || (*inp == 'X'))
-		    base = 16;
+				base = 16;
 		    inp++;
 		    uint8_t sensor = *inp; // Nästa är sensor-index
 		    inp++;
 		    if(sensor > MAX_SENSORS - 1)
-		    continue;
+				continue;
 		    if(base == 10)
 		    {
 			    sprintf(tmpp, "%3d", sensor_buffer[sensor]);

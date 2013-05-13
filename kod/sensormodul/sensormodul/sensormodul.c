@@ -128,6 +128,7 @@ int main(void)
 			}
 			else if(spi_data_from_master == STOP_TURN) {
 				read_mode = 0;
+				gyro_int = 0;
 			}
 			
 // 			switch(spi_data_to_master)
@@ -460,6 +461,10 @@ void decode_tape()
 			is_in_tape_segment = 1;
 			//first_tape = tape_count < 5 ? 's': 'l';
 			first_tape_count = tape_count;
+			uint8_t tmp[5];
+			tmp[0] = SENSOR_TAPE_DEBUG;
+			tmp[1] = tape_count;		
+			send_to_master(2,tmp);
 		}
 		tape_count=0;
 	}
@@ -489,30 +494,26 @@ void decode_tape()
 
 void decode_tape_segment(uint16_t first, uint8_t second)
 {
-	uint8_t tape_ratio;
 	_delay_ms(250);
-	if (second != 0)
-	{
-		first = first*10;
-		tape_ratio = first/second;
-	}
-	else         //Bara en tejp, vi är vid mål!
+	if (second == 0)         //Bara en tejp, vi är vid mål!
 	{
 		tape_type = 'g';
-		return;
+		return;	
+// 		first = first*10;
+// 		tape_ratio = first/second;
 	}
 	
-	if(1 < tape_ratio && tape_ratio < 7 ) //(first == 's' && second == 'l')
+	if(first <= 5 && second > 5) //(first == 's' && second == 'l')
 	{
 		//turn left
 		tape_type = 'l';
 	}
-	else if (7 <= tape_ratio && tape_ratio < 15) //(first == 's' && second == 's')
+	else if (first <= 5 && second <= 5) //(first == 's' && second == 's')
 	{
 		//keep going
 		tape_type = 'f';
 	}
-	else if (15 <= tape_ratio) //(first == 'l' && second == 's')
+	else /*if (first > 5 && second <= 5)*/ //(first == 'l' && second == 's')
 	{
 		//turn right
 		tape_type = 'r';
@@ -566,7 +567,6 @@ void regulate_end_tape()
 /*
  * Initiera timer kopplad till sensoravälsning
  */
-
 void init_sensor_timer()
 {
 	setbit(TCCR1A, WGM11);
@@ -579,10 +579,11 @@ void init_sensor_timer()
 	setbit(TIMSK, TOIE1);
 	
 	//25 hertz, ges av 8000000/(256*1250) = 25 Hz
-	ICR1 = 1250;
+	//ICR1 = 1250;
 	
-	//62,5 Hz
-	//ICR1 = 150;
+	
+	//50 Hertz, ges av 8000000/(256*625) = 50 Hz
+	ICR1 = 625;
 	
 }
 
@@ -595,6 +596,7 @@ void init_sensor_timer()
 ISR(TIMER1_OVF_vect)
 {
 	read_and_send_ir_to_master = 1;
+	to_read_gyro = 1;
 }
 
 //Gyro timer! ( Hz)
@@ -608,7 +610,7 @@ ISR(TIMER2_OVF_vect)
  */
 void disable_gyro_timer()
 {
-	clearbit(TIMSK,TOIE2);
+	clearbit(TIMSK, TOIE2);
 }
 
 /*
@@ -618,16 +620,21 @@ void init_gyro_timer()
 {
 	// WTF? Waveform?
 //	setbit(TCCR2, WGM20);
-//	setbit(TCCR2, WGM21);
+	//sätt CTC mode med OCR2 som topp!
+	setbit(TCCR2, WGM21);
 	
 	// Initvärde
 	TCNT2 = 0x00;
+	OCR2 = 0xff;
 	
 	//set prescaler på fck/1024
-	TCCR2 |= ((1 << CS22) | (1 << CS21) | (1 << CS20));
+	setbit(TCCR2, CS20);
+	setbit(TCCR2, CS21);
+	setbit(TCCR2, CS22);
 	
+
 	//aktivera interrupt på overflow
-	TIMSK |= (1 << TOIE2);
+	setbit(TIMSK, TOIE2);
 
 }
 

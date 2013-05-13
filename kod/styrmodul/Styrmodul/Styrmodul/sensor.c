@@ -82,6 +82,7 @@ uint8_t crossing_stop_value;
 uint8_t make_turn_flag = 0;
 uint8_t drive_from_crossing = 0;
 uint8_t first_time_in_tape_crossing = 1;
+uint8_t listening_to_gyro = 1;
 
 /* Flagga som anger huruvida displayen ska uppdateras varje gång nya sensorvärden kommer in från sensorenheten */
 uint8_t display_auto_update = 1;	// Påslagen som default
@@ -299,7 +300,6 @@ void decode_sensor(uint8_t data)
 		//sensor_start = 1;
 		//return;
 	}
-
 /**********************************************************************
  * Här hanteras kommandon från sensorenheten
  **********************************************************************/
@@ -315,9 +315,17 @@ void decode_sensor(uint8_t data)
 			stop_motors();
 			break;	
 		case SENSOR_GYRO_INTEGRAL:
+			
+			if(!listening_to_gyro)
+			{
+				break;
+			}
+			
 			degrees_full = tmp_sensor_buffer[2] | (tmp_sensor_buffer[1] << 8);
 			if(abs(degrees_full) > abs(turn_full)) {
 				turn = 0;
+				listening_to_gyro = 0;
+				if (autonomous) make_turn(crossing_direction);
 			}
 			
 			if(1||d++ % 64 == 0)
@@ -414,18 +422,12 @@ void decode_sensor(uint8_t data)
 				else 
 				{	
 					
-					if(crossings)
+					if(crossings||tape_crossings)
 					{
-						/*Hantera korsningar*/
+						/*Hantera korsningar*/ /*Hantera tejp-korsningar Bra flaggor satta!*/
 						handle_crossing();
 					}
-					if(tape_crossings)
-					{			
-						/*Hantera tejp-korsningar Bra flaggor satta!*/
-						handle_crossing();
-					}
-			
-
+					
   					if (follow_end_tape)
   					{
   						//regulate_end_tape_3();
@@ -460,14 +462,13 @@ void decode_sensor(uint8_t data)
 					
 					if(tape_command == 'f' || tape_command == 'r' || tape_command == 'l')
 					{
-						spi_delay_ms(1500);
 						first_time_in_tape_crossing = 0;
 						crossing_direction = tape_command;
 						tape_crossings = 1;
 						make_turn_flag = 1;
 						has_detected_crossing = 0;
 						crossings = 0;
-						crossing_stop_value = 40;	
+						stop_motors();	
 					}
 					else if (tape_command == 'g')
 					{
@@ -502,7 +503,13 @@ void decode_sensor(uint8_t data)
 							speed = 255;
 						}							        
                     }	
-					break;			
+					break;
+			case SENSOR_TAPE_DEBUG:
+					{
+						char tmp[20];
+						sprintf(tmp, "Tejp: %d ", tmp_sensor_buffer[1]);
+						debug(tmp);					
+					}						
 		default:
 				// Unimplemented command
 			break;
@@ -523,34 +530,6 @@ void decode_sensor(uint8_t data)
 	if(c++ % 512 == 0)
 		send_sensor_buffer_to_remote();
 	
-}
-
-void make_turning_decision()
-{
-	uint8_t tape_type = tape_command;
-	switch (tape_type)
-	{
-		case 'l':
-			//turn left
-			stop_motors();
-			make_turn('l');
-			break;
-		
-		case 'r':
-			//turn right
-			stop_motors();
-			make_turn('r');
-			break;
-		
-		case 'f':
-			//keep going
-			make_turn('f');
-			break;
-		
-		case 'g':
-			follow_end_tape = 1;
-			break;
-	}
 }
 
 
@@ -638,14 +617,13 @@ void handle_crossing()
 	//Kör ut från korsningen till regleringen är redo att slås på igen, nollställ drive_from_crossing flagga
 	else if(drive_from_crossing)
 	{
-		if (sensor_buffer[IR_LEFT_BACK] <= SEGMENT_LENGTH-30 && sensor_buffer[IR_RIGHT_BACK]-30 <= SEGMENT_LENGTH)
+		if (sensor_buffer[IR_LEFT_BACK] <= SEGMENT_LENGTH-30 && sensor_buffer[IR_RIGHT_BACK] <= SEGMENT_LENGTH - 30)
 		{
-			
 			drive_from_crossing = 0;
 			crossings = 1;
 			tape_crossings = 0;
 			first_time_in_tape_crossing = 1;
-			//enable_pid();
+			listening_to_gyro = 1;
 		}
 	}
 	else
@@ -661,7 +639,7 @@ void handle_crossing()
  */
 void analyze_ir_sensors()
 {
-	uint8_t sample_limit = 3;
+	uint8_t sample_limit = 1;
 	static uint8_t decision_tlar_count = 0, decision_tral_count = 0, decision_tlaf_count = 0, decision_traf_count = 0, decision_tfal_count = 0, decision_tfar_count = 0; 
 	
 	//Turn left, alley right												
@@ -756,18 +734,15 @@ void drive_to_crossing_end(uint8_t stop_distance)
 
 void make_turn(char dir)
 {
-
+	uint16_t gyro_const = 700;
 	static uint8_t first = 1;
 	//uint8_t turn_delay = 50;
 	// Sväng färdig
 	if (!turn && !first)
 	{
-		//stoppa timern!
-// 		clearbit(TCCR3B, CS30);
-// 		clearbit(TCCR3B, CS32);
-send_byte_to_sensor(STOP_TURN);
+		send_byte_to_sensor(STOP_TURN);
 		stop_motors();
-		spi_delay_ms(2000);
+		spi_delay_ms(500);
 		drive_forwards(speed);
 		first = 1;
 		make_turn_flag = 0;
@@ -786,9 +761,9 @@ send_byte_to_sensor(STOP_TURN);
 // 					setbit(TCCR3B, CS30);
 // 					setbit(TCCR3B, CS32);
 					send_byte_to_sensor(START_TURN);
-					turn_full = -600;
-
+					turn_full = -gyro_const;
 					
+					spi_delay_ms(1000);
 					first = 0;
 					tank_turn_left(speed);
 				}
@@ -803,14 +778,18 @@ send_byte_to_sensor(STOP_TURN);
 // 					setbit(TCCR3B, CS30);
 // 					setbit(TCCR3B, CS32);
 					send_byte_to_sensor(START_TURN);
-					turn_full = 600;
+					turn_full = gyro_const+100;
 					
+					spi_delay_ms(1000);
 					first = 0;
 					tank_turn_right(speed);
 				}
 			break;
 			
-			case 'f': 
+			case 'f':
+				stop_motors();
+				_delay_ms(10000);
+				 
 				first = 0;
 				break;
 			

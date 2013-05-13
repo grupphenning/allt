@@ -331,56 +331,6 @@
       <string>Bakre högra</string>
      </property>
     </item>
-    <item>
-     <property name="text">
-      <string>Tejp 0</string>
-     </property>
-    </item>
-    <item>
-     <property name="text">
-      <string>Tejp 1</string>
-     </property>
-    </item>
-    <item>
-     <property name="text">
-      <string>Tejp 2</string>
-     </property>
-    </item>
-    <item>
-     <property name="text">
-      <string>Tejp 3</string>
-     </property>
-    </item>
-    <item>
-     <property name="text">
-      <string>Tejp 4</string>
-     </property>
-    </item>
-    <item>
-     <property name="text">
-      <string>Tejp 5</string>
-     </property>
-    </item>
-    <item>
-     <property name="text">
-      <string>Tejp 6</string>
-     </property>
-    </item>
-    <item>
-     <property name="text">
-      <string>Tejp 7</string>
-     </property>
-    </item>
-    <item>
-     <property name="text">
-      <string>Tejp 8</string>
-     </property>
-    </item>
-    <item>
-     <property name="text">
-      <string>Tejp 9</string>
-     </property>
-    </item>
    </widget>
    <widget class="QLabel" name="label_16">
     <property name="geometry">

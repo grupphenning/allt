@@ -121,18 +121,18 @@ void send_sensor_buffer_to_remote(void)
 //används till gripklon, som måste köras i 50 Hz!
 ISR(TIMER1_COMPA_vect)
 {
-	if(turn)
-	{
-		ninety_timer++;
-	}
-
-	//en sekund har gått
-	if(ninety_timer == 18)
-	{
-		//turn = 0;
-		//tank_turn_left(255);
-		ninety_timer=0;
-	}
+// 	if(turn)
+// 	{
+// 		ninety_timer++;
+// 	}
+// 
+// 	//en sekund har gått
+// 	if(ninety_timer == 18)
+// 	{
+// 		//turn = 0;
+// 		//tank_turn_left(255);
+// 		ninety_timer=0;
+// 	}
 
 	// Refresha motor-output. Detta får äntligen styrningen att fungera pålitligt.
 	if(dirbits & 1) {
@@ -177,5 +177,5 @@ ISR(TIMER0_OVF_vect)
 
 ISR(TIMER3_COMPA_vect)
 {
-	turn = 0;
+	//turn = 0;
 }
