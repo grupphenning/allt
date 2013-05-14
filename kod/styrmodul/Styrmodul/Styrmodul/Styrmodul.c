@@ -34,6 +34,9 @@ int main(void)
 	sei();		//aktivera global interrupts
 	init_display();
 	update();
+	claw_out();
+	_delay_ms(500);
+	claw_in();
 	
 	//Vid testning bästa konstanterna.
 	//Regulator känslig för dåligt kalibrerade sensorer.

@@ -217,6 +217,6 @@ void claw_out()
 
 void claw_in()
 {
-	CLAW_AMOUNT = 63;
+	CLAW_AMOUNT = 156;
 }
 
