@@ -38,7 +38,8 @@ extern uint8_t autonomous;
 extern uint8_t display_auto_update;
 extern uint8_t calibrate_sensors;
 extern uint8_t make_turn_flag;
-
+extern uint8_t listening_to_gyro;
+extern int16_t degrees_full;
 
 
 #endif /* TAPEH_H_ */

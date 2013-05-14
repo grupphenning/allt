@@ -9,12 +9,13 @@ void debug(char *str);
 #include "handle_display.h"
 #include <string.h>
 #include "Styrmodul.h"
+#include "sensor.h"
 #include <avr/io.h>
 #include "bitmacros.h"
 uint8_t display_printf_string[100];
 
 #define BUFFER_SIZE 100
-#define MAX_SENSORS 15
+#define MAX_SENSORS 7
 void update_display_string()
 {
 	
@@ -58,7 +59,13 @@ void update_display_string()
 		    inp++;
 		    if(sensor > MAX_SENSORS - 1)
 				continue;
-		    if(base == 10)
+			if(sensor == 6)
+			{
+				sprintf(tmpp, "%6d", degrees_full);
+				for(uint8_t i = 0; i < 6; i++)
+					tmpp++;
+			}
+			else if(base == 10)
 		    {
 			    sprintf(tmpp, "%3d", sensor_buffer[sensor]);
 			    //debug(tmpp);

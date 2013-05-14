@@ -34,6 +34,7 @@ volatile uint8_t read_and_send_ir_to_master;
 volatile uint8_t follow_end_tape;
 volatile uint8_t autonomous;
 volatile uint8_t to_read_gyro;
+volatile uint8_t tape_interupt_flag;
 volatile uint8_t spi_transfer_complete;
 
 void read_byte(uint8_t b)
@@ -71,15 +72,11 @@ int main(void)
 			{
 				gyro_int += gyro_init_value - ((int16_t)read_gyro() * 16);			//Maxhastighet 300grader/s,
 				read_and_send_ir_to_master = 0;
-				
-				static uint8_t count;
-				{
-					uint8_t values[3];
-					values[0] = SENSOR_GYRO_INTEGRAL;
-					values[1] = (gyro_int / 16) >> 8;
-					values[2] = (gyro_int / 16);
-					send_to_master(3, values);
-				}					
+				uint8_t values[3];
+				values[0] = SENSOR_GYRO_INTEGRAL;
+				values[1] = (gyro_int / 16) >> 8;
+				values[2] = (gyro_int / 16);
+				send_to_master(3, values);					
 			}
 			if(to_read_gyro)
 			{
@@ -152,8 +149,9 @@ int main(void)
 			if(tape_sensor)
 			{
 				decode_tape();
-				send_decoded_tape();
-			}			
+				//send_decoded_tape(); //Onödigt skicka när beslut ej tagits.
+			}
+			tape_interupt_flag = 0;			
 		}		
     }
 }
@@ -454,17 +452,21 @@ void decode_tape()
 			is_in_tape_segment = 0;
 			//second_tape = tape_count < 5 ? 's': 'l';
 			second_tape_count = tape_count;
+			uint8_t tmp[5];
+// 			tmp[0] = SENSOR_TAPE_DEBUG;
+// 			tmp[1] = tape_count;
+// 			send_to_master(2,tmp);
 			decode_tape_segment(first_tape_count, second_tape_count); //Kör tejpsegmentsavkodning
 		}
-		else // Första tejpbit avslutad
+		else if(tape_count != 1) // Första tejpbit avslutad		OBS: Fulhack som löste en sensorbugg.
 		{
 			is_in_tape_segment = 1;
 			//first_tape = tape_count < 5 ? 's': 'l';
 			first_tape_count = tape_count;
-			uint8_t tmp[5];
-			tmp[0] = SENSOR_TAPE_DEBUG;
-			tmp[1] = tape_count;		
-			send_to_master(2,tmp);
+// 			uint8_t tmp[5];
+// 			tmp[0] = SENSOR_TAPE_DEBUG;
+// 			tmp[1] = tape_count;		
+//			send_to_master(2,tmp);
 		}
 		tape_count=0;
 	}
@@ -498,25 +500,29 @@ void decode_tape_segment(uint16_t first, uint8_t second)
 	if (second == 0)         //Bara en tejp, vi är vid mål!
 	{
 		tape_type = 'g';
+		send_decoded_tape();
 		return;	
 // 		first = first*10;
 // 		tape_ratio = first/second;
 	}
 	
-	if(first <= 5 && second > 5) //(first == 's' && second == 'l')
+	if(first <= 100 && second > 100) //(first == 's' && second == 'l')
 	{
 		//turn left
 		tape_type = 'l';
+		send_decoded_tape();
 	}
-	else if (first <= 5 && second <= 5) //(first == 's' && second == 's')
+	else if (first <= 100 && second <= 100) //(first == 's' && second == 's')
 	{
 		//keep going
 		tape_type = 'f';
+		send_decoded_tape();
 	}
-	else /*if (first > 5 && second <= 5)*/ //(first == 'l' && second == 's')
+	else if (first > 100 && second <= 100) //(first == 'l' && second == 's')
 	{
 		//turn right
 		tape_type = 'r';
+		send_decoded_tape();
 	}
 }
 
@@ -579,7 +585,7 @@ void init_sensor_timer()
 	setbit(TIMSK, TOIE1);
 	
 	//25 hertz, ges av 8000000/(256*1250) = 25 Hz
-	//ICR1 = 1250;
+	/*ICR1 = 1250;*/
 	
 	
 	//50 Hertz, ges av 8000000/(256*625) = 50 Hz
@@ -597,11 +603,12 @@ ISR(TIMER1_OVF_vect)
 {
 	read_and_send_ir_to_master = 1;
 	to_read_gyro = 1;
+	//tape_interupt_flag = 1;
 }
 
 //Gyro timer! ( Hz)
 ISR(TIMER2_OVF_vect)
-{
+{        
 	to_read_gyro = 1;
 }
 

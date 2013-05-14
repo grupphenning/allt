@@ -191,7 +191,7 @@ void tank_turn_left(uint8_t amount)
 	clearbit(PORT_DIR, LEFT_DIR);
 	setbit(PORT_DIR, RIGHT_DIR);
 	
-	LEFT_AMOUNT = amount;
+	LEFT_AMOUNT = amount - SPEED_OFFSET;
 	RIGHT_AMOUNT = amount;
 }
 
@@ -206,7 +206,7 @@ void tank_turn_right(uint8_t amount)
 	setbit(PORT_DIR, LEFT_DIR);
 	clearbit(PORT_DIR, RIGHT_DIR);
 	
-	LEFT_AMOUNT = amount;
+	LEFT_AMOUNT = amount - SPEED_OFFSET;
 	RIGHT_AMOUNT = amount;
 }
 

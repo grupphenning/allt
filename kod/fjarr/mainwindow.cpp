@@ -45,11 +45,18 @@ MainWindow::MainWindow(QWidget *parent) :
 
     ui->labelWarning->setVisible(false);
 
+    // 1: fram vänster
+    // 2: fram höger
+    // 3: fram
+    // 4: bak vänster
+    // 5: bak höger
+    // 6: gyro (16-bitarsvärde!)
+
     //bookmarks.append("V:%x\001,%x\002 F:%x\003    H:%x\004,%x\005");
     bookmarks.append("V:%d\001,%d\004 F:%d\003 H:%d\002,%d\005");
-    bookmarks.append("Tejp:%x\006,%x\007,%x\010,%x\011,%x\012,%x\013,%x\014,%x\015,%x\016");
+    bookmarks.append("Servo: %d\006");
     ui->bookmarks->addItem("Avstånd (default)", bookmarks.at(0));
-    ui->bookmarks->addItem("Tejp", bookmarks.at(1));
+    ui->bookmarks->addItem("Servointegral", bookmarks.at(1));
 
     debug_message = sensor_data = 0;
     /* Ladda bokmärken från QSettings! */
@@ -390,13 +397,22 @@ void MainWindow::updateDisplayExample()
             inp++;
             if(sensor > MAX_SENSORS)
                 continue;
-            if(base == 10)
+
+            // Specialbehandla gyro-data, vilket vi kallar sensor 6
+            if(sensor == 6)
+            {
+                sprintf(tmpp, "%6d", sensor_buffer[sensor]);
+                for(int i = 0; i < 6; i++)
+                    tmpp++;
+            }
+            else if(base == 10)
             {
                 sprintf(tmpp, "%3d", sensor_buffer[sensor]);
                 tmpp++; // Decimal-strängen är tre tecken
                 tmpp++;
                 tmpp++;
-            } else
+            }
+            else
             {
                 sprintf(tmpp, "%02X", sensor_buffer[sensor]);
                 tmpp++; // Hex-strängen är två tecken

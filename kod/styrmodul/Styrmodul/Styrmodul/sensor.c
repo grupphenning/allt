@@ -262,7 +262,8 @@ void decode_tape_segment(char first, char second)
 	
 }
 
-
+// Global så att även handle_display.h kan läsa den
+int16_t degrees_full;
 void decode_sensor(uint8_t data)
 {
 	static uint16_t d = 0;
@@ -304,7 +305,6 @@ void decode_sensor(uint8_t data)
  * Här hanteras kommandon från sensorenheten
  **********************************************************************/
 	switch(tmp_sensor_buffer[0]) {
-			int16_t degrees_full;
 		case SENSOR_DEBUG:
 			//sensor_debug_message();
 			break;
@@ -500,7 +500,7 @@ void decode_sensor(uint8_t data)
                
                             //is_returning_home = 1;        // OBS! SKALL GÖRAS EFTER ATT 180-GRADERSSVÄNGEN UTFÖRTS!!!
                             follow_end_tape = 0;
-							speed = 255;
+							speed = 0;
 						}							        
                     }	
 					break;
@@ -526,6 +526,7 @@ void decode_sensor(uint8_t data)
 		a=0;
 		update_display_string();
 	}
+
 	static uint16_t c = 0;
 	if(c++ % 512 == 0)
 		send_sensor_buffer_to_remote();
@@ -640,10 +641,30 @@ void handle_crossing()
 void analyze_ir_sensors()
 {
 	uint8_t sample_limit = 1;
-	static uint8_t decision_tlar_count = 0, decision_tral_count = 0, decision_tlaf_count = 0, decision_traf_count = 0, decision_tfal_count = 0, decision_tfar_count = 0; 
+	static uint8_t decision_tlar_count = 0, decision_tral_count = 0, decision_tlaf_count = 0, 
+			       decision_traf_count = 0, decision_tfal_count = 0, decision_tfar_count = 0,
+				   decision_tr_count = 0, decision_tl_count = 0; 
 	
+	//Turn right
+	if (sensor_buffer[IR_RIGHT_FRONT] >= MAXIMUM_IR_DISTANCE &&
+		sensor_buffer[IR_FRONT] <= SEGMENT_LENGTH &&
+		sensor_buffer[IR_LEFT_FRONT] <= SEGMENT_LENGTH)
+	{
+		if(++decision_tr_count == sample_limit) has_detected_crossing = 1;
+		crossing_direction = 'r';
+		crossing_stop_value = SEGMENT_LENGTH/2-IR_FRONT_TO_MIDDLE_LENGTH +OFFSET;
+	}
+	//Turn left
+	else if (sensor_buffer[IR_LEFT_FRONT] >= MAXIMUM_IR_DISTANCE &&
+			 sensor_buffer[IR_FRONT] <= SEGMENT_LENGTH &&
+			 sensor_buffer[IR_RIGHT_FRONT] <= SEGMENT_LENGTH)
+	{
+		if(++decision_tl_count == sample_limit) has_detected_crossing = 1;
+		crossing_direction = 'l';
+		crossing_stop_value = SEGMENT_LENGTH/2-IR_FRONT_TO_MIDDLE_LENGTH +OFFSET;
+	}
 	//Turn left, alley right												
-	if(sensor_buffer[IR_LEFT_FRONT] >= MAXIMUM_IR_DISTANCE &&
+	else if(sensor_buffer[IR_LEFT_FRONT] >= MAXIMUM_IR_DISTANCE &&
 		sensor_buffer[IR_FRONT] <= SEGMENT_LENGTH &&
 		sensor_buffer[IR_RIGHT_FRONT] >= SEGMENT_LENGTH &&
 		sensor_buffer[IR_RIGHT_FRONT] <= MAXIMUM_IR_DISTANCE)
@@ -705,7 +726,7 @@ void analyze_ir_sensors()
 	}
 	if(has_detected_crossing)
 	{
-		decision_tfal_count = decision_tlaf_count = decision_tlar_count = decision_tral_count = decision_traf_count = decision_tfar_count = 0;
+		decision_tfal_count = decision_tlaf_count = decision_tl_count = decision_tr_count = decision_tlar_count = decision_tral_count = decision_traf_count = decision_tfar_count = 0;
 	}	
 }
 
@@ -734,7 +755,7 @@ void drive_to_crossing_end(uint8_t stop_distance)
 
 void make_turn(char dir)
 {
-	uint16_t gyro_const = 700;
+	uint16_t gyro_const = 1300;
 	static uint8_t first = 1;
 	//uint8_t turn_delay = 50;
 	// Sväng färdig
@@ -787,8 +808,8 @@ void make_turn(char dir)
 			break;
 			
 			case 'f':
-				stop_motors();
-				_delay_ms(10000);
+// 				stop_motors();
+// 				_delay_ms(10000);
 				 
 				first = 0;
 				break;

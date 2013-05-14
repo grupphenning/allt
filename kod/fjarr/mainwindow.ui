@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>661</width>
-    <height>424</height>
+    <width>663</width>
+    <height>432</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -329,6 +329,11 @@
     <item>
      <property name="text">
       <string>Bakre högra</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>Servointegral (decimalform!)</string>
      </property>
     </item>
    </widget>
@@ -822,13 +827,26 @@ p, li { white-space: pre-wrap; }
      <number>30000</number>
     </property>
    </widget>
+   <widget class="QPushButton" name="pushButton_18">
+    <property name="geometry">
+     <rect>
+      <x>400</x>
+      <y>280</y>
+      <width>91</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Rensa</string>
+    </property>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menuBar">
    <property name="geometry">
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>661</width>
+     <width>663</width>
      <height>21</height>
     </rect>
    </property>
@@ -836,5 +854,22 @@ p, li { white-space: pre-wrap; }
  </widget>
  <layoutdefault spacing="6" margin="11"/>
  <resources/>
- <connections/>
+ <connections>
+  <connection>
+   <sender>pushButton_18</sender>
+   <signal>clicked()</signal>
+   <receiver>debugOutput</receiver>
+   <slot>clear()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>486</x>
+     <y>310</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>483</x>
+     <y>369</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
 </ui>
