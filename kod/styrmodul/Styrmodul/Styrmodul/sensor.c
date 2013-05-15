@@ -473,6 +473,7 @@ void decode_sensor(uint8_t data)
 					else if (tape_command == 'g')
 					{
 						follow_end_tape = 1;
+						claw_out();
 					}
 					
                     //make_turning_decision();
@@ -492,10 +493,11 @@ void decode_sensor(uint8_t data)
 						if(autonomous)
 						{
                             stop_motors();
+							claw_in();
                             /*
                             OBS!!! 
                             HÄR SKALL KLO STÄNGAS OCH 180-GRADERSSVÄNGEN INITIERAS!!!
-                            Kommer den att ha åkt för långt då?
+                            Kommer den att ha åkt för långt då?<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
                             */
                
                             //is_returning_home = 1;        // OBS! SKALL GÖRAS EFTER ATT 180-GRADERSSVÄNGEN UTFÖRTS!!!
