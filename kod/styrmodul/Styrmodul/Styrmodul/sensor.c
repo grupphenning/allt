@@ -24,7 +24,7 @@ uint8_t crossing_buffer_p;
 volatile uint8_t ninety_timer, turn, pid_timer;
 uint8_t left = 1;
 
-uint8_t gyro_init_value;						//Gyrots initialvärde
+int16_t gyro_init_value;						//Gyrots initialvärde
 uint8_t regulator_enable = 0;					//Flagga för att indikera 40 ms åt regulatorn.
 
 int16_t turn_full;
@@ -326,13 +326,14 @@ void decode_sensor(uint8_t data)
 			if(abs(degrees_full) > abs(turn_full)) {
 				turn = 0;
 				listening_to_gyro = 0;
+				debug("turn done");
 				if (autonomous) make_turn(crossing_direction);
 			}
 			
 			if(1||d++ % 64 == 0)
 			{
-				char integral_string[32];
-				sprintf(integral_string, "Integral: %d", tmp_sensor_buffer[2] | (tmp_sensor_buffer[1] << 8));
+				char integral_string[50];
+				sprintf(integral_string, "Integral: %d Turn full : %d", tmp_sensor_buffer[2] | (tmp_sensor_buffer[1] << 8), turn_full);
 				debug(integral_string);
 			}
 			break;
@@ -469,12 +470,15 @@ void decode_sensor(uint8_t data)
 						make_turn_flag = 1;
 						has_detected_crossing = 0;
 						crossings = 0;
-						stop_motors();	
+						if (tape_command != 'f')
+						{
+						spi_delay_ms(2000);
+						stop_motors();
+						}							
 					}
 					else if (tape_command == 'g')
 					{
 						follow_end_tape = 1;
-						claw_out();
 					}
 					
                     //make_turning_decision();
@@ -485,6 +489,7 @@ void decode_sensor(uint8_t data)
 				tape_command = tmp_sensor_buffer[1];
 				if(autonomous)
 				{
+					claw_out();
                     regulate_end_tape_4();
 				}				
                     break;
@@ -494,6 +499,7 @@ void decode_sensor(uint8_t data)
 						if(autonomous)
 						{
                             stop_motors();
+							speed = 255;
 							claw_in();
 							follow_end_tape = 0;
 							is_returning_home = 1;
@@ -751,7 +757,7 @@ void drive_to_crossing_end(uint8_t stop_distance)
 	if ((sensor_buffer[IR_FRONT] <= stop_distance) || stop_distance == 0)
 	{
 		make_turn_flag = 1;
-		stop_motors();
+		if (crossing_direction !='f') stop_motors();
 		has_detected_crossing = 0;
 	}
 	
@@ -759,7 +765,7 @@ void drive_to_crossing_end(uint8_t stop_distance)
 
 void make_turn(char dir)
 {
-	uint16_t gyro_const = 1300;
+	uint16_t gyro_const = 1150;
 	static uint8_t first = 1;
 	//uint8_t turn_delay = 50;
 	// Sväng färdig
@@ -824,7 +830,7 @@ void make_turn(char dir)
 				// 					setbit(TCCR3B, CS30);
 				// 					setbit(TCCR3B, CS32);
 				send_byte_to_sensor(START_TURN);
-				turn_full = 2*gyro_const;
+				turn_full = 3*gyro_const;
 				
 				spi_delay_ms(1000);
 				first = 0;
