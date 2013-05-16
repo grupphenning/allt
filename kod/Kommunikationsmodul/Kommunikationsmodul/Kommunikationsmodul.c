@@ -16,26 +16,25 @@
 
 volatile uint8_t data_from_styr;
 
-// Buffrar för dataöverföring, samt pekare till aktuell position
+
 uint8_t
 	spiw_data[256], spiw_r, spiw_w,
 	usartw_data[256], usartw_r, usartw_w, usartw_byte;
 
-// Funktioner som hanterar ovanstående buffrar
 void send_spi(uint8_t data) { spiw_data[spiw_w++] = data; }
 void send_usart(uint8_t data) { usartw_data[usartw_w++] = data; }
 
 int main(void)
 {
-	// Initiera funktionalitet
+//	out = 1;
+
 	init_spi();
 	USART_init();
 	
-	sei(); // Slå på globala avbrott
+	sei(); //Enable global interrupts
 
-	clearbit(PORTC, PINC0); // "Ready to Receive" till Firefly
+	clearbit(PORTC, PINC0); // Ready to receive
 
-	// Huvudloop
     while(1)
     {
 
@@ -100,19 +99,29 @@ int main(void)
 			send_usart(spir);
 		}
 		
+//		data = USART_Receive();
+//		uint8_t data;
+//		data = SPI_SlaveReceive();
+//		decode_remote(data);
+//		USART_Transmit(data);
+		
+//		char tmp[10];sprintf(tmp, "%02X", data_from_styr);
+//		USART_Transmit(tmp[0]);
+//		USART_Transmit(tmp[1]);
     }
 }
 
-// Skicka sträng till fjärrenheten
 void send_usart_string(uint8_t *str)
 {
 	while(*str)
 		send_usart(*str++);
 }
 
-// Initiera SPI-bussen
+
 void init_spi()
 {
+//	setbit(DDRB, PORTB1);		// Va ä dä här?
+
 	setbit(SPCR, SPE);		//Enables spi
 	clearbit(DDRB, PINB4);	// SS är input
 	clearbit(DDRB, PINB5);	// MOSI är input
@@ -123,14 +132,12 @@ void init_spi()
 	SPDR = 0x32;
 }
 
-// Skicka byte till fjärrenheten
 void serial_send_byte(uint8_t val)
 {
 	while((UCSRA &(1<<UDRE)) == 0);	// Vänta på att föregående värde redan skickats
 	UDR = val;
 }
 
-// Initiera kommunikationen med fjärrenheten
 void USART_init()
 {
 	OSCCAL = 0x70;		// Sänk klockhastigheten (0x7f betyder standard, dvs 8MHz).
@@ -142,14 +149,13 @@ void USART_init()
 	UCSRB = (1<<TXEN)|(1<<RXEN);
 }
 
-// Tolka data från fjärrenheten
 void decode_remote(uint8_t ch)
 {
 	
 	/* Hanterar kommando 'p', som tar tre argument: de tre PID-värden som används till regleringen */
-	static uint8_t pid = 0;	// Flagga som när den är skilld från noll anger att vi just nu tar emot argumenten till PID
-	static uint8_t display = 0; // Indikerar att nuvarande byte är en byte som ska vidare till styrenheten
-	static uint8_t speed_all = 0;	// Nuvarande byte är ett hastighetsargument
+	static uint8_t pid = 0;	// Flagga som anger att sist mottagna kommando från fjärrenheten var just pid!
+	static uint8_t display = 0; // Indikerar att nästa byte är en byte som ska vidare till styr
+	static uint8_t speed_all = 0;
 	static uint8_t p, i, dh, dl;	// Argumenten till PID!
 
 	/* Om PID är aktiverat (dvs. icke-noll), behandla den aktuella byten som ett argument till PID */
@@ -164,17 +170,16 @@ void decode_remote(uint8_t ch)
 			send_spi(i);
 			send_spi(dh);
 			send_spi(dl);
-			--pid; // Nästa argument, eller (om pid == 0) kommando
-			return;
+			--pid;
+			return;			// This ought to be needed, shound't it?
 		}
 		--pid;
-	} else if(display)	/* Nästa byte är ett tecken som ska vidare till styrenheten för hantering av displayen */
+	} else if(display)	/* Nästa byte är ett tecken som ska vidare till displayen på styrenheten */
 	{
 		display = 0;
 		send_spi(ch);
 		return;
 	}	
-	// Hastighetsargument
 	else if(speed_all) {
 		send_spi(COMM_SET_SPEED);
 		send_spi(ch);
@@ -188,22 +193,22 @@ void decode_remote(uint8_t ch)
 			case 'l': send_spi(COMM_LEFT); break;					// vänster
 			case 'd': send_spi(COMM_DRIVE); break;					// fram
 			case 'r': send_spi(COMM_RIGHT); break;					// höger
-			case 's': send_spi(COMM_STOP); break;					// stop
+			case 's': send_spi(COMM_STOP); break;								// stop
 			case 'b': send_spi(COMM_BACK); break;					// bakåt
-			case 'c': send_spi(COMM_CLAW_IN); break;				// claw in
+			case 'c': send_spi(COMM_CLAW_IN); break;					// claw in
 			case 'o': send_spi(COMM_CLAW_OUT); break;				// claw out
 			case 'v': send_spi(COMM_DRIVE_LEFT); break;				// kör framåt och vänster
-			case 'h': send_spi(COMM_DRIVE_RIGHT); break;			// framåt och höger
-			case 'q': send_spi(COMM_CLEAR_DISPLAY); break;			// Rensa displayen
-			case 'z': send_spi(COMM_DISPLAY); display = 1; break;	// tecken till displayen, tar ett argument
-			case 'p': pid = 4; break;								// PID-konstanter, tar fyra argument
-			case 'n': send_spi(COMM_ENABLE_PID); break;				// Slå på reglering
-			case 'm': send_spi(COMM_DISABLE_PID); break;			// Slå av reglering
-			case 't': send_spi(COMM_TOGGLE_SENSORS); break;			// Aktivera/deaktivera sensorer
-			case 'w': send_spi(COMM_TURN_90_DEGREES_LEFT); break;	// Vrid 90 grader vänster
-			case 'e': send_spi(COMM_TURN_90_DEGREES_RIGHT); break;	// Vrid 90 grader höger
-			case '1': send_spi(COMM_CALIBRATE_SENSORS); break;		// Kalibrera sensorer
-			case '#': speed_all = 1; break;							// Hastighet, tar ett argument
+			case 'h': send_spi(COMM_DRIVE_RIGHT); break;				// framåt och höger
+			case 'q': send_spi(COMM_CLEAR_DISPLAY); break;						// Rensa displayen
+			case 'z': send_spi(COMM_DISPLAY); display = 1; break;				// tecken till displayen
+			case 'p': pid = 4; break;											// PID-konstanter
+			case 'n': send_spi(COMM_ENABLE_PID); break;							// Slå på reglering
+			case 'm': send_spi(COMM_DISABLE_PID); break;						// Slå av reglering
+			case 't': send_spi(COMM_TOGGLE_SENSORS); break;						// Aktivera/deaktivera sensorer
+			case 'w': send_spi(COMM_TURN_90_DEGREES_LEFT); break;				// Vrid 90 grader vänster
+			case 'e': send_spi(COMM_TURN_90_DEGREES_RIGHT); break;				// Vrid 90 grader höger
+			case '1': send_spi(COMM_CALIBRATE_SENSORS); break;					// Kalibrera sensorer
+			case '#': speed_all = 1; break;
 		}			
 	}
 }

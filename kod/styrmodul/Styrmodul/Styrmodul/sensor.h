@@ -10,9 +10,9 @@
 #define TAPEH_H_
 
 
-void regulate_end_tape();
-//void regulate_end_tape_2(uint8_t* values);
-//void regulate_end_tape_3();
+void regulate_end_tape(uint8_t* values);
+void regulate_end_tape_2(uint8_t* values);
+void regulate_end_tape_3();
 void decode_tape_segment(char first, char second);
 void decode_tape_sensor_data();
 void disable_crossings();
@@ -30,6 +30,7 @@ void decode_sensor(uint8_t data);
 
 extern volatile uint8_t turn;
 extern uint8_t tmp_sensor_buffer_p;
+extern uint8_t tape_crossings;
 extern uint8_t sensor_start;
 extern uint8_t tmp_sensor_buffer_len;
 extern uint8_t regulator_enable;

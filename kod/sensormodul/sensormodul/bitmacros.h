@@ -1,4 +1,3 @@
-/* Makron som hanterar individuella bitar */
 #define bit(x) (1 << (x))
 #define setbits(x,y) ((x) |= (y))
 #define clearbits(x,y) ((x) &= (~(y)))

@@ -5,24 +5,21 @@
 
 void send_character_real(unsigned char character);
 unsigned char position = 0;
-
-// Display-buffert
 char framebuffer[32];
 
 void init_display(void)
 {
-	// Alla kontroll-pinnar är output!
 	LCD_CONTROL_DIR |= 1 << LCD_ENABLE | 1 << LCD_RW | 1 << LCD_RS;
-	spi_delay_ms(200);		// Vänta på att displayen startas
+	spi_delay_ms(200);		// Wait for LCD to turn on
 
 	/* Command is as:
 	   001DNF--
 	   DL = Data Length (1 = 8 bits, 0 = 4 bits)
-	   N  = Number of display lines
+	   N  = Number of display line
 	   F  = Font
 	*/
 	send_command(0b00111000);
-	spi_delay_ms(50);
+	spi_delay_ms(50);			//FIXME!!! This should be 2 ms, shouldn't it?
 
 	/* Command is as:
 	   00001DCB
@@ -31,12 +28,12 @@ void init_display(void)
 	   B = blink cursor
 	*/
 	send_command(0b00001101);
-	spi_delay_ms(50);
+	spi_delay_ms(50);			// FIXME!!! This too should be 2 ms!
 
-	send_command(0x01);			// Rensa skärmen
+	send_command(0x01);	// Clear display screen
 	spi_delay_ms(2);
 
-	LCD_DATA_DIR = 0xFF;		// Data-pinnarna är output
+	LCD_DATA_DIR = 0xFF;		// set LCD data direction to output
 	spi_delay_ms(2);
 
 	init_swedish();
@@ -45,7 +42,7 @@ void init_display(void)
 
 void init_swedish()
 {
-	// De svenska bokstäverna
+//	char font1[] = {0x0E, 0x0E, 0x0E, 0x0E, 0x0E, 0x0E, 0x0E, 0x00};
 	char font1[] = {0x04, 0x00, 0x0E, 0x01, 0x0F, 0x11, 0x0F, 0x00}; // å
 	char font2[] = {0x04, 0x00, 0x0E, 0x11, 0x1F, 0x11, 0x11, 0x00}; // Å
 	char font3[] = {0x0A, 0x00, 0x0E, 0x11, 0x1F, 0x11, 0x11, 0x00}; // Ä
@@ -59,11 +56,10 @@ void init_swedish()
 
 void register_character(char* font, unsigned pos)
 {
-	if(pos >= 0x10)	// Finns bara 16 positioner för tecken
+	if(pos >= 0x10)	// There are only 16 custom characters
 		return;
-	// Jao, lite fulhack. Vänta på att förra kommandot är fullt utfört.
-	// Dock helt ofarligt, då denna funktion kallas bara på vid initieringen av displayen.
-	spi_delay_ms(20);
+
+	spi_delay_ms(20);	// FIXME!!! Why?!? Makes no sense!
 	send_command(0x40 | pos * 0x08);
 	spi_delay_ms(2);
 
@@ -83,6 +79,9 @@ void gotoyx(unsigned y, unsigned x)
 		position = x;
 	else // y == 1
 		position = 0x10 + x;
+	// Hardware way to do it
+//	send_command(0x80 | pos);
+//	spi_delay_ms(50); // FIXME Too long, but how long is long enough?
 }
 
 
@@ -100,7 +99,9 @@ void check_busy()
 	LCD_CONTROL &= ~(1 << LCD_RS);
 	LCD_CONTROL |= 1 << LCD_RW;
 	while(LCD_DATA >= 0x80)		
+	{
 		finish_stuff();
+	}
 	LCD_DATA_DIR = 0xFF;	// Output
 
 }
@@ -108,7 +109,11 @@ void check_busy()
 void finish_stuff()
 {
 	LCD_CONTROL |= 1 << LCD_ENABLE;
-	_delay_us(2);
+	_delay_us(2);		// Is this safe?
+	/*
+	asm volatile("nop");
+	asm volatile("nop");
+	*/
 	LCD_CONTROL &= ~(1 << LCD_ENABLE);
 }
 
@@ -121,6 +126,7 @@ void send_string(char *string)
 
 void send_command(char command)
 {
+//	spi_delay_ms(20);		// This really shouldn't be necessecary...
 	check_busy();
 	LCD_DATA = command;
 	LCD_CONTROL &= ~((1 << LCD_RW) | (1 << LCD_RS)); // RW = 0 (= read mode), RS = 0 (= command mode)
@@ -155,26 +161,26 @@ void backspace()
 
 void newline()
 {
-	if(position > 15) // Andra raden
+	if(position > 15) // Second line
 		position = 0;
-	else // Första raden
+	else // First line
 		position = 16;
 }
 
 void update()
 {
-	send_command(0x02);	// Flytta markören till längst upp till vänster
-	spi_delay_ms(20);
+	send_command(0x02);	// Cursor home
+	spi_delay_ms(20);		// FIXME!!! Seriously... what the hell? Why?!
 
-	int length = 32;	// Antal tecken på displayen
+	int length = 32;	// The total length of the LCD
 	unsigned char *string = framebuffer;
 	while(length > 0)
 	{
 		send_character_real(*string++);
 		spi_delay_ms(2);
-		if(--length == 16)	// Slutet på första raden av displayen
+		if(--length == 16)	// End of first line of LCD
 		{
-			send_command(0x80 | 0x40);	// Flytta markören till början av andra raden
+			send_command(0x80 | 0x40);	// Next line
 			spi_delay_ms(2);
 		}
 	}

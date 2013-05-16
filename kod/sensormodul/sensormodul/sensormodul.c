@@ -22,18 +22,10 @@ char tape_type;
 int16_t gyro_init_value;						//Gyrots initialvärde
 int16_t full_turn, gyro_int;
 
-//Array med data från alla nio reflexsensorer.
 volatile uint8_t tape_sensor_data[9];
-//Array med data från alla fem IR-sensorer, med en extra plats för
-// en flagga som säger vilken typ av data det är.
 volatile uint8_t ir_sensor_data[5+1];
-//Array med data som säger vilken typ av tejp som hittats,
-//med en extra plats för en flagga som säger vilken typ av data det är.
 volatile uint8_t decoded_tape_data[1+1];
-//Array med data som säger vilken position roboten befinner sig på i linjeföljningen,
-//med en extra plats för en flagga som säger vilken typ av data det är.
 volatile uint8_t tape_position[1+1];
-//Används ej
 volatile uint8_t test_data[16+1];
 volatile uint8_t data_index=1;
 volatile uint8_t adc_interrupt;
@@ -78,7 +70,7 @@ int main(void)
 		if(read_mode) {
 			if(read_and_send_ir_to_master)
 			{
-				gyro_int += gyro_init_value - ((int16_t)read_gyro());			//Maxhastighet 300grader/s,
+				gyro_int += abs(gyro_init_value - ((int16_t)read_gyro()));			//Maxhastighet 300grader/s,
 				read_and_send_ir_to_master = 0;
 				uint8_t values[3];
 				values[0] = SENSOR_GYRO_INTEGRAL;
@@ -257,9 +249,7 @@ void init_adc()
 
 /*
  * Läs av alla sensorer ( Ej gyro)
- * Används ej!
  */
-/*
 void read_all_sensors()
 {
 	setbit(PORTC, PINC0);		// For debug!
@@ -288,7 +278,6 @@ void read_all_sensors()
 	setbit(PORTC, PINC0);		// For debug!!
 	clearbit(PORTC, PINC0);		// For debug!!
 }
-*/
 
 /*
 * Läser och skickar data från ir-sensorerna
@@ -316,9 +305,9 @@ void send_decoded_tape()
 
 /* 
  * Läser bara av tejpsensorer, skicka rådata eller beräkna mittpunkt här?!
- * Används ej!
  */
-/*
+
+
 void read_and_send_tape()
 {
 	data_index = 1;
@@ -331,7 +320,6 @@ void read_and_send_tape()
 	
 	send_to_master(11, test_data);
 }
-*/
 
 /*
  * Läs av gyrot.
@@ -449,6 +437,7 @@ void decode_tape()
 	
 	if (tape_sensor > REFLEX_SENSITIVITY) //Tejpbitsstart hittad
 	{
+		//cli(); //Stänger av globala avbrott
 		is_over_tape = 1;
 		no_tape_count = 0;
 		tape_count++;
@@ -486,11 +475,11 @@ void decode_tape()
 	{
 		no_tape_count++;
 		//checka om den bara sett en tejpbit, alltså är den vid mål. Kontrollerar aldrig om det är en kort eller lång tejpbit!
-		if(no_tape_count > 200 && is_in_tape_segment)
+		if(no_tape_count > 2 * first_tape_count && is_in_tape_segment)
 		{
 			is_in_tape_segment = 0;
 			follow_end_tape = 1;
-			decode_tape_segment(first_tape_count, 0); // Skickas vid början av linjeföljningen!
+			//decode_tape_segment(first_tape_count, 0); // Skickas vid början av linjeföljningen!
 			
 		}
 		//is_in_tape_segment = no_tape_count++ > 7 ? 0 : is_in_tape_segment; //vilken jävla oneliner!

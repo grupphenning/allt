@@ -132,6 +132,7 @@ void decode_comm(uint8_t command)
 	{
 		disable_pid();
 		stop_motors();
+		send_byte_to_sensor(STOP_TURN);
 	}
 	else if(command == COMM_SET_PID)
 	{
@@ -144,7 +145,7 @@ void decode_comm(uint8_t command)
 		send_byte_to_sensor(AUTONOMOUS_MODE);
 //		crossing_buffer_p = 0;
 		drive_forwards(speed);
-		//enable_pid();
+		enable_pid();
 		enable_crossings();
 		setbit(PORT_DIR, LEFT_DIR);		//Kör framåt under regleringen.
 		setbit(PORT_DIR, RIGHT_DIR);	
@@ -188,14 +189,14 @@ is_returning_home = 1;
 	{
 		turn_dir = 'l';
 		listening_to_gyro = 1;
-		debug("Svanger vanster");
+//		debug("Svanger vanster");
 //		send_byte_to_sensor(START_TURN);	
 	}
 	else if(command == COMM_TURN_90_DEGREES_RIGHT)
 	{
 		turn_dir = 'r';
 		listening_to_gyro = 1;
- 		debug("Svanger hoger");
+// 		debug("Svanger hoger");
 // 		send_byte_to_sensor(STOP_TURN);
 	}
 	else if(command == COMM_CALIBRATE_SENSORS)
