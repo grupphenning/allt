@@ -70,7 +70,7 @@ int main(void)
 		if(read_mode) {
 			if(read_and_send_ir_to_master)
 			{
-				gyro_int += gyro_init_value - ((int16_t)read_gyro() * 16);			//Maxhastighet 300grader/s,
+				gyro_int += abs(gyro_init_value - ((int16_t)read_gyro() * 16));			//Maxhastighet 300grader/s,
 				read_and_send_ir_to_master = 0;
 				uint8_t values[3];
 				values[0] = SENSOR_GYRO_INTEGRAL;

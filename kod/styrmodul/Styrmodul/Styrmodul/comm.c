@@ -188,14 +188,14 @@ is_returning_home = 1;
 	{
 		turn_dir = 'l';
 		listening_to_gyro = 1;
-//		debug("Svanger vanster");
+		debug("Svanger vanster");
 //		send_byte_to_sensor(START_TURN);	
 	}
 	else if(command == COMM_TURN_90_DEGREES_RIGHT)
 	{
 		turn_dir = 'r';
 		listening_to_gyro = 1;
-// 		debug("Svanger hoger");
+ 		debug("Svanger hoger");
 // 		send_byte_to_sensor(STOP_TURN);
 	}
 	else if(command == COMM_CALIBRATE_SENSORS)
