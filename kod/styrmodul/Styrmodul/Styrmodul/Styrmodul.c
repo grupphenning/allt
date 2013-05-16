@@ -86,7 +86,7 @@ int main(void)
 // 			regulate_end_tape(spi_data_from_sensor);
 // 		}
 
-		if(!autonomous) {
+		if(!autonomous || turning_180) {
 			if(turn_dir) {
 				make_turn_flag = 1;
 				make_turn(turn_dir);

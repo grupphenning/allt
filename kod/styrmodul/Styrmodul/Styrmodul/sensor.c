@@ -16,6 +16,7 @@ void debug(char *str);
 extern uint8_t is_returning_home;
 
 uint8_t autonomous;
+uint8_t turning_180;
 uint8_t is_returning_home;
 char crossing_buffer[256];
 uint8_t crossing_buffer_p;
@@ -494,15 +495,16 @@ void decode_sensor(uint8_t data)
 						{
                             stop_motors();
 							claw_in();
+							follow_end_tape = 0;
+							is_returning_home = 1;
+							turning_180 = 1;
+							make_turn('b');
                             /*
                             OBS!!! 
                             HÄR SKALL KLO STÄNGAS OCH 180-GRADERSSVÄNGEN INITIERAS!!!
                             Kommer den att ha åkt för långt då?<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
                             */
-               
-                            //is_returning_home = 1;        // OBS! SKALL GÖRAS EFTER ATT 180-GRADERSSVÄNGEN UTFÖRTS!!!
-                            follow_end_tape = 0;
-							speed = 0;
+							//speed = 0;
 						}							        
                     }	
 					break;
@@ -769,7 +771,11 @@ void make_turn(char dir)
 		drive_forwards(speed);
 		first = 1;
 		make_turn_flag = 0;
-		drive_from_crossing = 1;
+		if (!turning_180)
+		{
+			drive_from_crossing = 1;
+		}
+		turning_180 = 0;
 		if(!is_returning_home) add_to_crossing_buffer(dir);
 	}
 	else
@@ -801,12 +807,29 @@ void make_turn(char dir)
 // 					setbit(TCCR3B, CS30);
 // 					setbit(TCCR3B, CS32);
 					send_byte_to_sensor(START_TURN);
-					turn_full = gyro_const+100;
+					turn_full = gyro_const;
 					
 					spi_delay_ms(1000);
 					first = 0;
 					tank_turn_right(speed);
 				}
+			break;
+			
+			case 'b':
+			if(first)
+			{
+				turn = 1;
+				
+				//sätt igång timern!
+				// 					setbit(TCCR3B, CS30);
+				// 					setbit(TCCR3B, CS32);
+				send_byte_to_sensor(START_TURN);
+				turn_full = 2*gyro_const;
+				
+				spi_delay_ms(1000);
+				first = 0;
+				tank_turn_right(speed);
+			}
 			break;
 			
 			case 'f':

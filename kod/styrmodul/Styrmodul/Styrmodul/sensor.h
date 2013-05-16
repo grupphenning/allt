@@ -35,6 +35,7 @@ extern uint8_t tmp_sensor_buffer_len;
 extern uint8_t regulator_enable;
 extern volatile uint8_t ninety_timer;
 extern uint8_t autonomous;
+extern uint8_t turning_180;
 extern uint8_t display_auto_update;
 extern uint8_t calibrate_sensors;
 extern uint8_t make_turn_flag;
