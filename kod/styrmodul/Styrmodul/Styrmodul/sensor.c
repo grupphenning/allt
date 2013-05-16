@@ -15,10 +15,10 @@ void debug(char *str);
 
 extern uint8_t is_returning_home;
 
-uint8_t autonomous;
-uint8_t turning_180;
-uint8_t is_returning_home;
-char crossing_buffer[256];
+uint8_t autonomous; //Flagga som anger om roboten kör på egen hand
+uint8_t turning_180; 
+uint8_t is_returning_home; //Flagga som anger om roboten är på väg hem
+char crossing_buffer[256]; //En array som sparar de olika vägvalen för användning på tillbakavägen hem
 uint8_t crossing_buffer_p;
 
 volatile uint8_t ninety_timer, turn, pid_timer;
@@ -29,13 +29,14 @@ uint8_t regulator_enable = 0;					//Flagga för att indikera 40 ms åt regulator
 
 int16_t turn_full;
 
-// Denna ancänds bara av inte-interrupt-koden
+// Denna används bara av inte-interrupt-koden
 uint8_t sensor_buffer[SENSOR_BUFFER_SIZE];		// Buffer som håller data från sensorenheten
 uint8_t tape_command;
 uint8_t tmp_sensor_buffer[256];					// Tape-argument från sensorenheten
 uint8_t tmp_sensor_buffer_p;					// Pekare till aktuell position i bufferten
 uint8_t sensor_start;							// Flagga som avgör huruvida vi är i början av meddelande
 uint8_t tmp_sensor_buffer_len;					// Anger aktuell längd av meddelandet
+
 // Innehåller de spänningsvärden som ses i grafen på https://docs.isy.liu.se/twiki/pub/VanHeden/DataSheets/gp2y0a21.pdf, sid. 4.
 uint8_t small_ir_voltage_array[122] = {140, 139, 138, 137, 136, 135, 134, 133, 132, 131, 130, 129, 128, 127,
 									   126, 125, 124, 123, 122, 121, 120, 119, 118, 117, 116, 115, 114, 113,
@@ -68,7 +69,7 @@ uint8_t big_ir_centimeter_array[117] = {16, 16, 17, 17, 18, 18, 19, 19, 20, 20, 
 // Innehåller de centimetervärden som ses i grafen på https://docs.isy.liu.se/twiki/pub/VanHeden/DataSheets/gp2y0a21.pdf, sid. 4.
 
 
-uint8_t follow_end_tape = 1;
+uint8_t follow_end_tape = 1; //Flagga som anger om den är i tejpföljningsmodet
 
 
 //Kalibrering
@@ -90,39 +91,14 @@ uint8_t display_auto_update = 1;	// Påslagen som default
 uint8_t counter = 0;
 
 
-
-
-uint8_t *reflex_sensors_currently_seeing_tape(uint8_t * values)
+/*
+Kör själva tejpregleringen,
+mer ingående detaljer finnes i tekniska dokumentationen.
+*/
+void regulate_end_tape()
 {
-	uint8_t i, offset=5;
-	uint8_t return_values[11];
-	for (i = 0;i < 11;i++)
-	{
-		if(values[i+offset] > REFLEX_SENSITIVITY)
-			return_values[i] = 1;
-		else
-			return_values[i] = 0;
-	}
-	
-	return return_values;
-}
-
-
-uint8_t is_empty(uint8_t * values, uint8_t len)
-{
-	uint8_t i;
-	for (i = 0;i<len;i++)
-	{
-		if(values[i + 5] != 0)
-			return 0;
-	}
-	
-	return 1;
-}
-
-
-void regulate_end_tape_4()
-{
+	speed = 50;
+	//Debug för att kolla hur ofta funktionen körs.
 	static uint8_t hihi = 0;
 	if(hihi++ > 100)
 	{
@@ -130,15 +106,16 @@ void regulate_end_tape_4()
 		send_string("1");
 		update();
 	}
-	
-	int8_t pos = tape_command; //-5 för längst till vänster, 5 för höger, 0 i mitten!
+	 //-4 för längst till vänster, 4 för höger, 0 i mitten!
+	int8_t pos = tape_command;
 	if(pos > 0)
 	{
 		RIGHT_AMOUNT = speed + 30 + pos*5;
 		if(pos < 7)
-		LEFT_AMOUNT = speed - 20 - pos*5;
+			LEFT_AMOUNT = speed - 20 - pos*5;
 		else
-		LEFT_AMOUNT = 0;
+			LEFT_AMOUNT = 0;
+		
 		setbit(PORT_DIR, LEFT_DIR);
 		setbit(PORT_DIR, RIGHT_DIR);
 	}
@@ -147,15 +124,16 @@ void regulate_end_tape_4()
 	{
 		LEFT_AMOUNT = speed + 30 + abs(pos)*5;
 		if(abs(pos) < 7)
-		RIGHT_AMOUNT = speed - 20 - abs(pos)*5;
+			RIGHT_AMOUNT = speed - 20 - abs(pos)*5;
 		else
-		RIGHT_AMOUNT = 0;
+			RIGHT_AMOUNT = 0;
 		setbit(PORT_DIR, LEFT_DIR);
 		setbit(PORT_DIR, RIGHT_DIR);
 	}
 	
-	else //if(pos == 0)
-	{ // == 0
+	//pos == 0! Kör bara framåt.
+	else
+	{
 		drive_forwards(speed);
 	}
 }
@@ -264,6 +242,11 @@ void decode_tape_segment(char first, char second)
 
 // Global så att även handle_display.h kan läsa den
 int16_t degrees_full;
+
+/*
+Funktionen som tar hand om alla bussmeddelanden,
+och kör passande funktioner utefter vilken data den mottagit.
+*/
 void decode_sensor(uint8_t data)
 {
 	static uint16_t d = 0;
@@ -515,7 +498,7 @@ void decode_sensor(uint8_t data)
 					if(autonomous)
 					{
 						claw_out();
-						regulate_end_tape_4();
+						regulate_end_tape();
 					}				
 				}
 				break;
@@ -543,10 +526,11 @@ void decode_sensor(uint8_t data)
 				{
 					if(autonomous)
 					{
-						stop_motors();
-					}				
-				}							
-				break;
+					claw_out();
+                    regulate_end_tape();	
+					}	
+				}				
+                    break;
 			case SENSOR_TAPE_DEBUG:
 			{
 				char tmp[20];
@@ -596,7 +580,9 @@ void sensor_debug_hex()
 	update();
 }
 
-//void interpret_small_ir(uint8_t value) //wtf??
+/*
+Tolkar de små ir-sensorerna, ger tillbaka avstånd i cm.
+*/
 uint8_t interpret_small_ir(uint8_t value)
 {
  	uint8_t i = 0;
@@ -617,7 +603,9 @@ uint8_t interpret_small_ir(uint8_t value)
  	return small_ir_centimeter_array[i];
 }
 
-//void interpret_big_ir(uint8_t value) //wtf??
+/*
+Tolkar de stora ir-sensorerna, ger tillbaka avstånd i cm.
+*/
 uint8_t interpret_big_ir(uint8_t value)
 {
 	uint8_t i = 0;
@@ -637,6 +625,9 @@ uint8_t interpret_big_ir(uint8_t value)
 	return big_ir_centimeter_array[i];
 }
 
+/*
+Hantera korsningar utan tejpmarkeringar.
+*/
 void handle_crossing()
 {
 	//Om ej i korsning och får sensordata som indikerar korsning. Analysera korsningstyp, sätt direction och has_detected_crossing_flagga
@@ -690,7 +681,6 @@ void handle_crossing()
 	}
 }
 /* 
- * ANALYZE_IR_SENSORS()
  * Vid upptäckt av någon form av korsning anropas denna.
  * Funktionen väljer rätt korsningstyp utifrån sensordata.
  * Flaggor som talar om vilken korsning ddet är sätts.
@@ -790,11 +780,15 @@ void analyze_ir_sensors()
 	}
 	if(has_detected_crossing)
 	{
-		decision_tfal_count = decision_tlaf_count = decision_tl_count = decision_tr_count = decision_tlar_count = decision_tral_count = decision_traf_count = decision_tfar_count = 0;
+		decision_tfal_count = decision_tlaf_count = decision_tl_count = 
+		decision_tr_count = decision_tlar_count = decision_tral_count = 
+		decision_traf_count = decision_tfar_count = 0;
 	}	
 }
 
-
+/*
+Lägger till senaste korsningsbeslut i korsningsarrayen.
+*/
 void add_to_crossing_buffer(char c)
 {
 	crossing_buffer[crossing_buffer_p++] = c;
@@ -817,6 +811,9 @@ void drive_to_crossing_end(uint8_t stop_distance)
 	
 }
 
+/*
+Utför svängar med hjälp av gyrot.
+*/
 void make_turn(char dir)
 {
 	uint16_t gyro_const = 1150;
@@ -907,6 +904,10 @@ void make_turn(char dir)
 	}
 
 }
+
+/*
+Aktivera hanterandet av korsningar.
+*/
 void enable_crossings()
 {
 	crossings = 1;
@@ -915,6 +916,9 @@ void enable_crossings()
 	drive_from_crossing = 0;
 }
 
+/*
+Avaktivera hanterandet av korsningar.
+*/
 void disable_crossings()
 {
 	crossings = 0;

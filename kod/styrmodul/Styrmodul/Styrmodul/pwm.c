@@ -13,6 +13,10 @@ void debug(char *str);
 #include "Styrmodul.h"
 
 
+/*
+Initiera alla räknare, som används för motorer, gripklon,
+tajmade avbrott och även en experimentell timer för 90-graderssvängar
+*/
 void pwm_init()
 {
 	//_delay_ms(1000);
@@ -89,7 +93,7 @@ void pwm_init()
 	
 	
 	
-	//en helt EGEN 90-graderstimer
+	//en helt EGEN timer för 90-graderssvängar, utan gyro
 	TCCR3A = 0;
 	setbit(TCCR3A, COM3A1);
 	//setbit(TCCR3A, WGM30);
@@ -117,6 +121,10 @@ void pwm_init()
 
 
 uint8_t dirbits;
+/*
+Kör framåt, genom att sätta DIR-pinnarna till 1 (framåt)
+och pulsbreddsregistren till värdet amount, mellan 0 och 255.
+*/
 void drive_forwards(uint8_t amount)
 {
 	//sätt ettor (framåt) på DIR-pinnarna
@@ -128,6 +136,10 @@ void drive_forwards(uint8_t amount)
 	RIGHT_AMOUNT = amount;
 }
 
+/*
+Kör bakåt, genom att sätta DIR-pinnarna till 0 (bakåt)
+och pulsbreddsregistren till värdet amount, mellan 0 och 255.
+*/
 void drive_backwards(uint8_t amount)
 {
 	stop_motors();
@@ -142,7 +154,11 @@ void drive_backwards(uint8_t amount)
 	RIGHT_AMOUNT = amount;
 }
 
-//sväng vänster!
+/*
+Kör vänster, genom att sätta DIR-pinnarna till 1 (framåt)
+och pulsbreddsregistren till ett mindre värde på vänstra hjulparet
+så den svänger åt vänster.
+*/
 void turn_left(uint8_t amount)
 {
 	setbit(PORT_DIR, LEFT_DIR);
@@ -153,7 +169,11 @@ void turn_left(uint8_t amount)
 	RIGHT_AMOUNT = amount;
 }
 
-//sväng höger!
+/*
+Kör höger, genom att sätta DIR-pinnarna till 1 (framåt)
+och pulsbreddsregistren till ett mindre värde på högra hjulparet
+så den svänger åt höger.
+*/
 void turn_right(uint8_t amount)
 {
 	setbit(PORT_DIR, LEFT_DIR);
@@ -164,7 +184,10 @@ void turn_right(uint8_t amount)
 	RIGHT_AMOUNT = 60;
 }
 
-//stanna allt!
+/*
+Stoppa motorerna, genom att sätta hastigheten (pulsbredden)
+på båda registren till 0.
+*/
 void stop_motors()
 {
 	//sätter ingen klocka
@@ -183,7 +206,11 @@ void stop_motors()
 	RIGHT_AMOUNT = 0;
 }
 
-//sväng vänster som en stridsvagn!
+/*
+sväng vänster som en stridsvagn, genom att sätta en etta 
+respektive en nolla på höger respektive vänster hjulpar,
+så den svänger på stället.
+*/
 void tank_turn_left(uint8_t amount)
 {
 	//	stop_motors();
@@ -198,7 +225,11 @@ void tank_turn_left(uint8_t amount)
 }
 
 
-//sväng höger som en stridsvagn!
+/*
+sväng höger som en stridsvagn, genom att sätta en etta
+respektive en nolla på höger respektive vänster hjulpar,
+så den svänger på stället.
+*/
 void tank_turn_right(uint8_t amount)
 {
 	//	stop_motors();
@@ -212,11 +243,19 @@ void tank_turn_right(uint8_t amount)
 	RIGHT_AMOUNT = amount;
 }
 
+/*
+Öppnar gripklon genom att sätta pulsbredden till ett värde
+enligt specifikation.
+*/
 void claw_out()
 {
 	CLAW_AMOUNT = 312;
 }
 
+/*
+Stänger gripklon genom att sätta pulsbredden till ett värde
+enligt specifikation.
+*/
 void claw_in()
 {
 	CLAW_AMOUNT = 156;
