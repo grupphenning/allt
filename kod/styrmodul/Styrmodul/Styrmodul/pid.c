@@ -131,12 +131,12 @@ void regulator(int8_t diff_right, int8_t diff_left, int8_t diff_front, int8_t di
 
 void pid_timer_init()
 {
-	//sätt "Fast PWM mode", med OCRA (OCR0A?) som toppvärde!
+	//sätt "Fast PWM mode", med OCR0A som toppvärde!
 	setbit(TCCR0A, WGM00);
 	setbit(TCCR0A, WGM01);
 	setbit(TCCR0B, WGM02);
 	
-	//sätt klockskalning, fck = f/1024
+	//sätt klockskalning, f = fck/1024
 	setbit(TCCR0B, CS00);
 	setbit(TCCR0B, CS02);
 	

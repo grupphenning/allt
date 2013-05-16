@@ -22,10 +22,18 @@ char tape_type;
 int16_t gyro_init_value;						//Gyrots initialvärde
 int16_t full_turn, gyro_int;
 
+//Array med data från alla nio reflexsensorer.
 volatile uint8_t tape_sensor_data[9];
+//Array med data från alla fem IR-sensorer, med en extra plats för
+// en flagga som säger vilken typ av data det är.
 volatile uint8_t ir_sensor_data[5+1];
+//Array med data som säger vilken typ av tejp som hittats,
+//med en extra plats för en flagga som säger vilken typ av data det är.
 volatile uint8_t decoded_tape_data[1+1];
+//Array med data som säger vilken position roboten befinner sig på i linjeföljningen,
+//med en extra plats för en flagga som säger vilken typ av data det är.
 volatile uint8_t tape_position[1+1];
+//Används ej
 volatile uint8_t test_data[16+1];
 volatile uint8_t data_index=1;
 volatile uint8_t adc_interrupt;
@@ -249,7 +257,9 @@ void init_adc()
 
 /*
  * Läs av alla sensorer ( Ej gyro)
+ * Används ej!
  */
+/*
 void read_all_sensors()
 {
 	setbit(PORTC, PINC0);		// For debug!
@@ -278,6 +288,7 @@ void read_all_sensors()
 	setbit(PORTC, PINC0);		// For debug!!
 	clearbit(PORTC, PINC0);		// For debug!!
 }
+*/
 
 /*
 * Läser och skickar data från ir-sensorerna
@@ -305,9 +316,9 @@ void send_decoded_tape()
 
 /* 
  * Läser bara av tejpsensorer, skicka rådata eller beräkna mittpunkt här?!
+ * Används ej!
  */
-
-
+/*
 void read_and_send_tape()
 {
 	data_index = 1;
@@ -320,6 +331,7 @@ void read_and_send_tape()
 	
 	send_to_master(11, test_data);
 }
+*/
 
 /*
  * Läs av gyrot.
