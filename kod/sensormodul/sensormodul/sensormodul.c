@@ -70,12 +70,12 @@ int main(void)
 		if(read_mode) {
 			if(read_and_send_ir_to_master)
 			{
-				gyro_int += abs(gyro_init_value - ((int16_t)read_gyro() * 16));			//Maxhastighet 300grader/s,
+				gyro_int += gyro_init_value - ((int16_t)read_gyro());			//Maxhastighet 300grader/s,
 				read_and_send_ir_to_master = 0;
 				uint8_t values[3];
 				values[0] = SENSOR_GYRO_INTEGRAL;
-				values[1] = (gyro_int / 16) >> 8;
-				values[2] = (gyro_int / 16);
+				values[1] = (gyro_int) >> 8;
+				values[2] = (gyro_int);
 				send_to_master(3, values);					
 			}
 			if(to_read_gyro)
@@ -199,7 +199,7 @@ void init_gyro()
 	uint8_t i;
 	//for(i = 0; i < 16; ++i) sum += read_gyro();
 	gyro_init_value = 0;
-	for(i = 0; i < 16; ++i) gyro_init_value += read_gyro();
+	for(i = 0; i < 1; ++i) gyro_init_value += read_gyro();
 	gyro_init_value += 1;
 	//gyro_init_value = sum;
 }
@@ -437,7 +437,6 @@ void decode_tape()
 	
 	if (tape_sensor > REFLEX_SENSITIVITY) //Tejpbitsstart hittad
 	{
-		//cli(); //Stänger av globala avbrott
 		is_over_tape = 1;
 		no_tape_count = 0;
 		tape_count++;
@@ -475,11 +474,11 @@ void decode_tape()
 	{
 		no_tape_count++;
 		//checka om den bara sett en tejpbit, alltså är den vid mål. Kontrollerar aldrig om det är en kort eller lång tejpbit!
-		if(no_tape_count > 2 * first_tape_count && is_in_tape_segment)
+		if(no_tape_count > 200 && is_in_tape_segment)
 		{
 			is_in_tape_segment = 0;
 			follow_end_tape = 1;
-			//decode_tape_segment(first_tape_count, 0); // Skickas vid början av linjeföljningen!
+			decode_tape_segment(first_tape_count, 0); // Skickas vid början av linjeföljningen!
 			
 		}
 		//is_in_tape_segment = no_tape_count++ > 7 ? 0 : is_in_tape_segment; //vilken jävla oneliner!

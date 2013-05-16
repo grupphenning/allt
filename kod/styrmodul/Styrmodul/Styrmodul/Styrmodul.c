@@ -18,7 +18,7 @@ void debug(char *str);
 
 uint8_t turn_dir;
 uint8_t speed = 255;
-uint8_t SPEED_OFFSET = 14;
+uint8_t SPEED_OFFSET = 0/*14*/;
 
 
 int main(void)
@@ -42,7 +42,7 @@ int main(void)
 	//Regulator känslig för dåligt kalibrerade sensorer.
 	clear_pid();	
 	init_pid(150, -150);
-	update_k_values(30, 12, 22);
+	update_k_values(40, 12, 22);
 	
 	
 	tmp_sensor_buffer_p = 0x00;	// Pekare till aktuell position i bufferten
@@ -64,40 +64,21 @@ int main(void)
 		if(has_comm_data) decode_comm(comm_data);
 		if(has_sensor_data) decode_sensor(sensor_data);		
 		
-// 		if(turn)
-// 			tank_turn_left(speed);
-// 		else
-// 			stop_motors();
-			//drive_forwards(speed);
-		
-//		if (follow_end_tape)
-//		{
-			//regulate_end_tape_2(spi_data_from_sensor);
-			//regulate_end_tape(reflex_sensors_currently_seeing_tape(spi_data_from_sensor));
-// 			char temp[32];
-// 			sprintf(temp,"%03d ", spi_data_from_sensor[1]);
-// 			send_string(temp);
-// 			update();
-// 			
-			//reflex_sensors_currently_seeing_tape(spi_data_from_sensor);
-//		}
-// 		if (follow_end_tape)
-// 		{
-// 			regulate_end_tape(spi_data_from_sensor);
-// 		}
-
-		if(!autonomous || turning_180) {
-			if(turn_dir) {
+		if(!autonomous || turning_180) 
+		{
+			if(turn_dir) 
+			{
 				make_turn_flag = 1;
 				make_turn(turn_dir);
-				if(!make_turn_flag) {
+				if(!make_turn_flag) 
+				{
 					turn_dir = 0;
 					stop_motors();
 				}					
 				
 			}
 		}			
-		if (regulator_enable && regulator_flag)
+		if (regulator_enable)
 		{
 			regulator(sensor_buffer[IR_RIGHT_FRONT] - sensor_buffer[IR_RIGHT_BACK], 
 					  sensor_buffer[IR_LEFT_FRONT] - sensor_buffer[IR_LEFT_BACK], 

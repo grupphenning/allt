@@ -176,6 +176,8 @@ void stop_motors()
 	setbit(PORT_DIR, LEFT_DIR);
 	setbit(PORT_DIR, RIGHT_DIR);
 	
+	debug("STOP");
+	
 	dirbits = 3;
 	LEFT_AMOUNT = 0;
 	RIGHT_AMOUNT = 0;
