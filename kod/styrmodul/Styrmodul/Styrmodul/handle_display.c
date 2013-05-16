@@ -12,28 +12,14 @@ void debug(char *str);
 #include "sensor.h"
 #include <avr/io.h>
 #include "bitmacros.h"
-uint8_t display_printf_string[100];
+uint8_t display_printf_string[BUFFER_SIZE];
 
-#define BUFFER_SIZE 100
-#define MAX_SENSORS 7
 void update_display_string()
 {
-	
-// 	char tmp[100];
-// 	clear_screen();
-// 	sprintf(tmp, "L: %03d   R: %03d F: %03d ", sensor_buffer[IR_LEFT_FRONT], sensor_buffer[IR_RIGHT_FRONT], sensor_buffer[IR_FRONT]);
-// 	send_string(tmp);
-// 	update();
-// 	return;
-// 	
-/*
-	clear_screen();
-	send_string(display_printf_string);
-	update();
-	return;
-*/
+	// Pekare till aktuell position i den formatterade strängen
     uint8_t *inp = display_printf_string;
 
+	// Slutgiltig sträng att skicka till displayen
     char tmpStr[BUFFER_SIZE];
     char *tmpp = tmpStr;
     while(inp < display_printf_string + BUFFER_SIZE)
@@ -48,7 +34,7 @@ void update_display_string()
 		    continue;
 	    } else
 	    {
-		    inp++;    // Bortom %-tecknet
+		    inp++;			// Bortom %-tecknet
 		    uint8_t base;   // Nästa är d för decimal, x för hex
 		    if(*inp == 'd')
 				base = 10;
@@ -59,16 +45,17 @@ void update_display_string()
 		    inp++;
 		    if(sensor > MAX_SENSORS - 1)
 				continue;
+			// Specialhantering av sensor 6, den är en två bytes integer, alltid i decimalform!
 			if(sensor == 6)
 			{
-				sprintf(tmpp, "%6d", degrees_full);
+				sprintf(tmpp, "%5d", degrees_full);
 				for(uint8_t i = 0; i < 6; i++)
 					tmpp++;
 			}
+			// Alla andra sensorer ger en bytes data.
 			else if(base == 10)
 		    {
 			    sprintf(tmpp, "%3d", sensor_buffer[sensor]);
-			    //debug(tmpp);
 				tmpp++; // Decimal-strängen är tre tecken
 			    tmpp++;
 			    tmpp++;
@@ -81,6 +68,7 @@ void update_display_string()
 		    continue;
 	    }
     }
+	// Uppdatera skärmen med den nya strängen
 	clear_screen();
 	send_string(tmpStr);
 	update();
@@ -91,6 +79,8 @@ void update_display_string()
 
 void init_default_printf_string()
 {
+	// Standardsträng som skriver ut data från alla avståndssensorer
 	char default_string[] = {"V:%d\001,%d\004 F:%d\003 H:%d\002,%d\005" };
 	strcpy(display_printf_string, default_string);
 }
+
