@@ -1,9 +1,9 @@
 ﻿/*
- * Kommunikationsmodul.c
- *
- * Created: 4/6/2013 2:39:23 PM
- *  Author: rasme879
- */
+* Kommunikationsmodul.c
+*
+* Created: 4/6/2013 2:39:23 PM
+*  Author: rasme879
+*/
 //Måste definieras först!
 #define F_CPU 7380000UL
 
@@ -16,25 +16,26 @@
 
 volatile uint8_t data_from_styr;
 
-
+// Buffrar för dataöverföring, samt pekare till aktuell position
 uint8_t
-	spiw_data[256], spiw_r, spiw_w,
-	usartw_data[256], usartw_r, usartw_w, usartw_byte;
+spiw_data[256], spiw_r, spiw_w,
+usartw_data[256], usartw_r, usartw_w, usartw_byte;
 
+// Funktioner som hanterar ovanstående buffrar
 void send_spi(uint8_t data) { spiw_data[spiw_w++] = data; }
 void send_usart(uint8_t data) { usartw_data[usartw_w++] = data; }
 
 int main(void)
 {
-//	out = 1;
-
+	// Initiera funktionalitet
 	init_spi();
 	USART_init();
 	
 	sei(); //Enable global interrupts
 
-	clearbit(PORTC, PINC0); // Ready to receive
+	clearbit(PORTC, PINC0); // "Ready to Receive" till Firefly
 
+// Huvudloop
     while(1)
     {
 
@@ -98,30 +99,20 @@ int main(void)
 		if(has_spir) {
 			send_usart(spir);
 		}
-		
-//		data = USART_Receive();
-//		uint8_t data;
-//		data = SPI_SlaveReceive();
-//		decode_remote(data);
-//		USART_Transmit(data);
-		
-//		char tmp[10];sprintf(tmp, "%02X", data_from_styr);
-//		USART_Transmit(tmp[0]);
-//		USART_Transmit(tmp[1]);
     }
 }
 
+// Skicka sträng till fjärrenheten
 void send_usart_string(uint8_t *str)
 {
 	while(*str)
 		send_usart(*str++);
 }
 
+// Initiera SPI-bussen
 
 void init_spi()
 {
-//	setbit(DDRB, PORTB1);		// Va ä dä här?
-
 	setbit(SPCR, SPE);		//Enables spi
 	clearbit(DDRB, PINB4);	// SS är input
 	clearbit(DDRB, PINB5);	// MOSI är input
@@ -132,12 +123,14 @@ void init_spi()
 	SPDR = 0x32;
 }
 
+// Skicka byte till fjärrenheten
 void serial_send_byte(uint8_t val)
 {
 	while((UCSRA &(1<<UDRE)) == 0);	// Vänta på att föregående värde redan skickats
 	UDR = val;
 }
 
+// Initiera kommunikationen med fjärrenheten
 void USART_init()
 {
 	OSCCAL = 0x70;		// Sänk klockhastigheten (0x7f betyder standard, dvs 8MHz).
@@ -149,6 +142,7 @@ void USART_init()
 	UCSRB = (1<<TXEN)|(1<<RXEN);
 }
 
+// Tolka data från fjärrenheten
 void decode_remote(uint8_t ch)
 {
 	
