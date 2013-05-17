@@ -15,18 +15,9 @@ void debug(char *str);
 
 void pwm_init()
 {
-	//_delay_ms(1000);
-	
-	///////////////////////////////////spi_send_byte(0xAA);
-	
-	//DDRB = 0xFF;
-	//DDRC = 0xFF;
-	//DDRD = 0xFF;
-	
 	//sätt riktning på displaystyrpinnar!
 	setbit(DDRC, PC6);
 	setbit(DDRC, PC7);
-	
 	
 	//sätt riktning på motorer + gripklo
 	setbit(DDRB, PB0);
@@ -50,18 +41,8 @@ void pwm_init()
 	setbit(TCCR1B, CS11);
 	//setbit(TCCR1B, CS12);
 	
-	
-	//TCCR1A = (1 << COM1A1) | (1 << WGM11);
-	//TCCR1B = (1 << WGM11) | (1 << WGM13) | (1 << WGM12) | (1 << CS12) | (1 << CS10);
 	TIMSK1 = (1 << OCIE1A);  // Enable Interrupt TimerCounter1 Compare Match A (TIMER1_COMPA_vect)
-	//ICR1 = 390;
-	//ICR1 = 625;
-	//ICR1 = 313;
 	ICR1 = 625*4;
-	//sätt OCR1A också!
-	//CLAW_AMOUNT = 10*4;
-	//_delay_ms(1000);
-	//CLAW_AMOUNT = 78*4;
 	
 	//pwm-styrning för motorerna, pinne OC2A, register OCR2A för vänster, pinne OC2B, register OCR2B för höger.
 	//PB1 DIR höger, PB0 vänster
@@ -72,51 +53,21 @@ void pwm_init()
 	setbit(TCCR2A, WGM21);
 	OCR2A = 0;
 	OCR2B = 0;
-	
-	//TCCR2A = (1 << COM2A1) | (1 << COM2B1) | (1 << WGM21) | (1 << WGM20);
-	
-	//sätter på pwm!
+		
+	//Sätter på pwm!
 	TCCR2B=0;
 	//fclk/64, ger 488 Hz ut på PWM
 	setbit(TCCR2B, CS20);
 	setbit(TCCR2B, CS21);
-	
-	
-	
-	//TCCR2B = (1 << CS20);
-	////////////////////////////////////////////TIMSK2 = (1 << OCIE2A);
-	//fullt ös på OCR=0xff, inget på 0x00
-	
-	
-	
-	//en helt EGEN 90-graderstimer
-	TCCR3A = 0;
-	setbit(TCCR3A, COM3A1);
-	//setbit(TCCR3A, WGM30);
-	setbit(TCCR3A, WGM31);
-	
-	//starta inte timern än, gör det när du ska börja svänga!
-	setbit(TCCR3B, WGM32);
-	setbit(TCCR3B, WGM33);
-	
-	//setbit(TCCR3B, CS30);
-	//setbit(TCCR3B, CS32);
-	
-	//För fulladdat batteri:
-		//Utan svart tejp på:		 2700
-		//Med svart tejp på:		 2400
-	
-	ICR3 = 2700;
-	//ICR3 = 7812; //1 Hz!!
-	//ICR3 = 15625;
-	//ICR3 = 30000;
-	
-	setbit(TIMSK3, OCIE3A);
-	
 }
 
 
 uint8_t dirbits;
+
+/*
+Kör framåt, genom att sätta DIR-pinnarna till 1 (framåt)
+och pulsbreddsregistren till värdet amount, mellan 0 och 255.
+*/
 void drive_forwards(uint8_t amount)
 {
 	//sätt ettor (framåt) på DIR-pinnarna
@@ -128,6 +79,10 @@ void drive_forwards(uint8_t amount)
 	RIGHT_AMOUNT = amount;
 }
 
+/*
+Kör bakåt, genom att sätta DIR-pinnarna till 0 (bakåt)
+och pulsbreddsregistren till värdet amount, mellan 0 och 255.
+*/
 void drive_backwards(uint8_t amount)
 {
 	stop_motors();
@@ -142,7 +97,11 @@ void drive_backwards(uint8_t amount)
 	RIGHT_AMOUNT = amount;
 }
 
-//sväng vänster!
+/*
+Kör vänster, genom att sätta DIR-pinnarna till 1 (framåt)
+och pulsbreddsregistren till ett mindre värde på vänstra hjulparet
+så den svänger åt vänster.
+*/
 void turn_left(uint8_t amount)
 {
 	setbit(PORT_DIR, LEFT_DIR);
@@ -153,7 +112,11 @@ void turn_left(uint8_t amount)
 	RIGHT_AMOUNT = amount;
 }
 
-//sväng höger!
+/*
+Kör höger, genom att sätta DIR-pinnarna till 1 (framåt)
+och pulsbreddsregistren till ett mindre värde på högra hjulparet
+så den svänger åt höger.
+*/
 void turn_right(uint8_t amount)
 {
 	setbit(PORT_DIR, LEFT_DIR);
@@ -164,7 +127,10 @@ void turn_right(uint8_t amount)
 	RIGHT_AMOUNT = 60;
 }
 
-//stanna allt!
+/*
+Stoppa motorerna, genom att sätta hastigheten (pulsbredden)
+på båda registren till 0.
+*/
 void stop_motors()
 {
 	//sätter ingen klocka
@@ -181,7 +147,11 @@ void stop_motors()
 	RIGHT_AMOUNT = 0;
 }
 
-//sväng vänster som en stridsvagn!
+/*
+Sväng vänster som en stridsvagn, genom att sätta en etta
+respektive en nolla på höger respektive vänster hjulpar,
+så den svänger på stället.
+*/
 void tank_turn_left(uint8_t amount)
 {
 	//	stop_motors();
@@ -196,7 +166,11 @@ void tank_turn_left(uint8_t amount)
 }
 
 
-//sväng höger som en stridsvagn!
+/*
+Sväng höger som en stridsvagn, genom att sätta en etta
+respektive en nolla på höger respektive vänster hjulpar,
+så den svänger på stället.
+*/
 void tank_turn_right(uint8_t amount)
 {
 	//	stop_motors();
@@ -210,11 +184,19 @@ void tank_turn_right(uint8_t amount)
 	RIGHT_AMOUNT = amount;
 }
 
+/*
+Öppnar gripklon genom att sätta pulsbredden till ett värde
+enligt specifikation.
+*/
 void claw_out()
 {
 	CLAW_AMOUNT = 312;
 }
 
+/*
+Stänger gripklon genom att sätta pulsbredden till ett värde
+enligt specifikation.
+*/
 void claw_in()
 {
 	CLAW_AMOUNT = 156;

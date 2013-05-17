@@ -27,16 +27,18 @@ uint8_t left = 1;
 uint8_t gyro_init_value;						//Gyrots initialvärde
 uint8_t regulator_enable = 0;					//Flagga för att indikera 40 ms åt regulatorn.
 
-int16_t turn_full;
+int16_t turn_full;								//Gräns för gyrovärdet
 
 // Denna ancänds bara av inte-interrupt-koden
-uint8_t sensor_buffer[SENSOR_BUFFER_SIZE];		// Buffer som håller data från sensorenheten
-uint8_t tape_command;
-uint8_t tmp_sensor_buffer[256];					// Tape-argument från sensorenheten
-uint8_t tmp_sensor_buffer_p;					// Pekare till aktuell position i bufferten
-uint8_t sensor_start;							// Flagga som avgör huruvida vi är i början av meddelande
-uint8_t tmp_sensor_buffer_len;					// Anger aktuell längd av meddelandet
+uint8_t sensor_buffer[SENSOR_BUFFER_SIZE];		//Buffer som håller data från sensorenheten
+uint8_t tape_command;							//Används som riktningsindikator för tejpbeslut och linjeföljning
+uint8_t tmp_sensor_buffer[256];					//Tape-argument från sensorenheten
+uint8_t tmp_sensor_buffer_p;					//Pekare till aktuell position i bufferten
+uint8_t sensor_start;							//Flagga som avgör huruvida vi är i början av meddelande
+uint8_t tmp_sensor_buffer_len;					//Anger aktuell längd av meddelandet
+
 // Innehåller de spänningsvärden som ses i grafen på https://docs.isy.liu.se/twiki/pub/VanHeden/DataSheets/gp2y0a21.pdf, sid. 4.
+// Innehåller de centimetervärden som ses i grafen på https://docs.isy.liu.se/twiki/pub/VanHeden/DataSheets/gp2y0a21.pdf, sid. 4.
 uint8_t small_ir_voltage_array[122] = {140, 139, 138, 137, 136, 135, 134, 133, 132, 131, 130, 129, 128, 127,
 									   126, 125, 124, 123, 122, 121, 120, 119, 118, 117, 116, 115, 114, 113,
 									   112, 111, 110, 109, 108, 107, 106, 105, 104, 103, 102, 101, 100, 99,
@@ -65,74 +67,39 @@ uint8_t big_ir_centimeter_array[117] = {16, 16, 17, 17, 18, 18, 19, 19, 20, 20, 
 										42, 42, 43, 43, 44, 44, 45, 46, 47, 48, 49, 50, 51, 53, 54, 55, 56, 58, 59, 60, 60, 
 										61, 62, 63, 63, 64, 64, 65, 67, 68, 70, 73, 75, 78, 80, 82, 84, 86, 88, 90, 93, 97, 
 										100, 105, 110, 113, 117, 120, 125, 130, 135, 140, 145, 150};
-// Innehåller de centimetervärden som ses i grafen på https://docs.isy.liu.se/twiki/pub/VanHeden/DataSheets/gp2y0a21.pdf, sid. 4.
 
-
+//Flagga som indikerar om linjeföljning ska köras
 uint8_t follow_end_tape = 1;
-
 
 //Kalibrering
 uint8_t calibrate_sensors = 0;
 
-//Korsningsgrejer
-uint8_t crossings = 0;
-uint8_t tape_crossings = 0;
-uint8_t has_detected_crossing = 0;
-char crossing_direction;
-uint8_t crossing_stop_value;
-uint8_t make_turn_flag = 0;
-uint8_t drive_from_crossing = 0;
-uint8_t first_time_in_tape_crossing = 1;
-uint8_t listening_to_gyro = 1;
+//Korsningsflaggor och variabler
 
-/* Flagga som anger huruvida displayen ska uppdateras varje gång nya sensorvärden kommer in från sensorenheten */
-uint8_t display_auto_update = 1;	// Påslagen som default
+uint8_t crossings = 0;						//Tillåt icke-tejpkorsningar
+uint8_t tape_crossings = 0;					//Tillåt tejpkorsningar
+uint8_t has_detected_crossing = 0;			//Indikerar identifierad korsning
+char crossing_direction;					//Korsningsriktning
+uint8_t crossing_stop_value;				//Hur lång körning ska göras in i korsning(icke-tejp)
+uint8_t make_turn_flag = 0;					//Indikerar om sväng utförs
+uint8_t drive_from_crossing = 0;			//Indikerar att körning ska göras ut ur korsning
+uint8_t first_time_in_tape_crossing = 1;	//Indikerar om tejpkorsningsdata är aktuellt eller ej
+uint8_t listening_to_gyro = 1;				//Indikerar om gyrodata är aktuellt eller ej
+
+//Flagga som anger huruvida displayen ska uppdateras varje gång nya sensorvärden kommer in från sensorenheten
+
+uint8_t display_auto_update = 1;	//Påslagen som default
 uint8_t counter = 0;
 
-
-
-
-uint8_t *reflex_sensors_currently_seeing_tape(uint8_t * values)
-{
-	uint8_t i, offset=5;
-	uint8_t return_values[11];
-	for (i = 0;i < 11;i++)
-	{
-		if(values[i+offset] > REFLEX_SENSITIVITY)
-			return_values[i] = 1;
-		else
-			return_values[i] = 0;
-	}
-	
-	return return_values;
-}
-
-
-uint8_t is_empty(uint8_t * values, uint8_t len)
-{
-	uint8_t i;
-	for (i = 0;i<len;i++)
-	{
-		if(values[i + 5] != 0)
-			return 0;
-	}
-	
-	return 1;
-}
-
-
-void regulate_end_tape_4()
+/*
+Kör själva tejpregleringen,
+mer ingående detaljer finnes i tekniska dokumentationen.
+*/
+void regulate_end_tape()
 {
 	speed = 50;
-	static uint8_t hihi = 0;
-	if(hihi++ > 100)
-	{
-		hihi = 0;
-		send_string("1");
-		update();
-	}
-	
-	int8_t pos = tape_command; //-5 för längst till vänster, 5 för höger, 0 i mitten!
+	//-4 för längst till vänster, 4 för höger, 0 i mitten!
+	int8_t pos = tape_command;
 	if(pos > 0)
 	{
 		RIGHT_AMOUNT = speed + 30 + pos*5;
@@ -155,112 +122,11 @@ void regulate_end_tape_4()
 		setbit(PORT_DIR, RIGHT_DIR);
 	}
 	
-	else //if(pos == 0)
-	{ // == 0
+	//pos == 0! Kör bara framåt.
+	else
+	{
 		drive_forwards(speed);
 	}
-}
-
-
-
-
-void decode_tape_sensor_data()
-{
-	static uint8_t tape_count=0;
-	static uint8_t no_tape_count = 0;
-	static uint8_t is_over_tape = 0;
-	static uint8_t is_in_tape_segment = 0;
-	static char first_tape;
-	static char second_tape;
-	
-	
-	
-	static uint8_t used_sensor = REFLEX6;
-	
-	
-	if(make_turn_flag && !crossings)
-	{
-		disable_pid();
-		decode_tape_segment(first_tape, second_tape);
-	}
-	else if (sensor_buffer[used_sensor]>REFLEX_SENSITIVITY) //Tejpbitsstart hittad
-	{
-		crossings= 0;
-		is_over_tape = 1;
-		no_tape_count = 0;
-		tape_count++;
-	}
-	
-	else if (is_over_tape && sensor_buffer[used_sensor]<REFLEX_SENSITIVITY) //Tejpbit avslutad
-	{
-		is_over_tape = 0;
-		if(is_in_tape_segment) //Andra tejpbiten avslutad
-		{
-			is_in_tape_segment = 0;
-			second_tape = tape_count <= 5 ? 's': 'l';
-			make_turn_flag = 1;
-			
-		}
-		else // Första tejpbit avslutad
-		{
-			is_in_tape_segment = 1;
-			first_tape = tape_count <= 5 ? 's': 'l';
-		}
-		tape_count=0;
-	}
-	
-	else if(sensor_buffer[used_sensor]<REFLEX_SENSITIVITY) //Utanför tejp
-	{
-		//checka om den bara sett en tejpbit, alltså är den vid mål
-		if(first_tape == 's' && no_tape_count > 7 && is_in_tape_segment)
-		{
-			decode_tape_segment(first_tape, 0);
-		}
-		is_in_tape_segment = no_tape_count++ > 7 ? 0 : is_in_tape_segment; //vilken jävla oneliner!
-		
-		
-		//overflowskydd
-		if(no_tape_count == 255)
-		no_tape_count = 255;
-		
-	}
-	
-}
-
-
-void decode_tape_segment(char first, char second)
-{
-	char turn_dir;
-	if(first == 's' && second == 'l') turn_dir ='l'; //Turn left
-	else if (first == 'l' && second == 's') turn_dir ='r'; //Turn right
-	else if (first == 's' && second == 's') turn_dir = 'f'; //Turn front
-	else if (first == 's' && !second) follow_end_tape = 1; //första var smal, andra fanns ej, vi är vid mål!
-	
-	switch(turn_dir)
-	{
-		case 'l':
-		if(sensor_buffer[IR_LEFT_BACK] >= SEGMENT_LENGTH) make_turn(turn_dir);
-		break;
-		case 'r':
-		if(sensor_buffer[IR_RIGHT_BACK] >= SEGMENT_LENGTH) make_turn(turn_dir);
-		break;
-		case 'f':
-		make_turn('f');
-		break;
-		default:
-		break;
-	}
-	if(drive_from_crossing)
-	{
-		if (sensor_buffer[IR_LEFT_BACK] <= SEGMENT_LENGTH && sensor_buffer[IR_RIGHT_BACK] <= SEGMENT_LENGTH)
-		{
-			stop_motors();
-			drive_from_crossing = 0;
-			enable_crossings();
-			enable_pid();
-		}
-	}
-	
 }
 
 // Global så att även handle_display.h kan läsa den
@@ -314,7 +180,9 @@ void decode_sensor(uint8_t data)
 			break;
 		case GYRO_SENSOR:
 			stop_motors();
-			break;	
+			break;
+			
+		//Här hanteras gyrointegralen	
 		case SENSOR_GYRO_INTEGRAL:
 			
 			if(!listening_to_gyro)
@@ -337,7 +205,11 @@ void decode_sensor(uint8_t data)
 				debug(integral_string);
 			}
 			break;
+			
+		//IR-sensordata hanteras
 		case SENSOR_IR:
+			
+			//Spara i två buffrar. Så sensordata ej skrivs över av tejpkommandon.
 			memcpy(sensor_buffer, tmp_sensor_buffer, tmp_sensor_buffer_len);
 			
 			//Omvandla sensorvärden från spänningar till centimeter.
@@ -347,6 +219,7 @@ void decode_sensor(uint8_t data)
 			sensor_buffer[IR_LEFT_BACK] = interpret_small_ir(sensor_buffer[IR_LEFT_BACK])+left_back;
 			sensor_buffer[IR_RIGHT_BACK] = interpret_small_ir(sensor_buffer[IR_RIGHT_BACK])+right_back;
 
+			//Sensorkalibrering
 			if(calibrate_sensors)
 			{
 				int8_t left_diff = sensor_buffer[IR_LEFT_FRONT]-sensor_buffer[IR_LEFT_BACK];
@@ -373,7 +246,7 @@ void decode_sensor(uint8_t data)
 				calibrate_sensors = 0;			
 			}
 		
-			//Wait a few times before using data
+			//Kasta första fyra värdena
 			if(sensor_transmission_number<4)
 			{
 				sensor_transmission_number++;
@@ -381,29 +254,33 @@ void decode_sensor(uint8_t data)
 			}
 
 
-			if(autonomous) {
-				
+			if(autonomous) 
+			{
 				if((sensor_buffer[IR_LEFT_FRONT] <= 50 && sensor_buffer[IR_RIGHT_FRONT] <= 50) &&
 					(sensor_buffer[IR_LEFT_BACK] <= 50 && sensor_buffer[IR_RIGHT_BACK] <= 50))
 				{
 					regulator_enable = 1;		//Här har det gått ~40 ms dvs starta regleringen.
 				}
+				
 				// Om vi ska köra hemåt
 				if(is_returning_home)
 				{
 					static uint8_t turn_first = 1;
 					char c;
+					
 					// Analysera sensordata för att ta reda på när vi hittat en korsning.
 					if (!has_detected_crossing && !make_turn_flag && !drive_from_crossing &&
 					(sensor_buffer[IR_LEFT_FRONT] >= SEGMENT_LENGTH || sensor_buffer[IR_RIGHT_FRONT] >= SEGMENT_LENGTH))
 					{
 						analyze_ir_sensors();
 					}
+					
 					// Korsning funnen
 					if(has_detected_crossing)
 					{
 						drive_to_crossing_end(crossing_stop_value);
 					}
+					
 					if(make_turn_flag && turn_first) 
 					{
 						// Sväng i motsatt riktning gentemot buffern, samt räkna ner bufferpekaren
@@ -413,53 +290,37 @@ void decode_sensor(uint8_t data)
 							: c == 'r' ? 'l'
 							: c;
 						turn_first = 0;
-					}					
+					}
+										
 					if(make_turn_flag)
 					{
 						// Kolla om svängen är klar
 						make_turn(c);
+						
 						if(make_turn_flag == 0 && crossing_buffer_p == 0)
 						{
-							// TODO kör ut sista sträckan från labyrinten
+							//Kör ut sista sträckan från labyrinten
 							is_returning_home = 0;
 							//stop_motors();
 						}
 					}
+					
 					if(!make_turn_flag) turn_first = 1;
 				}
+				
+				//Om vi kör in i labyrinten
 				else 
 				{	
-					
 					if(crossings||tape_crossings)
 					{
-						/*Hantera korsningar*/ /*Hantera tejp-korsningar Bra flaggor satta!*/
+						//Hantera tejp- och icketejp-korsningar
 						handle_crossing();
-					}
-					
-  					if (follow_end_tape)
-  					{
-  						//regulate_end_tape_3();
-  					}
-
-					//Temp för debug av hemkörning
-					if(!turn && sensor_buffer[IR_FRONT] < SEGMENT_LENGTH/2 && sensor_buffer[IR_LEFT_FRONT] < SEGMENT_LENGTH/2 && sensor_buffer[IR_RIGHT_FRONT]< SEGMENT_LENGTH/2)
-					{
-						//stop_motors();
-						/*_delay_ms(250);
-						turn = 1;
-						tank_turn_left(speed);
-						stop_motors();
-						_delay_ms(250);
-						turn = 1;
-						tank_turn_left(speed);*/
-						//_delay_ms(5000);
-						//is_returning_home = 1;
 					}
 				}
 			}
-			//update_display_string();
 			break;
 			
+			//Om vi fått data från tejpsensorerna
 			case SENSOR_TAPE:
 				tape_command = tmp_sensor_buffer[1];
 			
@@ -468,6 +329,7 @@ void decode_sensor(uint8_t data)
 					if(!first_time_in_tape_crossing)
 						break;
 					
+					//Om korsningskommandon
 					if(tape_command == 'f' || tape_command == 'r' || tape_command == 'l')
 					{
 						first_time_in_tape_crossing = 0;
@@ -478,26 +340,29 @@ void decode_sensor(uint8_t data)
 						crossings = 0;
 						stop_motors();	
 					}
+					
+					//Om roboten kört fram till sluttejpen
 					else if (tape_command == 'g')
 					{
 						follow_end_tape = 1;
 						claw_out();
 					}
-					
-                    //make_turning_decision();
 				}
-				
                     break;
+					
+			//Om tejp ska följas
             case SENSOR_FOLLOW_TAPE:
 				tape_command = tmp_sensor_buffer[1];
 				if(autonomous)
 				{
-                    regulate_end_tape_4();
+                    regulate_end_tape();
 				}				
                     break;
+					
+			//Om roboten följt linjen till slutet
             case SENSOR_FOLLOW_TAPE_END:
                     {
-						
+						//Utför uppdraget i slutet
 						if(autonomous)
 						{
                             stop_motors();
@@ -507,15 +372,11 @@ void decode_sensor(uint8_t data)
 							is_returning_home = 1;
 							turning_180 = 1;
 							make_turn('b');
-                            /*
-                            OBS!!! 
-                            HÄR SKALL KLO STÄNGAS OCH 180-GRADERSSVÄNGEN INITIERAS!!!
-                            Kommer den att ha åkt för långt då?<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-                            */
-							//speed = 0;
 						}							        
                     }	
 					break;
+			
+			//Ta emot debugmeddelande från sensorenheten
 			case SENSOR_TAPE_DEBUG:
 					{
 						char tmp[20];
@@ -523,7 +384,6 @@ void decode_sensor(uint8_t data)
 						debug(tmp);					
 					}						
 		default:
-				// Unimplemented command
 			break;
 		}
 
@@ -545,7 +405,7 @@ void decode_sensor(uint8_t data)
 	
 }
 
-
+//Används ej
 void sensor_debug_message()
 {
 	clear_screen();
@@ -553,9 +413,10 @@ void sensor_debug_message()
 	update();
 }
 
+//Används ej
 void sensor_debug_hex()
 {
-	uint8_t pos = 1;	// Gå förbi DEBUG_HEX-kommandot
+	uint8_t pos = 1;
 	char tmpstr[10];
 	while(pos != tmp_sensor_buffer_len)
 	{
@@ -565,7 +426,8 @@ void sensor_debug_hex()
 	update();
 }
 
-//void interpret_small_ir(uint8_t value) //wtf??
+
+//Byt ut spänningsvärdena till centimetervärden
 uint8_t interpret_small_ir(uint8_t value)
 {
  	uint8_t i = 0;
@@ -586,7 +448,7 @@ uint8_t interpret_small_ir(uint8_t value)
  	return small_ir_centimeter_array[i];
 }
 
-//void interpret_big_ir(uint8_t value) //wtf??
+//Byt ut spänningsvärdena till centimetervärden
 uint8_t interpret_big_ir(uint8_t value)
 {
 	uint8_t i = 0;
@@ -608,8 +470,8 @@ uint8_t interpret_big_ir(uint8_t value)
 
 void handle_crossing()
 {
+	
 	//Om ej i korsning och får sensordata som indikerar korsning. Analysera korsningstyp, sätt direction och has_detected_crossing_flagga
-	//KOMMENTERA IN DENNA FÖR KORSNINGAR
 	if (!has_detected_crossing && !make_turn_flag && !drive_from_crossing && 
 		(sensor_buffer[IR_LEFT_BACK] >= SEGMENT_LENGTH || sensor_buffer[IR_RIGHT_BACK] >= SEGMENT_LENGTH))
 	{
@@ -622,11 +484,13 @@ void handle_crossing()
 		//disable_pid();
 		drive_to_crossing_end(crossing_stop_value);
 	}
+	
 	//Sväng tills villkor för svängning uppfyllt, sätt  is_turning flagga, nollställ begin turning
 	else if (make_turn_flag)
 	{
 		make_turn(crossing_direction);
 	}
+	
 	//Kör ut från korsningen till regleringen är redo att slås på igen, nollställ drive_from_crossing flagga
 	else if(drive_from_crossing)
 	{
@@ -640,6 +504,7 @@ void handle_crossing()
 		}
 	}
 }
+
 /* 
  * ANALYZE_IR_SENSORS()
  * Vid upptäckt av någon form av korsning anropas denna.
@@ -738,7 +603,7 @@ void analyze_ir_sensors()
 	}	
 }
 
-
+//Spara in beslut inför hemfärd
 void add_to_crossing_buffer(char c)
 {
 	crossing_buffer[crossing_buffer_p++] = c;
@@ -761,40 +626,45 @@ void drive_to_crossing_end(uint8_t stop_distance)
 	
 }
 
+//Utför sväng
 void make_turn(char dir)
 {
-	uint16_t gyro_const = 1150;
-	static uint8_t first = 1;
-	//uint8_t turn_delay = 50;
-	// Sväng färdig
+	uint16_t gyro_const = 1150;		//Empiriskt bestämd 90 graders konstant
+	static uint8_t first = 1;		//Indikerar om första gången i en sväng
+
+	//Sväng färdig
 	if (!turn && !first)
 	{
 		send_byte_to_sensor(STOP_TURN);
 		stop_motors();
 		spi_delay_ms(3000);
-		
 		drive_forwards(speed);
 		first = 1;
 		make_turn_flag = 0;
+		
 		if (!turning_180)
 		{
 			drive_from_crossing = 1;
 		}
+		
 		turning_180 = 0;
+		
+		//Spara inför hemfärd
 		if(!is_returning_home) add_to_crossing_buffer(dir);
 	}
+	
+	//Fortfarande i sväng
 	else
 	{
+		//Initiering av sväng
 		switch(dir)
 		{
+			//Om vänster
 			case 'l':
+			
 				if(first)
 				{
 					turn = 1;
-					//sätt igång timern!
-// 					setbit(TCCR3B, CS30);
-// 					setbit(TCCR3B, CS32);
-					
 					turn_full = -gyro_const;
 					spi_delay_ms(3000);
 					send_byte_to_sensor(START_TURN);
@@ -803,15 +673,11 @@ void make_turn(char dir)
 				}
 			break;
 			
+			//Om höger
 			case 'r':
 				if(first)
 				{
 					turn = 1;
-					
-					//sätt igång timern!
-// 					setbit(TCCR3B, CS30);
-// 					setbit(TCCR3B, CS32);
-					
 					turn_full = gyro_const;
 					spi_delay_ms(3000);
 					send_byte_to_sensor(START_TURN);
@@ -820,16 +686,12 @@ void make_turn(char dir)
 				}
 			break;
 			
+			//Om vänd om
 			case 'b':
 			if(first)
 			{
 				turn = 1;
-				
-				//sätt igång timern!
-				// 					setbit(TCCR3B, CS30);
-				// 					setbit(TCCR3B, CS32);
-				
-				turn_full = 2600;
+				turn_full = 2600;		//Empiriskt tillsatt 180 graders konstant
 				spi_delay_ms(1000);
 				send_byte_to_sensor(START_TURN);
 				first = 0;
@@ -837,18 +699,17 @@ void make_turn(char dir)
 			}
 			break;
 			
+			//Kör framåt
 			case 'f':
-// 				stop_motors();
-// 				_delay_ms(10000);
-				 
 				first = 0;
 				break;
 			
 			default: break;
 		}
 	}
-
 }
+
+//Tillåter korsningshantering
 void enable_crossings()
 {
 	crossings = 1;
@@ -857,60 +718,8 @@ void enable_crossings()
 	drive_from_crossing = 0;
 }
 
+//Avaktiverar korsningshantering
 void disable_crossings()
 {
 	crossings = 0;
 }
-
-//Används ej!
-// void turn_left90()
-// {
-// 	static uint8_t front = 0;
-// 	
-// 	if(is_turning && abs(front - sensor_buffer[IR_RIGHT_FRONT]) <= 1  && sensor_buffer[IR_FRONT] >=150)
-// 	{
-// 		is_turning = 0;
-// 		drive_from_crossing = 1;
-// 		
-// 		stop_motors();
-// 		_delay_ms(250);
-// 		drive_forwards(speed);
-// 	}
-// 	else if(!is_turning) 
-// 	{
-// 		front = sensor_buffer[IR_FRONT];
-// 		is_turning = 1;
-// 		stop_motors();
-// 		_delay_ms(250);
-// 		tank_turn_left(speed);
-// 	}  
-// 	
-// }
-//Används ej!
-/*void turn_right90()
-{
-	static uint8_t front = 0;
-	static uint8_t is_turning = 0;
-	
-	if(is_turning && front == sensor_buffer[IR_LEFT_FRONT] && sensor_buffer[IR_FRONT] >=150)
-	{
-		is_turning = 0;
-		stop_motors();
-		//Börjja köra sen
-	}
-	else if(!is_turning)
-	{
-		front = sensor_buffer[IR_FRONT];
-		is_turning = 1;
-		stop_motors();
-		_delay_ms(500);
-		tank_turn_right(speed);
-	}
-	
-}*/
-
-
-/********************************************************
-				Linjeföljning test
-********************************************************/ 
-

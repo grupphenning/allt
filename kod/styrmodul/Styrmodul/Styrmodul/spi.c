@@ -9,6 +9,7 @@
 #include <avr/interrupt.h>
 #include "bitmacros.h"
 #include <stddef.h>
+
 // Buffrar som sparar data vi får från de andra SPI-enheterna
 
 static volatile uint8_t spi_data_from_comm[256];
@@ -36,7 +37,6 @@ static volatile uint8_t transmit_source = SPI_NONE;
 
 // Slut på SPI-buffrar
 
-
 void spi_init()
 {
 	clearbit(DDRD, PIND3);		// Avbrott från kommunikationsenheten är input
@@ -62,14 +62,13 @@ void spi_init()
 	setbit(SPCR, SPIE);
 	setbit(SPCR, SPE);
 	setbit(SPCR, MSTR);
-	//setbit(SPCR, SPR0);
 	setbit(SPCR, SPI2X);
 
-	//aktivera interrupt på INT0 och INT1
+	//Aktivera interrupt på INT0 och INT1
 	setbit(EIMSK, INT0);	// Akvitera avbrottsförfrågan från sensorenheten
 	setbit(EIMSK, INT1);	// Akvitera avbrottsförfrågan från kommunikationsenheten
 
-	//aktivera interrupt-request på "any change"
+	//Aktivera interrupt-request på "any change"
 	setbit(EICRA, ISC00);
 	setbit(EICRA, ISC10);
 }

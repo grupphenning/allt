@@ -6,9 +6,8 @@
 #include "komm_styr_protokoll.h"
 #include "sensor_styr_protokoll.h"
 
-
-#define LEFT_DIR PB1
-#define RIGHT_DIR PB0
+#define LEFT_DIR	PB1
+#define RIGHT_DIR	PB0
 #define PORT_DIR PORTB
 
 #define LEFT_AMOUNT OCR2A
@@ -22,12 +21,13 @@
 #define PORT_PWM PORTD
 
 #define DISPLAY PORTA
-#define DISPLAY_POWER PA2
-#define DISPLAY_BLINK PA0
-#define DISPLAY_CURSOR PA1
-#define DISPLAY_RS PC7
-#define DISPLAY_ENABLE PC6
+#define DISPLAY_POWER	PA2
+#define DISPLAY_BLINK	PA0
+#define DISPLAY_CURSOR	PA1
+#define DISPLAY_RS		PC7
+#define DISPLAY_ENABLE	PC6
 
+//Indexering av sensorbuffern
 #define IR_LEFT_FRONT	1
 #define IR_RIGHT_FRONT  2
 #define IR_FRONT		3
@@ -69,17 +69,15 @@ void send_byte_to_comm(uint8_t byte);
 
 uint8_t interpret_big_ir(uint8_t value);
 uint8_t interpret_small_ir(uint8_t value);
-void regulate_end_tape(uint8_t* values);
-void regulate_end_tape_2(uint8_t* values);
-void regulate_end_tape_3();
+void regulate_end_tape();
 uint8_t * reflex_sensors_currently_seeing_tape(uint8_t * values);
 void init_default_printf_string();
+
 //Korsning
 void handle_crossing();
 void analyze_ir_sensors();
 void make_turn(char dir);
 void drive_to_crossing_end(uint8_t stop_distance);
-//void drive_from_crossing();
 void turn_right90();
 void turn_left90();
 

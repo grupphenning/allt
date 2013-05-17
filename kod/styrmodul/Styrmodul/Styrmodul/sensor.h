@@ -10,11 +10,7 @@
 #define TAPEH_H_
 
 
-void regulate_end_tape(uint8_t* values);
-void regulate_end_tape_2(uint8_t* values);
-void regulate_end_tape_3();
-void decode_tape_segment(char first, char second);
-void decode_tape_sensor_data();
+void regulate_end_tape();
 void disable_crossings();
 void enable_crossings();
 void make_turn(char dir);
