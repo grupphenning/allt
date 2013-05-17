@@ -9,6 +9,7 @@
 #include <avr/interrupt.h>
 #include "bitmacros.h"
 #include <stddef.h>
+#include <stdarg.h>
 
 // Buffrar som sparar data vi får från de andra SPI-enheterna
 
@@ -100,10 +101,16 @@ void send_byte_to_sensor(uint8_t byte) { spi_to_sensor[spi_to_sensor_write++] = 
 void send_byte_to_comm(uint8_t byte) { spi_to_comm[spi_to_comm_write++] = byte; }
 
 // Skickar en sträng till fjärrenheten (via komm) som dumpar den på skärmen
-void debug(char *str)
+void debug(char *fmt, ...)
 {
+	va_list args;
+	char tmp[256];
+	unsigned i;
+	va_start(args, fmt);
+	vsprintf(tmp, fmt, args);
+	va_end(args);	
 	send_byte_to_comm('d');
-	while(*str) send_byte_to_comm(*str++);
+	for(i = 0; tmp[i]; ++i) send_byte_to_comm(tmp[i]);
 	send_byte_to_comm('\n');
 	send_byte_to_comm(0);
 }

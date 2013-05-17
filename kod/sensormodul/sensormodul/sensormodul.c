@@ -12,12 +12,30 @@
 #include <avr/io.h>
 #include <avr/delay.h>
 #include <avr/interrupt.h>
+#include <stdarg.h>
 
 uint8_t spi_data_from_master;
 uint8_t spi_data_to_master;
 uint8_t tape_sensor;
 uint8_t read_mode; // Om read_mode == 1, integrera gyro, annars läs IR och tejp.
 char tape_type;
+
+void debug(char *fmt, ...)
+{
+	va_list args;
+	char tmp[32];
+	unsigned i;
+	va_start(args, fmt);
+	vsprintf(tmp, fmt, args);
+	va_end(args);
+
+	uint8_t len = strlen(tmp) + 1;	/* Längden av strängen + kommandot */
+	char msg[34];
+	strncpy(msg + 1, tmp, 33);
+	msg[0] = SENSOR_DEBUG;
+	msg[33] = 0;
+	send_to_master(34, msg);
+}
 
 //Gyrots initialvärde
 int16_t gyro_init_value;
@@ -84,7 +102,7 @@ int main(void)
 		if(read_mode) {
 			if(read_and_send_ir_to_master)
 			{
-				gyro_int += abs(gyro_init_value - ((int16_t)read_gyro()));			//Maxhastighet 300grader/s,
+				gyro_int += abs(gyro_init_value - read_gyro());			//Maxhastighet 300grader/s,
 				read_and_send_ir_to_master = 0;
 				uint8_t values[3];
 				values[0] = SENSOR_GYRO_INTEGRAL;
@@ -125,7 +143,7 @@ int main(void)
 				setbit(PORTB, PORTB3);
 				autonomous = 1;
 				//resetta allt, vi vill inte börja snurra o hålla på
-				data_index=1;
+				data_index = 1;
 				adc_interrupt = 0;
 				has_data_from_spi = 0;
 				read_and_send_ir_to_master = 0;
@@ -334,12 +352,12 @@ void read_adc_ir()
 
 void decode_tape()
 {
-	static uint8_t tape_count=0;
-	static uint8_t no_tape_count = 0;
+	static uint16_t tape_count=0;
+	static uint16_t no_tape_count = 0;
 	static uint8_t is_over_tape = 0;
 	static uint8_t is_in_tape_segment = 0;
-	static uint8_t first_tape_count = 0;
-	static uint8_t second_tape_count = 0;
+	static uint16_t first_tape_count = 0;
+	static uint16_t second_tape_count = 0;
 	static char first_tape;
 	static char second_tape;
 	
@@ -354,8 +372,9 @@ void decode_tape()
 	{
 		is_over_tape = 0;
 		
-		if(is_in_tape_segment) //Andra tejpbiten avslutad
+		if(is_in_tape_segment && tape_count !=1) //Andra tejpbiten avslutad
 		{
+			debug("Andra tejpen: %d", tape_count);
 			is_in_tape_segment = 0;
 			second_tape_count = tape_count;
 			uint8_t tmp[5];
@@ -363,6 +382,7 @@ void decode_tape()
 		}
 		else if(tape_count != 1) // Första tejpbit avslutad		OBS: Fulhack som löste en sensorbugg.
 		{
+			debug("Forsta tejpen: %d", tape_count);
 			is_in_tape_segment = 1;
 			first_tape_count = tape_count;
 		}
@@ -373,10 +393,11 @@ void decode_tape()
 	{
 		no_tape_count++;
 		//checka om den bara sett en tejpbit, alltså är den vid mål. Kontrollerar aldrig om det är en kort eller lång tejpbit!
-		if(no_tape_count > 2 * first_tape_count && is_in_tape_segment)
+		if(no_tape_count > 220 && is_in_tape_segment)
 		{
 			is_in_tape_segment = 0;
 			follow_end_tape = 1;
+			decode_tape_segment(first_tape_count, 0);
 		}
 		
 		
@@ -389,29 +410,29 @@ void decode_tape()
 }
 
 
-void decode_tape_segment(uint16_t first, uint8_t second)
+void decode_tape_segment(uint16_t first, uint16_t second)
 {
-	_delay_ms(250);
-	if (second == 0)         //Bara en tejp, vi är vid mål!
+	uint16_t tape_border = 180;
+	if (first <= tape_border && second == 0) //Bara en tejp, vi är vid mål!
 	{
 		tape_type = 'g';
 		send_decoded_tape();
 		return;
 	}
 	
-	if(first <= 100 && second > 100) //(first == 's' && second == 'l')
+	if(first <= tape_border && second > tape_border) //(first == 's' && second == 'l')
 	{
 		//turn left
 		tape_type = 'l';
 		send_decoded_tape();
 	}
-	else if (first <= 100 && second <= 100) //(first == 's' && second == 's')
+	else if (first <= tape_border && second <= tape_border) //(first == 's' && second == 's')
 	{
 		//keep going
 		tape_type = 'f';
 		send_decoded_tape();
 	}
-	else if (first > 100 && second <= 100) //(first == 'l' && second == 's')
+	else if (first > tape_border && second <= tape_border) //(first == 'l' && second == 's')
 	{
 		//turn right
 		tape_type = 'r';

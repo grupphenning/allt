@@ -4,7 +4,7 @@
 * Created: 5/5/2013 1:26:17 PM
 *  Author: davek282
 */
-void debug(char *str);
+void debug(char *str, ...);
 
 #include "handle_display.h"
 #include <string.h>

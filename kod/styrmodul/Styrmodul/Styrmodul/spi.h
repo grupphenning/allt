@@ -12,7 +12,7 @@
 void spi_init();
 void send_byte_to_sensor(uint8_t byte);
 void send_byte_to_comm(uint8_t byte);
-void debug(char *str);
+void debug(char *str, ...);
 void do_spi(uint8_t *has_comm_data_out, uint8_t *has_sensor_data_out, uint8_t *comm_data_out, uint8_t *sensor_data_out);
 void spi_delay_ms(unsigned ms);
 

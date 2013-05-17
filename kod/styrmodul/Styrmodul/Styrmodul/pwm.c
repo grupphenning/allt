@@ -4,7 +4,7 @@
  * Created: 5/5/2013 12:52:43 PM
  *  Author: davek282
  */ 
-void debug(char *str);
+void debug(char *str, ...);
 
 #include "spi.h"
 #include <avr/interrupt.h>

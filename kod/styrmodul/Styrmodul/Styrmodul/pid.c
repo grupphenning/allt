@@ -3,7 +3,7 @@
  
  Regulatorn ska köras med intervall på ~40ms
  */ 
-void debug(char *str);
+void debug(char *str, ...);
 #include "pid.h"
 #include "Styrmodul.h"
 

@@ -5,7 +5,7 @@
  *  Author: davek282
  */ 
 
-void debug(char *str);
+void debug(char *str, ...);
 
 #include <avr/interrupt.h>
 #include "bitmacros.h"

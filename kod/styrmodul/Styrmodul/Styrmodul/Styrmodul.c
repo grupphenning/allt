@@ -4,7 +4,7 @@
  * Created: 4/2/2013 2:20:45 PM
  *  Author: klawi021 ET AL!
  */
-void debug(char *str);
+void debug(char *str, ...);
 
 #define F_CPU 8000000UL
 #include "Styrmodul.h"
@@ -17,8 +17,8 @@ void debug(char *str);
 #include "comm.h"
 
 uint8_t turn_dir;
-uint8_t speed = 255;
-uint8_t SPEED_OFFSET = 14;
+uint8_t speed = 150;
+uint8_t SPEED_OFFSET = 0;
 
 
 int main(void)
@@ -42,7 +42,8 @@ int main(void)
 	//Initiera regulator
 	clear_pid();	
 	init_pid(150, -150);
-	update_k_values(30, 10, 18);
+	//update_k_values(40, 12, 22);
+	update_k_values(40, 70, 30);
 	
 	// Pekare till aktuell position i bufferten
 	tmp_sensor_buffer_p = 0x00;
@@ -70,10 +71,10 @@ int main(void)
 		if(has_sensor_data) decode_sensor(sensor_data);
 		
 		//Vid manuell sväng eller 180 grader måste make_turn anropas 		
-		if(!autonomous || turning_180) 
-		{			
+		if(!autonomous || turning_180)
+		{
 			if(turn_dir) 
-			{	
+			{
 				make_turn_flag = 1;
 				make_turn(turn_dir);
 				
