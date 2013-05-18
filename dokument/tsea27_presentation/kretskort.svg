@@ -28,9 +28,9 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="0.98994949"
-     inkscape:cx="305.57029"
-     inkscape:cy="597.1289"
+     inkscape:zoom="0.7"
+     inkscape:cx="471.20838"
+     inkscape:cy="648.80153"
      inkscape:document-units="px"
      inkscape:current-layer="layer2"
      showgrid="false"
@@ -38,7 +38,9 @@
      inkscape:window-height="1001"
      inkscape:window-x="-4"
      inkscape:window-y="-4"
-     inkscape:window-maximized="1" />
+     inkscape:window-maximized="1"
+     showguides="true"
+     inkscape:guide-bbox="true" />
   <metadata
      id="metadata3805">
     <rdf:RDF>
@@ -11301,5 +11303,17 @@ EZzjHFOGAScDIpDyRgY96hwinZFXaVhpZQcADOKUHIyOfzpMA9vxxTugwBmrsnoLSx//2Q==
          x="364.90308"
          id="tspan5663"
          sodipodi:role="line">Resetknapp</tspan></text>
+    <text
+       sodipodi:linespacing="125%"
+       id="text8739"
+       y="152.93054"
+       x="130.87244"
+       style="font-size:40px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       xml:space="preserve"><tspan
+         style="font-size:30px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;fill:#ffffff;font-family:Verdana;-inkscape-font-specification:Verdana"
+         y="152.93054"
+         x="130.87244"
+         id="tspan8741"
+         sodipodi:role="line">Firefly</tspan></text>
   </g>
 </svg>
