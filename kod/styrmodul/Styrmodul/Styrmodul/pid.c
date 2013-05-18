@@ -110,6 +110,8 @@ void regulator(int8_t diff_right, int8_t diff_left, int8_t diff_front, int8_t di
 	else if(output_u < min_out) output_u = min_out;
 	uint8_t b;
 	
+	output_u -= 25;
+	
 	if (output_u > 0)
 	{
 		b = speed - (uint8_t)output_u;

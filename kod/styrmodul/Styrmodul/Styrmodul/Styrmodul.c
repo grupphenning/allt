@@ -43,7 +43,7 @@ int main(void)
 	clear_pid();	
 	init_pid(80, -80);
 	//update_k_values(40, 12, 22);
-	update_k_values(40, 70, 30);
+	update_k_values(40, 170, 20);
 	
 	// Pekare till aktuell position i bufferten
 	tmp_sensor_buffer_p = 0x00;
