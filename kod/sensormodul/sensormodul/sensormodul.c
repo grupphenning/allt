@@ -452,8 +452,6 @@ void regulate_end_tape()
 	int8_t res=0;
 	int8_t old_pos=0, pos=0;
 	uint8_t reflex[9];
-	uint8_t left_ir_sensor = 0;
-	uint8_t right_ir_sensor = 2;
 	uint8_t left_ir_sensor_value;
 	uint8_t right_ir_sensor_value;
 	
@@ -497,8 +495,10 @@ void regulate_end_tape()
 	}
 	else // Utanför tejp men den har inte kört linjeföljning, ska regulera in mot tejpen.
 	{
-		left_ir_sensor_value = read_ir(left_ir_sensor);
-		right_ir_sensor_value = read_ir(right_ir_sensor);
+		read_ir(1);
+		read_ir(2);
+		left_ir_sensor_value = ir_sensor_data[2]; //Läggs in med index sensorindex + 1 från read_adc
+		right_ir_sensor_value = ir_sensor_data[3];
 		if ( right_ir_sensor_value > left_ir_sensor_value) // Står till vänster om tejpen, sväng höger
 		{
 			pos = 10;
