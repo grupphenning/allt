@@ -19,6 +19,7 @@ uint8_t spi_data_to_master;
 uint8_t tape_sensor;
 uint8_t read_mode; // Om read_mode == 1, integrera gyro, annars läs IR och tejp.
 char tape_type;
+uint8_t vertical_end_tape_found = 0;
 
 void debug(char *fmt, ...)
 {
@@ -451,6 +452,10 @@ void regulate_end_tape()
 	int8_t res=0;
 	int8_t old_pos=0, pos=0;
 	uint8_t reflex[9];
+	uint8_t left_ir_sensor = 0;
+	uint8_t right_ir_sensor = 2;
+	uint8_t left_ir_sensor_value;
+	uint8_t right_ir_sensor_value;
 	
 	for (i = 0; i < 9; i++)
 	{
@@ -466,6 +471,7 @@ void regulate_end_tape()
 	}
 	
 	//div med 0
+	
 	if(n_of_reflexes_on != 0)
 	{
 		pos = res*2/n_of_reflexes_on;        //ojojoj
@@ -474,14 +480,41 @@ void regulate_end_tape()
 		//Skicka positionen till master
 		send_to_master(2, tape_position);
 	}
+	
+	if (n_of_reflexes_on < 4 ) // den är på linjen, sätt flagga att den följt linje
+	{
+		vertical_end_tape_found = 1;
+	}
+	
 	//utanför tejp, stopp!
-	else
+	else if (n_of_reflexes_on = 0 && vertical_end_tape_found) // Utanför tejp men den har kört linjeföljning. Henning är i mål!
 	{
 		//Skickar att det är slut på linjeföljning till mastern
 		tape_position[0] = SENSOR_FOLLOW_TAPE_END;
 		tape_position[1] = 'e';
 		send_to_master(2, tape_position);
 		follow_end_tape = 0;
+	}
+	else // Utanför tejp men den har inte kört linjeföljning, ska regulera in mot tejpen.
+	{
+		left_ir_sensor_value = read_ir(left_ir_sensor);
+		right_ir_sensor_value = read_ir(right_ir_sensor);
+		if ( right_ir_sensor_value > left_ir_sensor_value) // Står till vänster om tejpen, sväng höger
+		{
+			pos = 10;
+			tape_position[0] = SENSOR_FOLLOW_TAPE;
+			tape_position[1] = pos;
+			//Skicka positionen till master
+			send_to_master(2, tape_position);
+		}
+		else // Står till höger om tejpen, sväng vänster
+		{
+			pos = -10;
+			tape_position[0] = SENSOR_FOLLOW_TAPE;
+			tape_position[1] = pos;
+			//Skicka positionen till master
+			send_to_master(2, tape_position);
+		}
 	}
 }
 
