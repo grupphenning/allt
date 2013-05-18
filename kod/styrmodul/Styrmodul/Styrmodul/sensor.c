@@ -282,46 +282,60 @@ void decode_sensor(uint8_t data)
 				if(is_returning_home)
 				{
 					static uint8_t turn_first = 1;
-					char c;
+					static char home_dir;
 					
 					// Analysera sensordata för att ta reda på när vi hittat en korsning.
 					if (!has_detected_crossing && !make_turn_flag && !drive_from_crossing &&
 					(sensor_buffer[IR_LEFT_FRONT] >= SEGMENT_LENGTH || sensor_buffer[IR_RIGHT_FRONT] >= SEGMENT_LENGTH))
 					{
-						analyze_ir_sensors();
+						has_detected_crossing = 1;
 					}
 					
 					// Korsning funnen
-					if(has_detected_crossing)
+					else if(has_detected_crossing)
 					{
-						drive_to_crossing_end(crossing_stop_value);
+						spi_delay_ms(6000);
+						if (crossing_buffer[crossing_buffer_p] == 'f')
+						{
+							drive_from_crossing = 1;
+							--crossing_buffer_p;
+						}
+						else
+						{
+							stop_motors();
+							make_turn_flag = 1;
+						}
+						has_detected_crossing = 0;
+
 					}
 					
-					if(make_turn_flag && turn_first) 
+					else if(make_turn_flag && turn_first) 
 					{
 						// Sväng i motsatt riktning gentemot buffern, samt räkna ner bufferpekaren
-						c = crossing_buffer[--crossing_buffer_p];
-						c =
-							c == 'l' ? 'r'
-							: c == 'r' ? 'l'
-							: c;
+						
+						home_dir = crossing_buffer[--crossing_buffer_p];
+						home_dir =
+							home_dir == 'l' ? 'r'
+							: home_dir == 'r' ? 'l'
+							: home_dir;
 						turn_first = 0;
+						listening_to_gyro = 1;
 					}
 										
-					if(make_turn_flag)
+					else if(make_turn_flag)
 					{
 						// Kolla om svängen är klar
-						make_turn(c);
-						
-						if(make_turn_flag == 0 && crossing_buffer_p == 0)
-						{
-							//Kör ut sista sträckan från labyrinten
-							is_returning_home = 0;
-							//stop_motors();
-						}
+						make_turn(home_dir);
 					}
 					
-					if(!make_turn_flag) turn_first = 1;
+					else if(drive_from_crossing)
+					{
+						if (sensor_buffer[IR_LEFT_BACK] <= SEGMENT_LENGTH-30 && sensor_buffer[IR_RIGHT_BACK] <= SEGMENT_LENGTH - 30)
+						{
+							drive_from_crossing = 0;
+							turn_first = 1;
+						}
+					}
 				}
 				
 				//Om vi kör in i labyrinten
@@ -338,18 +352,19 @@ void decode_sensor(uint8_t data)
 			
 			//Om vi fått data från tejpsensorerna
 			case SENSOR_TAPE:
+				tape_command = tmp_sensor_buffer[1];
 				if(is_returning_home)
 				{
-					if(crossing_buffer_p == 0)
+					if(tape_command == 'f' && crossing_buffer_p == 0)
 					{
 						debug("Bajsat klart!");
-						//--------HÄR ÄR VI HEMMA!!!!!
 						stop_motors();
-//						while(1);
+						spi_delay_ms(2000);
+						while(1);
 					}
 					break;
 				}
-				tape_command = tmp_sensor_buffer[1];
+
 				if(autonomous)
 				{
 					if(!first_time_in_tape_crossing)
@@ -675,6 +690,7 @@ void make_turn(char dir)
 	uint8_t turn_speed = 255;
 	uint16_t gyro_const = 1150;		//Empiriskt bestämd 90 graders konstant
 	static uint8_t first = 1;		//Indikerar om första gången i en sväng
+	//debug("First = %d, Dir = %d, Buffer = %d",first, dir, crossing_buffer[crossing_buffer_p]);
 
 	//Sväng färdig
 	if (!turn && !first)
@@ -685,8 +701,9 @@ void make_turn(char dir)
 		drive_forwards(speed);
 		first = 1;
 		make_turn_flag = 0;
+		debug("Pissstrale");
 		
-		if (!turning_180)
+		if (!turning_180 || is_returning_home)
 		{
 			drive_from_crossing = 1;
 		}

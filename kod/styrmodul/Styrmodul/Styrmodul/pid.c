@@ -76,11 +76,11 @@ void regulator(int8_t diff_right, int8_t diff_left, int8_t diff_front, int8_t di
 	
 	if ((sensor_buffer[IR_LEFT_FRONT] <= 16) || (sensor_buffer[IR_LEFT_BACK] <= 16))
 	{
-		output_u += 128*150;			//Om nära en vägg, dra på lite extra.
+		output_u += 128*80;			//Om nära en vägg, dra på lite extra.
 	}
 	else if ((sensor_buffer[IR_RIGHT_FRONT] <= 16) || (sensor_buffer[IR_RIGHT_BACK] <= 16))
 	{
-		output_u -= 128*150;
+		output_u -= 128*80;
 	}
 	else if (targetwall == 1)		//Reglera mot höger vägg
 	{

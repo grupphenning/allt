@@ -41,7 +41,7 @@ int main(void)
 	
 	//Initiera regulator
 	clear_pid();	
-	init_pid(150, -150);
+	init_pid(80, -80);
 	//update_k_values(40, 12, 22);
 	update_k_values(40, 70, 30);
 	
