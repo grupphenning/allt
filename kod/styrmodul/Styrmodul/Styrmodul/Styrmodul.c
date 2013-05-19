@@ -111,6 +111,9 @@ void send_sensor_buffer_to_remote(void)
 //används till gripklon, som måste köras i 50 Hz!
 ISR(TIMER1_COMPA_vect)
 {
+	static uint8_t integral_counter;
+	if(integral_counter++ % 8 == 0) if(!turn) send_byte_to_sensor(STOP_TURN);
+	
 	// Refresha motor-output. Detta får äntligen styrningen att fungera pålitligt.
 	if(dirbits & 1) {
 		clearbit(PORT_DIR, LEFT_DIR);
