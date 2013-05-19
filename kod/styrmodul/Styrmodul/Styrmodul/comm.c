@@ -183,6 +183,7 @@ void decode_comm(uint8_t command)
 	
 	else if(command == COMM_CALIBRATE_SENSORS)
 	{
+		send_byte_to_sensor(STOP_TURN);
 		calibrate_sensors = 1;
 	}
 	

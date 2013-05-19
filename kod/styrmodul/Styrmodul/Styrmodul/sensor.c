@@ -187,7 +187,7 @@ void decode_sensor(uint8_t data)
 			
 		//Här hanteras gyrointegralen	
 		case SENSOR_GYRO_INTEGRAL:
-			
+
 			if(!listening_to_gyro)
 			{
 				break;
@@ -201,17 +201,10 @@ void decode_sensor(uint8_t data)
 				if (autonomous) make_turn(crossing_direction);
 			}
 			
-// 			if(1||d++ % 64 == 0)
-// 			{
-// 				char integral_string[32];
-// 				sprintf(integral_string, "Integral: %d Turn full: %d", degrees_full, turn_full);
-// 				debug(integral_string);
-// 			}
 			break;
 			
 		//IR-sensordata hanteras
 		case SENSOR_IR:
-			
 			//Spara i två buffrar. Så sensordata ej skrivs över av tejpkommandon.
 			memcpy(sensor_buffer, tmp_sensor_buffer, tmp_sensor_buffer_len);
 			
@@ -221,6 +214,9 @@ void decode_sensor(uint8_t data)
 			sensor_buffer[IR_RIGHT_FRONT] = interpret_big_ir(sensor_buffer[IR_RIGHT_FRONT])+right_front;
 			sensor_buffer[IR_LEFT_BACK] = interpret_small_ir(sensor_buffer[IR_LEFT_BACK])+left_back;
 			sensor_buffer[IR_RIGHT_BACK] = interpret_small_ir(sensor_buffer[IR_RIGHT_BACK])+right_back;
+if(sensor_buffer[IR_FRONT] == 0) {
+debug(":( %d %d", sensor_buffer[IR_FRONT], tmp_sensor_buffer[IR_FRONT]);
+}
 
 			//Sensorkalibrering
 			if(calibrate_sensors)
@@ -305,27 +301,49 @@ void decode_sensor(uint8_t data)
 				// Om vi ska köra hemåt
 				if(is_returning_home)
 				{
+					static uint8_t first_after_180 = 1;
+					
+					if(!turning_180 && first_after_180)
+					{
+						sensor_buffer[IR_LEFT_BACK] = 40;
+						sensor_buffer[IR_LEFT_FRONT] = 40;
+						sensor_buffer[IR_RIGHT_BACK] = 40;
+						sensor_buffer[IR_RIGHT_FRONT] = 40;
+						first_after_180 = 0;
+						drive_from_crossing = 0;
+						make_turn_flag = 0;
+						has_detected_crossing = 0;
+					}
+					
 					static uint8_t turn_first = 1;
-					static char home_dir;
+					static char home_dir, crossing_counter;
 					
 					// Analysera sensordata för att ta reda på när vi hittat en korsning.
 					if (!has_detected_crossing && !make_turn_flag && !drive_from_crossing &&
 					(sensor_buffer[IR_LEFT_FRONT] >= SEGMENT_LENGTH || sensor_buffer[IR_RIGHT_FRONT] >= SEGMENT_LENGTH))
 					{
-						has_detected_crossing = 1;
+						if(++crossing_counter > 3)
+						{
+							has_detected_crossing = 1;
+							crossing_counter = 0;
+						}							
 					}
 					
 					// Korsning funnen
 					else if(has_detected_crossing)
 					{
-						spi_delay_ms(6000);
-						if (crossing_buffer[crossing_buffer_p] == 'f')
+						
+						drive_forwards(speed);
+						spi_delay_ms(4500);
+						if (crossing_buffer[--crossing_buffer_p] == 'f')
 						{
+							debug("Korsning funnen fram");
 							drive_from_crossing = 1;
-							--crossing_buffer_p;
+							
 						}
 						else
 						{
+							debug("Korsning funnen h/v");
 							stop_motors();
 							make_turn_flag = 1;
 						}
@@ -337,13 +355,16 @@ void decode_sensor(uint8_t data)
 					{
 						// Sväng i motsatt riktning gentemot buffern, samt räkna ner bufferpekaren
 						
-						home_dir = crossing_buffer[--crossing_buffer_p];
+						home_dir = crossing_buffer[crossing_buffer_p];
+						debug("home_dir_first: %c", home_dir);
 						home_dir =
 							home_dir == 'l' ? 'r'
 							: home_dir == 'r' ? 'l'
 							: home_dir;
+						debug("home_dir_second: %c", home_dir);
 						turn_first = 0;
 						listening_to_gyro = 1;
+						make_turn(home_dir);
 					}
 										
 					else if(make_turn_flag)
@@ -351,14 +372,20 @@ void decode_sensor(uint8_t data)
 						// Kolla om svängen är klar
 						make_turn(home_dir);
 					}
-					
 					else if(drive_from_crossing)
 					{
-						if (sensor_buffer[IR_LEFT_BACK] <= SEGMENT_LENGTH-30 && sensor_buffer[IR_RIGHT_BACK] <= SEGMENT_LENGTH - 30)
+						static uint8_t ir_counter;
+						if (sensor_buffer[IR_LEFT_BACK] <= SEGMENT_LENGTH-20 && sensor_buffer[IR_RIGHT_BACK] <= SEGMENT_LENGTH - 20)
 						{
-							drive_from_crossing = 0;
-							turn_first = 1;
+							if(ir_counter++ > 20)
+							{
+								debug("crossing done");
+								ir_counter = 0;
+								drive_from_crossing = 0;
+								turn_first = 1;
+							}
 						}
+						else drive_forwards(speed);
 					}
 				}
 				
@@ -381,7 +408,6 @@ void decode_sensor(uint8_t data)
 				{
 					if(tape_command == 'f' && crossing_buffer_p == 0)
 					{
-						debug("Bajsat klart!");
 						stop_motors();
 						spi_delay_ms(2000);
 						while(1);
@@ -397,24 +423,25 @@ void decode_sensor(uint8_t data)
 					//Om korsningskommandon
 					if(tape_command == 'f' || tape_command == 'r' || tape_command == 'l')
 					{
-						spi_delay_ms(7213); //Davids magkänsla
-						debug("tejpkmmand  %c", tape_command);
+						drive_forwards(speed);
+						spi_delay_ms(7913); //Davids magkänsla
+						if (tape_command != 'f')
+						{
+							stop_motors();
+						}
 						first_time_in_tape_crossing = 0;
 						crossing_direction = tape_command;
 						tape_crossings = 1;
 						make_turn_flag = 1;
 						has_detected_crossing = 0;
 						crossings = 0;
-						
-						tape_detected = 1;
-						
-						stop_motors();	
+						tape_detected = 1;							
 					}
 					
 					//Om roboten kört fram till sluttejpen
 					else if (tape_command == 'g')
 					{
-						debug("GOAL");
+						//debug("GOAL");
 						follow_end_tape = 1;
 						claw_out();
 					}
@@ -435,7 +462,6 @@ void decode_sensor(uint8_t data)
 			//Om roboten följt linjen till slutet
             case SENSOR_FOLLOW_TAPE_END:
                     {
-						debug("Måltejp slut");
 						if(is_returning_home) break;
 						//Utför uppdraget i slutet
 						if(autonomous)
@@ -447,17 +473,13 @@ void decode_sensor(uint8_t data)
 							is_returning_home = 1;
 							turning_180 = 1;
 							make_turn('b');
-						}							        
+						}
+						//debug("Måltejp slut");							        
                     }	
 					break;
 			
 			//Ta emot debugmeddelande från sensorenheten
 			case SENSOR_TAPE_DEBUG:
-					{
-						char tmp[20];
-						sprintf(tmp, "Tejp: %d ", tmp_sensor_buffer[1]);
-						debug(tmp);					
-					}						
 		default:
 			break;
 		}
@@ -495,10 +517,7 @@ void sensor_debug_hex()
 	char tmpstr[10];
 	while(pos != tmp_sensor_buffer_len)
 	{
-		sprintf(tmpstr, "%02X", tmp_sensor_buffer[pos++]);
-		send_string(tmpstr);
 	}
-	update();
 }
 
 
@@ -702,7 +721,7 @@ void drive_to_crossing_end(uint8_t stop_distance)
 	if ((sensor_buffer[IR_FRONT] <= stop_distance) || stop_distance == 0)
 	{
 		make_turn_flag = 1;
-		stop_motors();
+		if (stop_distance) stop_motors();
 		has_detected_crossing = 0;
 	}
 	
@@ -726,12 +745,16 @@ void make_turn(char dir)
 		drive_forwards(speed);
 		first = 1;
 		make_turn_flag = 0;
-		debug("Pissstrale");
 		valid_buffer_values = 0;
 		
-		if (!turning_180 || is_returning_home)
+		if (!turning_180)
 		{
 			drive_from_crossing = 1;
+		}
+		else
+		{
+			drive_forwards(speed);
+			spi_delay_ms(1000);
 		}
 		
 		turning_180 = 0;
@@ -777,16 +800,17 @@ void make_turn(char dir)
 			
 			//Om vänd om
 			case 'b':
-				debug("Hemåt");
 				if(first)
 				{
 				
 					turn = 1;
-					turn_full = 2600;		//Empiriskt tillsatt 180 graders konstant
+					turn_full = 3000;		//Empiriskt tillsatt 180 graders konstant
 					spi_delay_ms(3000);
 					send_byte_to_sensor(START_TURN);
 					first = 0;
 					tank_turn_right(turn_speed);
+					//debug("Hemåt");
+					//debug("Antal beslut: %d,%c,%c,%c,%c,%c.", crossing_buffer_p,crossing_buffer[0],crossing_buffer[1],crossing_buffer[2],crossing_buffer[3],crossing_buffer[4]);
 				}
 			break;
 			

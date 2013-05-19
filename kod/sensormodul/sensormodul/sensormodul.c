@@ -19,23 +19,19 @@ uint8_t spi_data_to_master;
 uint8_t tape_sensor;
 uint8_t read_mode; // Om read_mode == 1, integrera gyro, annars läs IR och tejp.
 char tape_type;
-uint8_t vertical_end_tape_found = 0;
+
 
 void debug(char *fmt, ...)
 {
 	va_list args;
-	char tmp[32];
+	char tmp[256];
 	unsigned i;
 	va_start(args, fmt);
-	vsprintf(tmp, fmt, args);
+	vsnprintf(tmp + 1, 255, fmt, args);
 	va_end(args);
 
-	uint8_t len = strlen(tmp) + 1;	/* Längden av strängen + kommandot */
-	char msg[34];
-	strncpy(msg + 1, tmp, 33);
-	msg[0] = SENSOR_DEBUG;
-	msg[33] = 0;
-	send_to_master(34, msg);
+	tmp[0] = SENSOR_DEBUG;
+	send_to_master(strlen(tmp) + 2, tmp);
 }
 
 //Gyrots initialvärde
@@ -69,6 +65,7 @@ volatile uint8_t autonomous;
 volatile uint8_t to_read_gyro;
 volatile uint8_t tape_interrupt_flag;
 volatile uint8_t spi_transfer_complete;
+//uint8_t no_tape_counter;
 
 /*
 Sparar ner data från bussen.
@@ -353,7 +350,7 @@ void read_adc_ir()
 
 void decode_tape()
 {
-	static uint16_t tape_count=0;
+	static uint16_t tape_count = 0;
 	static uint16_t no_tape_count = 0;
 	static uint8_t is_over_tape = 0;
 	static uint8_t is_in_tape_segment = 0;
@@ -367,6 +364,17 @@ void decode_tape()
 		is_over_tape = 1;
 		no_tape_count = 0;
 		tape_count++;
+	//	debug("tejpr %d", tape_count);
+		if(tape_count > 400)
+		{
+			//debug("lang maltejp");
+			is_in_tape_segment = 0;
+			follow_end_tape = 1;
+			no_tape_count = 0;
+			decode_tape_segment(first_tape_count, 0);
+			tape_count = 0;
+		}
+
 	}
 	
 	else if (is_over_tape && tape_sensor < REFLEX_SENSITIVITY) //Tejpbit avslutad
@@ -375,7 +383,7 @@ void decode_tape()
 		
 		if(is_in_tape_segment && tape_count !=1) //Andra tejpbiten avslutad
 		{
-			debug("Andra tejpen: %d", tape_count);
+			//debug("Andra tejpen: %d", tape_count);
 			is_in_tape_segment = 0;
 			second_tape_count = tape_count;
 			uint8_t tmp[5];
@@ -383,7 +391,7 @@ void decode_tape()
 		}
 		else if(tape_count != 1) // Första tejpbit avslutad		OBS: Fulhack som löste en sensorbugg.
 		{
-			debug("Forsta tejpen: %d", tape_count);
+			//debug("Forsta tejpen: %d", tape_count);
 			is_in_tape_segment = 1;
 			first_tape_count = tape_count;
 		}
@@ -394,17 +402,18 @@ void decode_tape()
 	{
 		no_tape_count++;
 		//checka om den bara sett en tejpbit, alltså är den vid mål. Kontrollerar aldrig om det är en kort eller lång tejpbit!
-		if(no_tape_count > 220 && is_in_tape_segment)
+		if(no_tape_count > 300 && is_in_tape_segment)
 		{
 			is_in_tape_segment = 0;
 			follow_end_tape = 1;
+			no_tape_count = 0;
 			decode_tape_segment(first_tape_count, 0);
 		}
 		
 		
 		//overflowskydd
-		if(no_tape_count == 255)
-		no_tape_count = 255;
+		if(no_tape_count == 65000)
+		no_tape_count = 65000;
 		
 	}
 	
@@ -414,7 +423,7 @@ void decode_tape()
 void decode_tape_segment(uint16_t first, uint16_t second)
 {
 	uint16_t tape_border = 180;
-	if (first <= tape_border && second == 0) //Bara en tejp, vi är vid mål!
+	if (second == 0) //Bara en tejp, vi är vid mål!
 	{
 		tape_type = 'g';
 		send_decoded_tape();
@@ -454,6 +463,7 @@ void regulate_end_tape()
 	uint8_t reflex[9];
 	uint8_t left_ir_sensor_value;
 	uint8_t right_ir_sensor_value;
+	static uint8_t vertical_end_tape_found = 0;
 	
 	for (i = 0; i < 9; i++)
 	{
@@ -465,11 +475,19 @@ void regulate_end_tape()
 			n_of_reflexes_on += 1;
 		}
 		else
-		reflex[i] = 0;
+			reflex[i] = 0;
 	}
 	
 	//div med 0
 	
+		
+	if (n_of_reflexes_on < 4 &&  n_of_reflexes_on > 0 ) // den är på linjen, sätt flagga att den följt linje
+	{
+		vertical_end_tape_found = 1;
+	}
+	
+static uint8_t floor_counter;
+	// Normal linjeföljning
 	if(n_of_reflexes_on != 0)
 	{
 		pos = res*2/n_of_reflexes_on;        //ojojoj
@@ -478,28 +496,30 @@ void regulate_end_tape()
 		//Skicka positionen till master
 		send_to_master(2, tape_position);
 	}
-	
-	if (n_of_reflexes_on < 4 ) // den är på linjen, sätt flagga att den följt linje
+
+	//utanför tejp
+	else if ((n_of_reflexes_on == 0 || n_of_reflexes_on > 4) && vertical_end_tape_found) // Utanför tejp men den har kört linjeföljning. Henning är i mål!
 	{
-		vertical_end_tape_found = 1;
+		if(++floor_counter > 20)
+		{
+			floor_counter = 0;
+//			debug("hittat sluttejp");
+			//Skickar att det är slut på linjeföljning till mastern
+			tape_position[0] = SENSOR_FOLLOW_TAPE_END;
+			tape_position[1] = 'e';
+			send_to_master(2, tape_position);
+
+			vertical_end_tape_found = 0;
+			follow_end_tape = 0;
+		}			
 	}
-	
-	//utanför tejp, stopp!
-	else if (n_of_reflexes_on = 0 && vertical_end_tape_found) // Utanför tejp men den har kört linjeföljning. Henning är i mål!
-	{
-		//Skickar att det är slut på linjeföljning till mastern
-		tape_position[0] = SENSOR_FOLLOW_TAPE_END;
-		tape_position[1] = 'e';
-		send_to_master(2, tape_position);
-		follow_end_tape = 0;
-	}
-	else // Utanför tejp men den har inte kört linjeföljning, ska regulera in mot tejpen.
+	else if (n_of_reflexes_on == 0 && !vertical_end_tape_found)// Utanför tejp men den har inte kört linjeföljning, ska regulera in mot tejpen.
 	{
 		read_ir(1);
 		read_ir(2);
-		left_ir_sensor_value = ir_sensor_data[2]; //Läggs in med index sensorindex + 1 från read_adc
-		right_ir_sensor_value = ir_sensor_data[3];
-		if ( right_ir_sensor_value > left_ir_sensor_value) // Står till vänster om tejpen, sväng höger
+		left_ir_sensor_value = ir_sensor_data[1]; //Läggs in med index sensorindex + 1 från read_adc
+		right_ir_sensor_value = ir_sensor_data[2];
+		if (right_ir_sensor_value > left_ir_sensor_value) // Står till vänster om tejpen, sväng höger
 		{
 			pos = 10;
 			tape_position[0] = SENSOR_FOLLOW_TAPE;

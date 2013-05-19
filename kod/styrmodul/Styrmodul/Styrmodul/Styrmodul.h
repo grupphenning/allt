@@ -5,6 +5,7 @@
 #include <avr/interrupt.h>
 #include "komm_styr_protokoll.h"
 #include "sensor_styr_protokoll.h"
+#include "../../../sensormodul/sensormodul/sensormodul.h"
 
 #define LEFT_DIR	PB1
 #define RIGHT_DIR	PB0

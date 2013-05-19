@@ -43,6 +43,13 @@ void update_display_string()
 			base = 10;
 			else if((*inp == 'x') || (*inp == 'X'))
 			base = 16;
+			else if(*inp == 's') // Styrbeslut
+			{
+				inp++; // Bortom s:et
+				*tmpp = 'k';
+				tmpp++;
+				continue;
+			}
 			inp++;
 			uint8_t sensor = *inp; // Nästa är sensor-index
 			inp++;
@@ -80,6 +87,6 @@ void update_display_string()
 
 void init_default_printf_string()
 {
-char default_string[] = {"V:%d\001,%d\004 F:%d\003 H:%d\002,%d\005" };
-strcpy(display_printf_string, default_string);
+	char default_string[] = {"V:%d\001, H:%d\002    D:%s" };
+	strcpy(display_printf_string, default_string);
 }
