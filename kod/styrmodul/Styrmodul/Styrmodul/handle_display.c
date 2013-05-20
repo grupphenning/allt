@@ -14,6 +14,8 @@ void debug(char *str, ...);
 #include "bitmacros.h"
 uint8_t display_printf_string[100];
 
+char *crossing_decision_string = "Inget \341n";
+
 #define BUFFER_SIZE 100
 #define MAX_SENSORS 7
 void update_display_string()
@@ -46,8 +48,8 @@ void update_display_string()
 			else if(*inp == 's') // Styrbeslut
 			{
 				inp++; // Bortom s:et
-				*tmpp = 'k';
-				tmpp++;
+				strcpy(tmpp, crossing_decision_string);
+				tmpp += strlen(crossing_decision_string);
 				continue;
 			}
 			inp++;
@@ -59,7 +61,7 @@ void update_display_string()
 			{
 				sprintf(tmpp, "%6d", degrees_full);
 				for(uint8_t i = 0; i < 6; i++)
-				tmpp++;
+					tmpp++;
 			}
 			else if(base == 10)
 			{

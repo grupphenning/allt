@@ -14,6 +14,7 @@
 
 void init_default_printf_string();
 void update_display_string();
+extern char *crossing_decision_string;
 
 extern uint8_t display_printf_string[];
 extern uint8_t last_command[];

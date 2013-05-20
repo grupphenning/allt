@@ -10,6 +10,7 @@ void debug(char *str, ...);
 #include "bitmacros.h"
 #include "Styrmodul.h"
 #include "sensor.h"
+#include "handle_display.h"
 
 #include "../../../sensormodul/sensormodul/sensormodul.h"
 
@@ -21,6 +22,8 @@ uint8_t turning_180;
 uint8_t is_returning_home;
 char crossing_buffer[256];
 uint8_t crossing_buffer_p;
+
+uint8_t first_crossing_was_tape_forward;
 
 volatile uint8_t ninety_timer, turn, pid_timer;
 uint8_t left = 1;
@@ -406,11 +409,16 @@ debug(":( %d %d", sensor_buffer[IR_FRONT], tmp_sensor_buffer[IR_FRONT]);
 				tape_command = tmp_sensor_buffer[1];
 				if(is_returning_home)
 				{
+					static uint8_t tape_f_count;
 					if(tape_command == 'f' && crossing_buffer_p == 0)
 					{
-						stop_motors();
-						spi_delay_ms(2000);
-						while(1);
+						if(first_crossing_was_tape_forward && tape_f_count == 0) ++tape_f_count;
+						else
+						{
+							stop_motors();
+							spi_delay_ms(2000);
+							while(1);
+						}							
 					}
 					break;
 				}
@@ -423,6 +431,7 @@ debug(":( %d %d", sensor_buffer[IR_FRONT], tmp_sensor_buffer[IR_FRONT]);
 					//Om korsningskommandon
 					if(tape_command == 'f' || tape_command == 'r' || tape_command == 'l')
 					{
+						if(!crossing_buffer_p && tape_command == 'f') first_crossing_was_tape_forward = 1;
 						drive_forwards(speed);
 						spi_delay_ms(7913); //Davids magkänsla
 						if (tape_command != 'f')
@@ -707,7 +716,7 @@ void analyze_ir_sensors()
 //Spara in beslut inför hemfärd
 void add_to_crossing_buffer(char c)
 {
-	debug("Tillagd i buffer");
+//	debug("Tillagd i buffer");
 	crossing_buffer[crossing_buffer_p++] = c;
 }
 
@@ -775,6 +784,7 @@ void make_turn(char dir)
 				if(first)
 				{
 					debug("Left");
+					crossing_decision_string = "Sv\341nger v\341nster";
 					turn = 1;
 					turn_full = gyro_const;
 					spi_delay_ms(3000);
@@ -789,6 +799,7 @@ void make_turn(char dir)
 				if(first)
 				{
 					debug("Right");
+					crossing_decision_string = "Sv\341nger h\357ger";
 					turn = 1;
 					turn_full = gyro_const;
 					spi_delay_ms(3000);
@@ -803,6 +814,7 @@ void make_turn(char dir)
 				if(first)
 				{
 				
+					crossing_decision_string = "V\341nder";
 					turn = 1;
 					turn_full = 3000;		//Empiriskt tillsatt 180 graders konstant
 					spi_delay_ms(3000);
@@ -816,6 +828,7 @@ void make_turn(char dir)
 			
 			//Kör framåt
 			case 'f':
+				crossing_decision_string = "K\357r fram\1t";
 				first = 0;
 				break;
 			

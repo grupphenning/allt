@@ -35,6 +35,10 @@ int main(void)
 
 	clearbit(PORTC, PINC0); // "Ready to Receive" till Firefly
 
+	// Har autonom-toggle på PA0
+	static uint8_t has_pressed_auto;
+	clearbit(DDRA, 0);
+
 // Huvudloop
     while(1)
     {
@@ -42,7 +46,14 @@ int main(void)
 		static uint8_t spi_state = 0; // 0 väntar, 1 skriver
 		static uint8_t usart_state = 0; // 0 väntar, 1 skriver
 		uint8_t spir, has_spir = 0, usartr, has_usartr = 0;
-		
+
+		if(!has_pressed_auto) {
+			if(!(PINA & 0x01)) {
+				has_pressed_auto = 1;
+				send_spi(COMM_ENABLE_PID);
+			}
+		}
+
 		// Processa SPI
 		if(spi_state == 0) {
 			// Kolla om vi har fått nåt
