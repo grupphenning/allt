@@ -139,6 +139,10 @@ void decode_comm(uint8_t command)
 		//Kör framåt under regleringen.
 		setbit(PORT_DIR, LEFT_DIR);		
 		setbit(PORT_DIR, RIGHT_DIR);	
+		
+		spi_delay_ms(1);
+		send_byte_to_sensor(SENSOR_DELAY);
+		spi_delay_ms(5000);
 	}
 	
 	else if(command == COMM_DISABLE_PID)

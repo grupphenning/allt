@@ -24,6 +24,7 @@
 #define AUTONOMOUS_MODE				0x12
 #define START_TURN					0x13
 #define STOP_TURN					0x14
+#define SENSOR_DELAY				0x15
 
 
 /* Övriga definitioner */
