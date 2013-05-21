@@ -14,7 +14,7 @@
    height="1000"
    id="svg3800"
    version="1.1"
-   inkscape:version="0.48.2 r9819"
+   inkscape:version="0.48.4 r9939"
    sodipodi:docname="kretskort.svg"
    inkscape:export-filename="H:\tsea27\allt\dokument\tsea27_presentation\kretskort.png"
    inkscape:export-xdpi="90"
@@ -28,16 +28,16 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="0.35"
-     inkscape:cx="-691.31027"
-     inkscape:cy="389.83353"
+     inkscape:zoom="1.4"
+     inkscape:cx="-1405.107"
+     inkscape:cy="494.7957"
      inkscape:document-units="px"
      inkscape:current-layer="layer2"
      showgrid="false"
-     inkscape:window-width="1366"
-     inkscape:window-height="721"
+     inkscape:window-width="1680"
+     inkscape:window-height="1001"
      inkscape:window-x="-4"
-     inkscape:window-y="24"
+     inkscape:window-y="-4"
      inkscape:window-maximized="1"
      showguides="true"
      inkscape:guide-bbox="true" />
@@ -49,7 +49,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -4477,69 +4477,6 @@
          id="tspan6142"
          sodipodi:role="line">Hållare för IR-sensorer</tspan></text>
     <g
-       id="g6716"
-       transform="translate(-811.42857,0)"
-       inkscape:export-filename="C:\Users\erikhk\tsea27\allt\dokument\tsea27_presentation\reset_k.png"
-       inkscape:export-xdpi="200"
-       inkscape:export-ydpi="200">
-      <g
-         transform="matrix(0,-1,1,0,-807.42568,937.29504)"
-         id="g5904">
-        <rect
-           style="fill:#d4285a;fill-opacity:1;stroke:none"
-           id="rect5906"
-           width="62.124382"
-           height="90.913727"
-           x="366.68536"
-           y="446.27066"
-           ry="3.2829957" />
-        <path
-           style="fill:#7e1835;fill-opacity:1;stroke:none"
-           d="m 369.28571,480.21932 59.64286,0 -1.07143,54.28572 -4.64285,-4.64286 0.35714,-45.71428 -52.5,-0.35715 z"
-           id="path5908"
-           inkscape:connector-curvature="0" />
-        <path
-           style="fill:#ffffff;stroke:none"
-           d="m 370.97852,534.15393 0.50508,-50.50763 -2.52538,1.26269 z"
-           id="path5910"
-           inkscape:connector-curvature="0" />
-      </g>
-      <g
-         transform="matrix(0,-1,1,0,-809.92568,901.93794)"
-         id="g5912">
-        <rect
-           ry="3.2829957"
-           y="448.77066"
-           x="397.04251"
-           height="90.913727"
-           width="62.124382"
-           id="rect5914"
-           style="fill:#3e8db4;fill-opacity:1;stroke:none" />
-        <path
-           inkscape:connector-curvature="0"
-           id="path5916"
-           d="m 399.64285,482.71932 59.64286,0 -1.07143,54.28572 -4.64285,-4.64286 0.35714,-45.71428 -52.5,-0.35715 z"
-           style="fill:#275770;fill-opacity:1;stroke:none" />
-        <path
-           inkscape:connector-curvature="0"
-           id="path5918"
-           d="m 401.33566,536.65393 0.50508,-50.50763 -2.52538,1.26269 z"
-           style="fill:#ffffff;stroke:none" />
-      </g>
-      <text
-         xml:space="preserve"
-         style="font-size:34.05342484px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
-         x="-378.69614"
-         y="545.43243"
-         id="text6144"
-         sodipodi:linespacing="125%"><tspan
-           sodipodi:role="line"
-           id="tspan6146"
-           x="-378.69614"
-           y="545.43243"
-           style="font-size:21.28339195px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;fill:#ffffff;font-family:Verdana;-inkscape-font-specification:Verdana">Resetknapp</tspan></text>
-    </g>
-    <g
        transform="translate(-950.34536,17.142844)"
        id="g6152"
        inkscape:export-filename="C:\Users\erikhk\tsea27\allt\dokument\tsea27_presentation\display_k.png"
@@ -6510,6 +6447,77 @@
            x="-406.08691"
            y="170.07346"
            style="font-size:30px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;fill:#ffffff;font-family:Verdana;-inkscape-font-specification:Verdana">Firefly</tspan></text>
+    </g>
+    <g
+       id="g6524">
+      <g
+         transform="matrix(0,-1,1,0,-1618.8543,937.29504)"
+         id="g5904">
+        <rect
+           style="fill:#d4285a;fill-opacity:1;stroke:none"
+           id="rect5906"
+           width="62.124382"
+           height="90.913727"
+           x="366.68536"
+           y="446.27066"
+           ry="3.2829957" />
+        <path
+           style="fill:#7e1835;fill-opacity:1;stroke:none"
+           d="m 369.28571,480.21932 59.64286,0 -1.07143,54.28572 -4.64285,-4.64286 0.35714,-45.71428 -52.5,-0.35715 z"
+           id="path5908"
+           inkscape:connector-curvature="0" />
+        <path
+           style="fill:#ffffff;stroke:none"
+           d="m 370.97852,534.15393 0.50508,-50.50763 -2.52538,1.26269 z"
+           id="path5910"
+           inkscape:connector-curvature="0" />
+      </g>
+      <g
+         transform="matrix(0,-1,1,0,-1621.3543,901.93794)"
+         id="g5912">
+        <rect
+           ry="3.2829957"
+           y="448.77066"
+           x="397.04251"
+           height="90.913727"
+           width="62.124382"
+           id="rect5914"
+           style="fill:#3e8db4;fill-opacity:1;stroke:none" />
+        <path
+           inkscape:connector-curvature="0"
+           id="path5916"
+           d="m 399.64285,482.71932 59.64286,0 -1.07143,54.28572 -4.64285,-4.64286 0.35714,-45.71428 -52.5,-0.35715 z"
+           style="fill:#275770;fill-opacity:1;stroke:none" />
+        <path
+           inkscape:connector-curvature="0"
+           id="path5918"
+           d="m 401.33566,536.65393 0.50508,-50.50763 -2.52538,1.26269 z"
+           style="fill:#ffffff;stroke:none" />
+      </g>
+      <text
+         xml:space="preserve"
+         style="font-size:34.05342484px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+         x="-1190.1248"
+         y="545.43243"
+         id="text6144"
+         sodipodi:linespacing="125%"><tspan
+           sodipodi:role="line"
+           id="tspan6146"
+           x="-1190.1248"
+           y="545.43243"
+           style="font-size:21.28339195px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;fill:#ffffff;font-family:Verdana;-inkscape-font-specification:Verdana">Resetknapp</tspan></text>
+      <text
+         sodipodi:linespacing="125%"
+         id="text6520"
+         y="479.7182"
+         x="-1186.5811"
+         style="font-size:34.05342484px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+         xml:space="preserve"><tspan
+           style="font-size:21.28339195px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;fill:#ffffff;font-family:Verdana;-inkscape-font-specification:Verdana"
+           y="479.7182"
+           x="-1186.5811"
+           id="tspan6522"
+           sodipodi:role="line">Startknapp</tspan></text>
     </g>
   </g>
 </svg>
